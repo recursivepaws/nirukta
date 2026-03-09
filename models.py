@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 import re
 from typing import List, Optional
+from parser import SlokaFile
 from colors import COLORS
 
 from indic_transliteration import sanscript
@@ -192,6 +193,13 @@ class Sloka:
     citation: Citation
     sanskrit: List[List[Node]]  # list of lines, each line a list of nodes
     english: List[List[Node]]
+
+    def __init__(self, file: SlokaFile):
+        # For each visual row
+        for line in file.lines:
+            # For each utterance
+            for vAkya in line.vAkyAni:
+                print("meow")
 
     def __repr__(self):
         def fmt_section(lines):

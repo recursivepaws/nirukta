@@ -1,89 +1,193 @@
-"""
-Parser for the sloka DSL.
-
-File structure:
-    === citation ===
-    (abhinayadarpaNe 1) SANSKRIT
-
-    === sanskrit ===
-    --- line ---
-    "node" @COLOR [GLOSS] +delay {
-        "child"
-    }
-
-    --- line ---
-    "next line node"
-
-    === english ===
-    --- line ---
-    "translation node" @COLOR
-
-Node syntax:
-    "text" @COLOR [GLOSS.INFO] +delay {
-        child_node
-        child_node
-    }
-
-All node fields except text are optional and order-independent.
-"""
-
 from __future__ import annotations
 from dataclasses import dataclass, field
-from typing import List, Optional
-from models import Citation, Language, Node, Sloka
+from enum import Enum
+from typing import List, Union
 
+from indic_transliteration import sanscript
+from indic_transliteration.sanscript import transliterate
+from janim.imports import (
+    DOWN,
+    WHITE,
+    FadeOut,
+    Group,
+    Succession,
+    TypstText,
+    Wait,
+    Write,
+)
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
 
+SCALE = 2.0
 # ---------------------------------------------------------------------------
 # Data model
 # ---------------------------------------------------------------------------
 
-from janim.imports import (
-    BLUE,
-    DOWN,
-    GREEN,
-    ORANGE,
-    ORIGIN,
-    PINK,
-    RED,
-    UP,
-    WHITE,
-    YELLOW,
-)
+
+def Junicode(text: str, color: str):
+    return f'#text(font: "Junicode", stroke: none, fill: rgb("{color}"))[{text}]'
+
+
+def Jaini(text: str, color: str):
+    return f'#text(font: "Jaini", stroke: none, fill: rgb("{color}"))[{text}]'
+
+
+class Language(Enum):
+    ENGLISH = "english"
+    SANSKRIT = "sanskrit"
+    TRANSLIT = "translit"
+
+
+def typst_code(text: str, language: Language, color: str = WHITE):
+    match language:
+        case Language.ENGLISH:
+            return Junicode(text, color)
+        case Language.TRANSLIT:
+            iast = transliterate(text, sanscript.SLP1, sanscript.IAST)
+            return Junicode(iast, color)
+        case Language.SANSKRIT:
+            deva = transliterate(text, sanscript.SLP1, sanscript.DEVANAGARI)
+            return Jaini(deva, color)
+
+
+@dataclass
+class Gloss:
+    """A single English gloss attached to a Sanskrit token.
+
+    etymological=False  ->  [] translation gloss, shown in animations
+    etymological=True   ->  {} etymology gloss, hidden by default
+    """
+
+    text: str
+    etymological: bool = False
+
+
+@dataclass
+class SimpleToken:
+    """An unanalysed Sanskrit word with its glosses."""
+
+    slp1: str
+    glosses: List[Gloss] = field(default_factory=list)
+
+
+@dataclass
+class CompoundToken:
+    """A sandhi compound.
+
+    parts   -- ordered list of SimpleToken / CompoundToken (the components)
+    slp1 -- the phonetically-merged SLP1 surface form (after '=')
+    """
+
+    parts: List[Union[SimpleToken, "CompoundToken"]]
+    slp1: str
+
+
+# Convenience type alias
+TokenType = Union[SimpleToken, CompoundToken, str]  # str for punctuation
+
+
+@dataclass
+class VerseLine:
+    """One sentence-worth of Sanskrit tokens paired with its English rendering."""
+
+    tokens: List[TokenType]
+    english: str
+
+
+@dataclass
+class Line:
+    """A stanza-level grouping of verse lines (between --- line --- markers)."""
+
+    vAkyAni: List[VerseLine]
+
+
+@dataclass
+class SlokaFile:
+    citation: str
+    lines: List[Line]
+
+    def teach(self):
+        sloka = []
+
+        for line in self.lines:
+            # english = ""
+            sanskrit = ""
+            # for each utterance we want to analyze separately
+            for vAkya in line.vAkyAni:
+                # english += vAkya.english
+                for token in vAkya.tokens:
+                    if isinstance(token, str):
+                        sanskrit += token
+                    else:
+                        sanskrit += token.slp1
+
+                    sanskrit += " "
+
+            sloka.append(
+                TypstText(typst_code(sanskrit, Language.SANSKRIT), scale=SCALE)
+            )
+
+        sloka = Group(*sloka)
+        sloka.points.arrange(DOWN)
+        animations = []
+        for line in sloka:
+            animations.append(Write(line, duration=6.0))
+
+        citation = TypstText(typst_code(self.citation, Language.SANSKRIT), scale=SCALE)
+        citation.points.next_to(sloka, DOWN)
+
+        animations.append(
+            Succession(
+                Wait(2.0),
+                Write(citation, duration=1.0),
+                Wait(1.0),
+                FadeOut(Group(sloka, citation)),
+            )
+        )
+        return Succession(*animations)
+
 
 # ---------------------------------------------------------------------------
 # Grammar
 # ---------------------------------------------------------------------------
 
 GRAMMAR = Grammar(r"""
-    sloka            = ws citation_section sanskrit_section english_section ws
+    sloka           = ws citation_line ws line+ ws
 
-    citation_section = "=== citation ===" ws citation_body ws
-    citation_body    = ~r"[^\n]+"
+    citation_line   = "===" ws citation_text ws "==="
+    citation_text   = ~r"[^=]+"
 
-    sanskrit_section = "=== sanskrit ===" ws line+
-    english_section  = "=== english ===" ws line+
+    line            = "--- line ---" ws verse_line+
+    verse_line      = !"--- line ---" token_seq ws quoted_str ws
 
-    line             = "--- line ---" ws node+ ws
+    token_seq       = token (ws token)*
 
-    node             = text attrs ws children?
+    token           = compound_token / simple_token / punct
 
-    text             = ws quoted_str ws
-    attrs            = attr*
-    attr             = ws (color / gloss / delay)
+    # Sandhi: one or more components joined by '+', then '=' surface form.
+    # Components may themselves be parenthesised sandhi groups, enabling
+    # arbitrary nesting:  (a[x]+b[y]=ab)+c[z]=abc
+    compound_token  = comp_part plus_part+ "=" slp1
+    plus_part       = "+" comp_part
+    comp_part       = paren_compound / simple_token
+    paren_compound  = "(" compound_token ")"
 
-    color            = "@" identifier
-    gloss            = "[" gloss_content "]"
-    gloss_content    = ~r"[^\]]+"
-    delay            = "+" ~r"[0-9]+"
+    simple_token    = slp1 gloss*
+    gloss           = trans_gloss / etym_gloss
+    trans_gloss     = "[" trans_content "]"
+    etym_gloss      = "{" etym_content "}"
+    trans_content   = ~r"[^\]]+"
+    etym_content    = ~r"[^}]+"
 
-    children         = "{" ws node* ws "}" ws
+    # '..' must precede '.' so the longer match wins
+    punct           = ~r"\.\.|[.;]"
 
-    quoted_str       = '"' ~r'(?:[^"\\]|\\.)*' '"'
-    identifier       = ~r"[A-Za-z_][A-Za-z0-9_.]*"
-    ws               = ~r"\s*"
+    # SLP1: anything that isn't a format metacharacter or whitespace
+    slp1            = ~r"[^[\]{}.;=+()\"\s]+"
+
+    quoted_str      = '"' ~r'(?:[^"\\]|\\.)*' '"'
+    ws              = ~r"\s*"
 """)
 
 
@@ -96,93 +200,93 @@ class SlokaVisitor(NodeVisitor):
     # -- top level ----------------------------------------------------------
 
     def visit_sloka(self, node, visited_children):
-        _, citation, sanskrit, english, _ = visited_children
-        return Sloka(citation=citation, sanskrit=sanskrit, english=english)
+        _, citation, _, lines, _ = visited_children
+        return SlokaFile(citation=citation, lines=list(lines))
 
     # -- citation -----------------------------------------------------------
 
-    def visit_citation_section(self, node, visited_children):
-        _, _, body, _ = visited_children
-        return body
+    def visit_citation_line(self, node, visited_children):
+        _, _, text, _, _ = visited_children
+        return text
 
-    def visit_citation_body(self, node, visited_children):
-        raw = node.text.strip()
-        parts = raw.rsplit(None, 1)
-        if len(parts) == 2 and parts[1].isupper():
-            lang = Language[parts[1]]  # "SANSKRIT" -> Language.SANSKRIT
-            return Citation(text=parts[0].strip(), lang=lang)
-        return Citation(text=raw, lang=Language.SANSKRIT)
+    def visit_citation_text(self, node, visited_children):
+        return node.text.strip()
 
-    # -- sections -----------------------------------------------------------
-
-    def visit_sanskrit_section(self, node, visited_children):
-        _, _, lines = visited_children
-        return lines
-
-    def visit_english_section(self, node, visited_children):
-        _, _, lines = visited_children
-        return lines
+    # -- line / verse line --------------------------------------------------
 
     def visit_line(self, node, visited_children):
-        _, _, nodes, _ = visited_children
-        return nodes
+        _, _, verse_lines = visited_children
+        return Line(vAkyAni=list(verse_lines))
 
-    # -- nodes --------------------------------------------------------------
+    def visit_verse_line(self, node, visited_children):
+        # visited_children: [lookahead, token_seq, ws, quoted_str, ws]
+        _, tokens, _, english, _ = visited_children
+        return VerseLine(tokens=tokens, english=english)
 
-    def visit_node(self, node, visited_children):
-        text, attrs, _, children_maybe = visited_children
-        color = WHITE
-        gloss = None
-        delay = 0
-        for kind, value in attrs:
-            if kind == "color":
-                color = value
-            elif kind == "gloss":
-                gloss = value
-            elif kind == "delay":
-                delay = value
+    # -- token sequence -----------------------------------------------------
 
-        children = []
-        if isinstance(children_maybe, list) and children_maybe:
-            children = children_maybe[0]
+    def visit_token_seq(self, node, visited_children):
+        first, rest = visited_children
+        tokens = [first]
+        for pair in rest:
+            # pair = [ws_node, token_result] from the anonymous (ws token) sequence
+            tokens.append(pair[1])
+        return tokens
 
-        return Node(text=text, color=color, gloss=gloss, delay=delay, children=children)
+    def visit_token(self, node, visited_children):
+        return visited_children[0]
 
-    def visit_text(self, node, visited_children):
-        _, quoted, _ = visited_children
-        return quoted
+    # -- compound (sandhi) tokens -------------------------------------------
 
-    def visit_attrs(self, node, visited_children):
-        return visited_children
+    def visit_compound_token(self, node, visited_children):
+        first_part, plus_parts, _, surface = visited_children
+        parts = [first_part] + list(plus_parts)
+        return CompoundToken(parts=parts, slp1=surface)
 
-    def visit_attr(self, node, visited_children):
-        _, attr = visited_children
-        return attr[0]
+    def visit_plus_part(self, node, visited_children):
+        _, part = visited_children
+        return part
 
-    def visit_color(self, node, visited_children):
-        _, identifier = visited_children
-        return ("color", identifier)
+    def visit_comp_part(self, node, visited_children):
+        return visited_children[0]
+
+    def visit_paren_compound(self, node, visited_children):
+        _, compound, _ = visited_children
+        return compound
+
+    # -- simple tokens & glosses --------------------------------------------
+
+    def visit_simple_token(self, node, visited_children):
+        slp1, glosses = visited_children
+        return SimpleToken(slp1=slp1, glosses=list(glosses))
 
     def visit_gloss(self, node, visited_children):
-        _, content, _ = visited_children
-        return ("gloss", content)
+        return visited_children[0]
 
-    def visit_gloss_content(self, node, visited_children):
+    def visit_trans_gloss(self, node, visited_children):
+        _, content, _ = visited_children
+        return Gloss(text=content, etymological=False)
+
+    def visit_etym_gloss(self, node, visited_children):
+        _, content, _ = visited_children
+        return Gloss(text=content, etymological=True)
+
+    def visit_trans_content(self, node, visited_children):
         return node.text
 
-    def visit_delay(self, node, visited_children):
-        _, digits = visited_children
-        return ("delay", int(digits.text))
+    def visit_etym_content(self, node, visited_children):
+        return node.text
 
-    def visit_children(self, node, visited_children):
-        _, _, nodes, _, _, _ = visited_children
-        return nodes
+    # -- terminals ----------------------------------------------------------
+
+    def visit_punct(self, node, visited_children):
+        return node.text
+
+    def visit_slp1(self, node, visited_children):
+        return node.text
 
     def visit_quoted_str(self, node, visited_children):
         return node.text[1:-1].replace('\\"', '"').replace("\\\\", "\\")
-
-    def visit_identifier(self, node, visited_children):
-        return node.text
 
     def generic_visit(self, node, visited_children):
         return visited_children or node
@@ -193,8 +297,8 @@ class SlokaVisitor(NodeVisitor):
 # ---------------------------------------------------------------------------
 
 
-def parse(source: str) -> Sloka:
-    """Parse a sloka file string and return a Sloka object."""
+def parse(source: str) -> SlokaFile:
+    """Parse a sloka source string and return a Sloka object."""
     tree = GRAMMAR.parse(source)
     return SlokaVisitor().visit(tree)
 
@@ -205,85 +309,25 @@ def parse(source: str) -> Sloka:
 
 if __name__ == "__main__":
     sample = r"""
-=== citation ===
-(abhinayadarpaNe 1) SANSKRIT
-
-=== sanskrit ===
---- line ---
-"A~NgikaM bhuvanaM yasya" {
-    "A~Ngikam"  @ADJECTIVES +1
-    "bhuvanam"  @OBJECTS +1
-    "yasya"     @YOU +1
-}
-"vAchikaM sarvavA~Nmayam ." {
-    "vAchikam"  @ADJECTIVES +3
-    "sarvavA~Nmayam" {
-        "sarva"     @YOU +2
-        "vA~Nmayam" @ORANGE [COMP] {
-            "vAc"   @YELLOW
-            "mayam" @RED
-        }
-    }
-    "."
-}
+=== tEttirIyopaniSade 2.2.2 ===
 
 --- line ---
-"AhAryaM chandratArAdi" {
-    "AhAryam"       @ADJECTIVES +2
-    "chandratArAdi" {
-        "chandra"   @YOU +1
-        "tAra"      @OBJECTS +1
-        "Adi"       @PARTICLES +1
-    }
-}
-"taM numaH sAttvikaM shivam .." {
-    "tam"       @YOU +1
-    "numaH"     @VERB +1
-    "sAttvikam" @ADJECTIVES +1
-    "shivam"    @GOD +1
-    ".."
-}
+saha[together]  nO[we both]+avatu[May][be protected]=nAvavatu  .
+"May we both be protected together."
 
-=== english ===
---- line ---
-"Whose bodily expression is the universe," {
-    "Whose"             @YOU +2
-    "bodily expression" @ADJECTIVES +2
-    "is"
-    "the universe"      @OBJECTS +2
-    ","
-}
-"Whose verbal expression is all language," {
-    "Whose"
-    "verbal expression" @ADJECTIVES +4
-    "is"
-    "all"               @YOU +4
-    "language"          @ORANGE [COMP] +2 {
-        "language"  @ORANGE
-        "made of"   @RED
-        "speech"    @YELLOW
-    }
-    ","
-}
+saha[together]  nO[we both]  Bunaktu[May][be nourished]  .
+"May we both be nourished together."
+
+saha[together]  vIryaM[vigorously]  karavAvahai[May we both work]  .
+"May we both work vigorously together."
 
 --- line ---
-"Whose ornamental expression is the moon, stars, etc." {
-    "Whose"
-    "ornamental expression" @ADJECTIVES +3
-    "is"
-    "the moon"  @YOU +3
-    ","
-    "stars"     @OBJECTS +3
-    ","
-    "etc."      @PARTICLES +3
-}
-"We verbally praise that pure lord shiva." {
-    "We verbally praise"    @VERB +2
-    "that"                  @YOU +2
-    "pure"                  @ADJECTIVES +2
-    "lord shiva"            @GOD +2
-    "."
-}
+tejasvi[brilliant]  (nO[both our]+aDItam[study]=nAvaDItam)+astu[May][be]=nAvaDItamastu  ;  mA[not]  vidvizAvahai[hate one another]  ..
+"May both our study be brilliant; may we not hate one another."
+
+--- line ---
+oM[OM]  SAntiH[peace]+SAntiH[peace]+SAntiH[peace]=SAntiSSAntiSSAntiH  ..
+"OM, peace, peace, peace."
 """
 
     sloka = parse(sample)

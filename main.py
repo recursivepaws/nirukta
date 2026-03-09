@@ -1,7 +1,11 @@
+import importlib
 from janim.imports import Config, Timeline
-from parser import parse, Sloka
 import glob
 import os
+import parser
+from parser import parse, SlokaFile
+
+importlib.reload(parser)
 
 
 def get_sloka_file() -> str:
@@ -45,7 +49,7 @@ print(f"Loading {chosen}...")
 with open(chosen) as f:
     source = f.read()
 
-sloka: Sloka = parse(source)
+sloka: SlokaFile = parse(source)
 
 
 class SlokaTime(Timeline):
@@ -53,3 +57,4 @@ class SlokaTime(Timeline):
 
     def construct(self):
         self.play(sloka.teach())
+        self.forward()
