@@ -161,6 +161,8 @@ class SlokaFile:
 
         colors = [RED, BLUE, YELLOW, GREEN, PINK, ORANGE]
 
+        slp1_color_codes = {}
+
         for line in self.lines:
             # When doing translation pages we do an utterance at a time rather
             # than a line at a time.
@@ -174,11 +176,11 @@ class SlokaFile:
                 plain_english = ""
                 color_index = 0
 
-                references: Dict[str, List[Reference]] = {}
+                references: List[Tuple[str, List[Reference]]] = []
 
                 for token in vAkya.tokens:
                     # sanskrit +=
-                    references |= process_token(vAkya.english, token)
+                    references += process_token(vAkya.english, token)
 
                 print("processed token dictionary for this vAkya:")
                 print(references)
@@ -187,14 +189,29 @@ class SlokaFile:
                 english_colors: Dict[int, Tuple[str, str]] = {}
 
                 # For each reference
-                for i, [slp1, glosses] in enumerate(references.items()):
-                    color = colors[i % len(colors)]
+                for i, [slp1, glosses] in enumerate(references):
+                    if slp1 not in slp1_color_codes.keys():
+                        slp1_color_codes[slp1] = colors[i % len(colors)]
+
+                    color = slp1_color_codes[slp1]
 
                     sanskrit += typst_code(slp1, Language.SANSKRIT, color)
                     sanskrit += " "
 
                     for gloss in glosses:
-                        english_colors[gloss.gloss_index] = (gloss.english, color)
+                        if gloss.gloss_index in english_colors.keys():
+                            print(
+                                f"\n\n\n\n\nMEOW\n\n\n\n{vAkya.english}\n{gloss.gloss_index}\n{gloss.english}"
+                            )
+                            english_colors[
+                                vAkya.english[
+                                    gloss.gloss_index + len(gloss.english) :
+                                ].find(gloss.english)
+                                + gloss.gloss_index
+                                + len(gloss.english)
+                            ] = (gloss.english, color)
+                        else:
+                            english_colors[gloss.gloss_index] = (gloss.english, color)
 
                 # For each gloss sorted by index
                 for gloss_index in collections.OrderedDict(
@@ -238,20 +255,25 @@ class Reference(NamedTuple):
 
 
 def process_token(english, token: Union[SimpleToken, CompoundToken, str]):
-    references: Dict[str, List[Reference]] = {}
+    references: List[Tuple[str, List[Reference]]] = []
     if isinstance(token, SimpleToken):
         # print(f"simpletoken: {token}")
+        gloss_refs = []
         for gloss in token.glosses:
             gloss_index = english.find(gloss.text)
+            # english.find
             if gloss_index < 0:
                 raise ValueError(
                     "Gloss cannot reference text not contained in the english translation!"
                     + "\n"
                     + f'Tried to find "{gloss.text}" in "{english}" but was unable.'
                 )
-            references.setdefault(token.slp1, []).append(
-                Reference(gloss.text, gloss_index)
-            )
+            gloss_refs.append(Reference(gloss.text, gloss_index))
+            # references.setdefault(token.slp1, []).append(
+            #     Reference(gloss.text, gloss_index)
+            # )
+
+        references.append((token.slp1, gloss_refs))
 
         # print(f"simpletoken gloss references: {references}")
         return references
@@ -261,7 +283,7 @@ def process_token(english, token: Union[SimpleToken, CompoundToken, str]):
         # compound tokens MUST be recursed in order to reveal full meanings
         for part in token.parts:
             # recurse on child tokens
-            references |= process_token(english, part)
+            references += process_token(english, part)
 
         return references
     else:
