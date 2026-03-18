@@ -1,6 +1,7 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
+import re
 from typing import Dict, List, Set, Union
 
 from aksharamukha import transliterate
@@ -145,6 +146,10 @@ class Line:
     vAkyAni: List[VerseLine]
 
 
+def extract_rgb_values(s):
+    return "".join(re.findall(r'rgb\("(#[0-9A-Fa-f]{6})"\)', s))
+
+
 @dataclass
 class SlokaFile:
     citation: str
@@ -158,7 +163,6 @@ class SlokaFile:
             sanskrit = ""
             # for each utterance we want to analyze separately
             for vAkya in line.vAkyAni:
-                # english += vAkya.english
                 for token in vAkya.tokens:
                     if isinstance(token, str):
                         sanskrit += token
@@ -209,11 +213,6 @@ class SlokaFile:
                 ]
                 frames = frames_for_vakya(display_tokens)
 
-                print(f"vaaaaaaakya: {vAkya.english}")
-                print("processed token dictionary for this vAkya:")
-                # print(refs)
-                print(frames)
-
                 # sa, tr, en
                 states = [[], [], []]
 
@@ -238,6 +237,7 @@ class SlokaFile:
                         for start, end in token.english_spans
                     ]
                     all_tuples.append(((len(vAkya.english), len(vAkya.english)), WHITE))
+
                     cursor = 0
                     for [start, end], color in sorted(
                         all_tuples, key=lambda item: item[0]
@@ -258,7 +258,7 @@ class SlokaFile:
                     states[2].append(TypstText(english, scale=SCALE))
 
                 print("states:\n")
-                print(states)
+                print((t.text for s in states for t in s))
                 print("\n")
 
                 for i in range(len(states[0])):
@@ -284,29 +284,44 @@ class SlokaFile:
 
                     # Transformation into current state
                     if i > 0:
-                        animations.append(
-                            Aligned(
-                                *(
-                                    TransformMatchingDiff(
-                                        s[i - 1],
-                                        s[i],
-                                        duration=0.5,
-                                        mismatch=(  # type: ignore[arg-type]
-                                            lambda item, p, **kwargs: ShrinkToCenter(
-                                                item, **kwargs
-                                            ),
-                                            lambda item, p, **kwargs: GrowFromCenter(
-                                                item, **kwargs
-                                            ),
-                                        ),
-                                    )
-                                    for s in states
-                                ),
-                            )
-                        )
+                        node_count_changed = states[0][i - 1].text.count(
+                            "#text"
+                        ) != states[0][i].text.count("#text")
+                        colors_changed = extract_rgb_values(
+                            states[0][i - 1].text
+                        ) != extract_rgb_values(states[0][i].text)
 
-                animations.append(Aligned(*(FadeOut(s[-1]) for s in states)))
-                print("-------------------")
+                        long = node_count_changed or not colors_changed
+                        duration = 0.8 if long else 0.25
+
+                        transformation: List[TransformMatchingDiff] = [
+                            *(
+                                TransformMatchingDiff(
+                                    s[i - 1],
+                                    s[i],
+                                    duration=duration,
+                                    mismatch=(  # type: ignore[arg-type]
+                                        lambda item, p, **kwargs: ShrinkToCenter(
+                                            item, **kwargs
+                                        ),
+                                        lambda item, p, **kwargs: GrowFromCenter(
+                                            item, **kwargs
+                                        ),
+                                    ),
+                                )
+                                for s in states
+                            ),
+                        ]
+
+                        animations.append(Aligned(*transformation))
+
+                        if not long:
+                            animations.append(Wait(0.25))
+
+                animations.append(
+                    Succession(Wait(2.0), Aligned(*(FadeOut(s[-1]) for s in states)))
+                )
+
         return Succession(*animations)
 
 
@@ -332,7 +347,6 @@ def process_token(
         for gloss in token.glosses:
             n = 1
             while True:
-                print("meowing")
                 gi = find_nth(english, gloss.text, n)
 
                 assert gi >= 0, (
@@ -389,29 +403,6 @@ def frames_for_vakya(tokens: List[DisplayToken]) -> List[List[DisplayToken]]:
     return frames
 
 
-def diff_frames(
-    old: List[DisplayToken],
-    new: List[DisplayToken],
-) -> tuple[List[DisplayToken], DisplayToken, List[DisplayToken]]:
-    """
-    Since exactly one token is expanded per frame transition, we can find
-    the split point where old and new diverge.
-
-    Returns:
-        unchanged  -- tokens before the split (same objects, just shifting)
-        expanded   -- the compound token that was expanded
-        children   -- its replacement tokens in the new frame
-    """
-    i = 0
-    while i < len(old) and i < len(new) and old[i] is new[i]:
-        i += 1
-
-    expanded = old[i]
-    children = new[i : i + len(expanded.children)]
-
-    return old[:i], expanded, children
-
-
 def collect_leaf_slp1s(token: TokenType):
     """Walk the token tree yielding leaf slp1 strings in order."""
     if isinstance(token, SimpleToken):
@@ -419,7 +410,6 @@ def collect_leaf_slp1s(token: TokenType):
     elif isinstance(token, CompoundToken):
         for part in token.parts:
             yield from collect_leaf_slp1s(part)
-    # str (punct): skip — punctuation never gets a color
 
 
 def build_colorings(tokens: List[TokenType], colors: List[str]) -> Dict[str, str]:
@@ -466,11 +456,18 @@ def build_display_token(
                     visited.add(index)
                     break
 
-        return DisplayToken(
+        leaf = DisplayToken(
             slp1=token.slp1,
             color=colorings.get(token.slp1, WHITE),
             children=[],
             english_spans=spans,
+        )
+        # Wrap in a single-child compound so color is only revealed on expansion
+        return DisplayToken(
+            slp1=token.slp1,
+            color=WHITE,
+            children=[leaf],
+            english_spans=[],
         )
 
     elif isinstance(token, CompoundToken):
