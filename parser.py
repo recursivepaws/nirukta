@@ -10,10 +10,13 @@ from janim.imports import (
     DOWN,
     GREEN,
     ORANGE,
+    ORIGIN,
     PINK,
     RED,
+    UP,
     WHITE,
     YELLOW,
+    Aligned,
     FadeOut,
     Group,
     GrowFromCenter,
@@ -211,7 +214,8 @@ class SlokaFile:
                 # print(refs)
                 print(frames)
 
-                old_group = Group()
+                # sa, tr, en
+                states = [[], [], []]
 
                 for i, frame in enumerate(frames):
                     sanskrit = ""
@@ -252,28 +256,43 @@ class SlokaFile:
                         )
                         cursor = end
 
-                    new_group = Group(
-                        TypstText(english, scale=SCALE),
-                        TypstText(translit, scale=SCALE),
-                        TypstText(sanskrit, scale=SCALE),
-                    )
-                    new_group.points.arrange(DOWN)
+                    states[0].append(TypstText(sanskrit, scale=SCALE))
+                    states[1].append(TypstText(translit, scale=SCALE))
+                    states[2].append(TypstText(english, scale=SCALE))
 
+                print("states:\n")
+                print(states)
+                print("\n")
+
+                for i in range(len(states[0])):
+                    # Start the transliteration in the center
+                    states[1][i].points.move_to(ORIGIN)
+
+                    # Move sa and en above and below
+                    states[0][i].points.next_to(states[1][i], UP / SCALE * 4.0)
+                    states[2][i].points.next_to(states[1][i], DOWN / SCALE * 4.0)
+
+                    # Initial write on
                     if i == 0:
                         animations.append(
                             Succession(
                                 Wait(1.0),
-                                Write(new_group, duration=1.0),
+                                Aligned(
+                                    *(Write(s[i]) for s in states),
+                                    duration=1.0,
+                                ),
                                 Wait(1.0),
                             )
                         )
-                    else:
+
+                    # Transformation into current state
+                    if i > 0:
                         animations.append(
-                            Succession(
+                            Aligned(
                                 *(
                                     TransformMatchingDiff(
-                                        old_group[i],
-                                        new_group[i],
+                                        s[i - 1],
+                                        s[i],
                                         duration=0.5,
                                         mismatch=(  # type: ignore[arg-type]
                                             lambda item, p, **kwargs: ShrinkToCenter(
@@ -284,55 +303,13 @@ class SlokaFile:
                                             ),
                                         ),
                                     )
-                                    for i in range(3)
+                                    for s in states
                                 ),
                             )
                         )
 
-                    old_group = new_group
-
-                animations.append(FadeOut(old_group))
-
+                animations.append(Aligned(*(FadeOut(s[-1]) for s in states)))
                 print("-------------------")
-
-                # # Mapping from slp1 sanskrit to color code
-                # colorings: Dict[str, str] = {}
-                #
-                # filtered_refs = [
-                #     ref for ref in refs if any(c.isalnum() for c in ref[0])
-                # ]
-                #
-                # for i, [slp1, _] in enumerate(filtered_refs):
-                #     if slp1 not in colorings:
-                #         colorings[slp1] = colors[i % len(colors)]
-                #
-                # # Iterate sorting by slp1 insertion order
-                # for slp1, _ in refs:
-                #     color = colorings.get(slp1, WHITE)
-                #
-                #     sanskrit += typst_code(slp1, Language.SANSKRIT, color) + " "
-                #     translit += typst_code(slp1, Language.TRANSLIT, color) + " "
-                #
-                # all_tuples = [
-                #     (start, end, slp1) for slp1, spans in refs for start, end in spans
-                # ]
-                # all_tuples.append((len(vAkya.english), len(vAkya.english), ""))
-                # print(all_tuples)
-                # cursor = 0
-                # for start, end, slp1 in sorted(all_tuples, key=lambda item: item[0]):
-                #     # if start < cursor:  # skip duplicates / overlaps
-                #     #     continue
-                #     if start > cursor:
-                #         missing_text = vAkya.english[cursor:start]
-                #         plain_english += missing_text
-                #         english += missing_text
-                #     color = colorings.get(slp1, WHITE)
-                #     plain_english += vAkya.english[start:end]
-                #     english += typst_code(
-                #         vAkya.english[start:end], Language.ENGLISH, color
-                #     )
-                #     cursor = end
-
         return Succession(*animations)
 
 
