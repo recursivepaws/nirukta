@@ -233,15 +233,13 @@ class SlokaFile:
                         )
 
                     all_tuples = [
-                        ((start, end), token.slp1, token.color)
+                        ((start, end), token.color)
                         for token in frame
                         for start, end in token.english_spans
                     ]
-                    all_tuples.append(
-                        ((len(vAkya.english), len(vAkya.english)), "", WHITE)
-                    )
+                    all_tuples.append(((len(vAkya.english), len(vAkya.english)), WHITE))
                     cursor = 0
-                    for [start, end], slp1, color in sorted(
+                    for [start, end], color in sorted(
                         all_tuples, key=lambda item: item[0]
                     ):
                         # if start < cursor:  # skip duplicates / overlaps
@@ -517,7 +515,7 @@ GRAMMAR = Grammar(r"""
     # Sandhi: one or more components joined by '+', then '=' surface form.
     # Components may themselves be parenthesised sandhi groups, enabling
     # arbitrary nesting:  (a[x]+b[y]=ab)+c[z]=abc
-    compound_token  = comp_part plus_part+ "=" slp1
+    compound_token  = comp_part plus_part* "=" slp1
     plus_part       = "+" comp_part
     comp_part       = paren_compound / simple_token
     paren_compound  = "(" compound_token ")"
