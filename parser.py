@@ -16,7 +16,10 @@ from janim.imports import (
     YELLOW,
     FadeOut,
     Group,
+    GrowFromCenter,
+    ShrinkToCenter,
     Succession,
+    TransformMatchingDiff,
     TypstText,
     Wait,
     Write,
@@ -94,6 +97,32 @@ class CompoundToken:
     slp1: str
 
 
+@dataclass
+class DisplayToken:
+    """A single renderable unit at a given animation stage."""
+
+    slp1: str
+    color: str  # resolved from colorings
+    children: List["DisplayToken"]  # empty => leaf (SimpleToken or punct)
+    english_spans: List[tuple[int, int]]  # the spans this token is responsible for
+
+    @property
+    def is_leaf(self) -> bool:
+        return not self.children
+
+    def at_depth(self, depth: int) -> List["DisplayToken"]:
+        if self.is_leaf or depth == 0:
+            return [self]
+        return [leaf for child in self.children for leaf in child.at_depth(depth - 1)]
+
+
+def at_depth(node: DisplayToken, depth: int) -> List[DisplayToken]:
+    """Flatten the tree to a specific expansion depth."""
+    if node.is_leaf or depth == 0:
+        return [node]
+    return [child for c in node.children for child in at_depth(c, depth - 1)]
+
+
 # Convenience type alias
 TokenType = Union[SimpleToken, CompoundToken, str]  # str for punctuation
 
@@ -163,75 +192,146 @@ class SlokaFile:
             # When doing translation pages we do an utterance at a time rather
             # than a line at a time.
             for vAkya in line.vAkyAni:
-                sanskrit = ""
-                translit = ""
-                english = ""
-                plain_english = ""
-
                 refs: List[tuple[str, List[tuple[int, int]]]] = []
 
                 visited = set()
                 for token in vAkya.tokens:
                     refs += process_token(vAkya.english, token, visited)
 
+                visited = set()
+                colorings = build_colorings(vAkya.tokens, colors)
+                display_tokens = [
+                    build_display_token(vAkya.english, token, visited, colorings)
+                    for token in vAkya.tokens
+                ]
+                frames = frames_for_vakya(display_tokens)
+
                 print(f"vaaaaaaakya: {vAkya.english}")
                 print("processed token dictionary for this vAkya:")
-                print(refs)
+                # print(refs)
+                print(frames)
+
+                old_group = Group()
+
+                for i, frame in enumerate(frames):
+                    sanskrit = ""
+                    translit = ""
+                    english = ""
+                    plain_english = ""
+
+                    print(f"\nframe: {frame}\n\n")
+                    for token in frame:
+                        sanskrit += (
+                            typst_code(token.slp1, Language.SANSKRIT, token.color) + " "
+                        )
+                        translit += (
+                            typst_code(token.slp1, Language.TRANSLIT, token.color) + " "
+                        )
+
+                    all_tuples = [
+                        ((start, end), token.slp1, token.color)
+                        for token in frame
+                        for start, end in token.english_spans
+                    ]
+                    all_tuples.append(
+                        ((len(vAkya.english), len(vAkya.english)), "", WHITE)
+                    )
+                    cursor = 0
+                    for [start, end], slp1, color in sorted(
+                        all_tuples, key=lambda item: item[0]
+                    ):
+                        # if start < cursor:  # skip duplicates / overlaps
+                        #     continue
+                        if start > cursor:
+                            missing_text = vAkya.english[cursor:start]
+                            plain_english += missing_text
+                            english += missing_text
+                        plain_english += vAkya.english[start:end]
+                        english += typst_code(
+                            vAkya.english[start:end], Language.ENGLISH, color
+                        )
+                        cursor = end
+
+                    new_group = Group(
+                        TypstText(english, scale=SCALE),
+                        TypstText(translit, scale=SCALE),
+                        TypstText(sanskrit, scale=SCALE),
+                    )
+                    new_group.points.arrange(DOWN)
+
+                    if i == 0:
+                        animations.append(
+                            Succession(
+                                Wait(1.0),
+                                Write(new_group, duration=1.0),
+                                Wait(1.0),
+                            )
+                        )
+                    else:
+                        animations.append(
+                            Succession(
+                                *(
+                                    TransformMatchingDiff(
+                                        old_group[i],
+                                        new_group[i],
+                                        duration=0.5,
+                                        mismatch=(  # type: ignore[arg-type]
+                                            lambda item, p, **kwargs: ShrinkToCenter(
+                                                item, **kwargs
+                                            ),
+                                            lambda item, p, **kwargs: GrowFromCenter(
+                                                item, **kwargs
+                                            ),
+                                        ),
+                                    )
+                                    for i in range(3)
+                                ),
+                            )
+                        )
+
+                    old_group = new_group
+
+                animations.append(FadeOut(old_group))
+
                 print("-------------------")
 
-                # Mapping from slp1 sanskrit to color code
-                colorings: Dict[str, str] = {}
-
-                filtered_refs = [
-                    ref for ref in refs if any(c.isalnum() for c in ref[0])
-                ]
-
-                for i, [slp1, _] in enumerate(filtered_refs):
-                    if slp1 not in colorings:
-                        colorings[slp1] = colors[i % len(colors)]
-
-                # Iterate sorting by slp1 insertion order
-                for slp1, _ in refs:
-                    color = colorings.get(slp1, WHITE)
-
-                    sanskrit += typst_code(slp1, Language.SANSKRIT, color) + " "
-                    translit += typst_code(slp1, Language.TRANSLIT, color) + " "
-
-                all_tuples = [
-                    (start, end, slp1) for slp1, spans in refs for start, end in spans
-                ]
-                all_tuples.append((len(vAkya.english), len(vAkya.english), ""))
-                print(all_tuples)
-                cursor = 0
-                for start, end, slp1 in sorted(all_tuples, key=lambda item: item[0]):
-                    # if start < cursor:  # skip duplicates / overlaps
-                    #     continue
-                    if start > cursor:
-                        missing_text = vAkya.english[cursor:start]
-                        plain_english += missing_text
-                        english += missing_text
-                    color = colorings.get(slp1, WHITE)
-                    plain_english += vAkya.english[start:end]
-                    english += typst_code(
-                        vAkya.english[start:end], Language.ENGLISH, color
-                    )
-                    cursor = end
-
-                group = Group(
-                    TypstText(english, scale=SCALE),
-                    TypstText(translit, scale=SCALE),
-                    TypstText(sanskrit, scale=SCALE),
-                )
-                group.points.arrange(DOWN)
-
-                animations.append(
-                    Succession(
-                        Wait(2.0),
-                        Write(group, duration=1.0),
-                        Wait(1.0),
-                        FadeOut(group),
-                    )
-                )
+                # # Mapping from slp1 sanskrit to color code
+                # colorings: Dict[str, str] = {}
+                #
+                # filtered_refs = [
+                #     ref for ref in refs if any(c.isalnum() for c in ref[0])
+                # ]
+                #
+                # for i, [slp1, _] in enumerate(filtered_refs):
+                #     if slp1 not in colorings:
+                #         colorings[slp1] = colors[i % len(colors)]
+                #
+                # # Iterate sorting by slp1 insertion order
+                # for slp1, _ in refs:
+                #     color = colorings.get(slp1, WHITE)
+                #
+                #     sanskrit += typst_code(slp1, Language.SANSKRIT, color) + " "
+                #     translit += typst_code(slp1, Language.TRANSLIT, color) + " "
+                #
+                # all_tuples = [
+                #     (start, end, slp1) for slp1, spans in refs for start, end in spans
+                # ]
+                # all_tuples.append((len(vAkya.english), len(vAkya.english), ""))
+                # print(all_tuples)
+                # cursor = 0
+                # for start, end, slp1 in sorted(all_tuples, key=lambda item: item[0]):
+                #     # if start < cursor:  # skip duplicates / overlaps
+                #     #     continue
+                #     if start > cursor:
+                #         missing_text = vAkya.english[cursor:start]
+                #         plain_english += missing_text
+                #         english += missing_text
+                #     color = colorings.get(slp1, WHITE)
+                #     plain_english += vAkya.english[start:end]
+                #     english += typst_code(
+                #         vAkya.english[start:end], Language.ENGLISH, color
+                #     )
+                #     cursor = end
 
         return Succession(*animations)
 
@@ -294,6 +394,130 @@ def process_token(
     else:
         refs.append((token, []))
         return refs
+
+
+def frames_for_vakya(tokens: List[DisplayToken]) -> List[List[DisplayToken]]:
+    """
+    Generate animation frames by expanding one compound at a time, left to right.
+    Each frame is a flat list of DisplayTokens — the current visible surface.
+    """
+    current: List[DisplayToken] = list(tokens)
+    frames = [list(current)]
+
+    while True:
+        idx = next((i for i, t in enumerate(current) if not t.is_leaf), None)
+        if idx is None:
+            break
+        token = current[idx]
+        current = current[:idx] + token.children + current[idx + 1 :]
+        frames.append(list(current))
+
+    return frames
+
+
+def diff_frames(
+    old: List[DisplayToken],
+    new: List[DisplayToken],
+) -> tuple[List[DisplayToken], DisplayToken, List[DisplayToken]]:
+    """
+    Since exactly one token is expanded per frame transition, we can find
+    the split point where old and new diverge.
+
+    Returns:
+        unchanged  -- tokens before the split (same objects, just shifting)
+        expanded   -- the compound token that was expanded
+        children   -- its replacement tokens in the new frame
+    """
+    i = 0
+    while i < len(old) and i < len(new) and old[i] is new[i]:
+        i += 1
+
+    expanded = old[i]
+    children = new[i : i + len(expanded.children)]
+
+    return old[:i], expanded, children
+
+
+def collect_leaf_slp1s(token: TokenType):
+    """Walk the token tree yielding leaf slp1 strings in order."""
+    if isinstance(token, SimpleToken):
+        yield token.slp1
+    elif isinstance(token, CompoundToken):
+        for part in token.parts:
+            yield from collect_leaf_slp1s(part)
+    # str (punct): skip — punctuation never gets a color
+
+
+def build_colorings(tokens: List[TokenType], colors: List[str]) -> Dict[str, str]:
+    colorings: Dict[str, str] = {}
+    idx = 0
+    for token in tokens:
+        for slp1 in collect_leaf_slp1s(token):
+            if slp1 not in colorings and any(c.isalnum() for c in slp1):
+                colorings[slp1] = colors[idx % len(colors)]
+                idx += 1
+    return colorings
+
+
+def build_display_token(
+    english: str,
+    token: TokenType,
+    visited: Set[tuple[int, int]],
+    colorings: Dict[str, str],
+) -> DisplayToken:
+    if isinstance(token, SimpleToken):
+        spans: List[tuple[int, int]] = []
+
+        for gloss in token.glosses:
+            n = 1
+            while True:
+                gi = find_nth(english, gloss.text, n)
+
+                assert gi >= 0, (
+                    "Gloss cannot reference text not contained in the english translation!"
+                    + "\n"
+                    + f'Tried to find "{gloss.text}" in "{english}" but was unable.'
+                )
+
+                index = (gi, gi + len(gloss.text))
+
+                assert english[index[0] : index[1]] == gloss.text, (
+                    "Invalid gloss index into english text"
+                )
+
+                if index in visited:
+                    n += 1
+                else:
+                    spans.append(index)
+                    visited.add(index)
+                    break
+
+        return DisplayToken(
+            slp1=token.slp1,
+            color=colorings.get(token.slp1, WHITE),
+            children=[],
+            english_spans=spans,
+        )
+
+    elif isinstance(token, CompoundToken):
+        children = [
+            build_display_token(english, part, visited, colorings)
+            for part in token.parts
+        ]
+        return DisplayToken(
+            slp1=token.slp1,
+            color=WHITE,
+            children=children,
+            english_spans=[],  # spans live only on leaves
+        )
+
+    else:  # str punctuation
+        return DisplayToken(
+            slp1=token,
+            color=WHITE,
+            children=[],
+            english_spans=[],
+        )
 
 
 # ---------------------------------------------------------------------------
