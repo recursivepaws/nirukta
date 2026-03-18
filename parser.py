@@ -1,10 +1,8 @@
 from __future__ import annotations
-import collections
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Dict, List, NamedTuple, Tuple, Union
+from typing import Dict, List, Set, Union
 
-from attr.validators import instance_of
 from aksharamukha import transliterate
 
 from janim.imports import (
@@ -165,61 +163,60 @@ class SlokaFile:
             # When doing translation pages we do an utterance at a time rather
             # than a line at a time.
             for vAkya in line.vAkyAni:
-                # # for every word in the english translation of the vAkya,
-                # # we want to
-                # vAkya.english.split(" ")
-
                 sanskrit = ""
                 translit = ""
                 english = ""
                 plain_english = ""
-                # color_index = 0
 
-                refs: Dict[Tuple[int, int], str] = {}
+                refs: List[tuple[str, List[tuple[int, int]]]] = []
 
+                visited = set()
                 for token in vAkya.tokens:
-                    # sanskrit +=
-                    refs |= process_token(vAkya.english, token)
+                    refs += process_token(vAkya.english, token, visited)
 
+                print(f"vaaaaaaakya: {vAkya.english}")
                 print("processed token dictionary for this vAkya:")
                 print(refs)
                 print("-------------------")
 
-                # english_colors: Dict[int, Tuple[str, str]] = {}
-
                 # Mapping from slp1 sanskrit to color code
                 colorings: Dict[str, str] = {}
 
-                for i, slp1 in enumerate(refs.values()):
+                filtered_refs = [
+                    ref for ref in refs if any(c.isalnum() for c in ref[0])
+                ]
+
+                for i, [slp1, _] in enumerate(filtered_refs):
                     if slp1 not in colorings:
                         colorings[slp1] = colors[i % len(colors)]
 
                 # Iterate sorting by slp1 insertion order
-                for [start, end], slp1 in refs.items():
-                    color = colorings[slp1]
+                for slp1, _ in refs:
+                    color = colorings.get(slp1, WHITE)
+
                     sanskrit += typst_code(slp1, Language.SANSKRIT, color) + " "
                     translit += typst_code(slp1, Language.TRANSLIT, color) + " "
 
-                # Iterate sorting by start index in the english
-                for [start, end], slp1 in sorted(
-                    refs.items(), key=lambda item: item[0][0]
-                ):
-                    if start > len(plain_english):
-                        print(f"gloss: [{start}:{end}], len pl: ${len(plain_english)}")
-                        missing_text = vAkya.english[len(plain_english) : start]
+                all_tuples = [
+                    (start, end, slp1) for slp1, spans in refs for start, end in spans
+                ]
+                all_tuples.append((len(vAkya.english), len(vAkya.english), ""))
+                print(all_tuples)
+                cursor = 0
+                for start, end, slp1 in sorted(all_tuples, key=lambda item: item[0]):
+                    # if start < cursor:  # skip duplicates / overlaps
+                    #     continue
+                    if start > cursor:
+                        missing_text = vAkya.english[cursor:start]
                         plain_english += missing_text
                         english += missing_text
-                        print(f'to account for discrepancy i added: "{missing_text}"')
-
-                    color = colorings[slp1]
-                    plain_english += vAkya.english[start:end] + " "
-                    english += (
-                        typst_code(vAkya.english[start:end], Language.ENGLISH, color)
-                        + " "
+                    color = colorings.get(slp1, WHITE)
+                    plain_english += vAkya.english[start:end]
+                    english += typst_code(
+                        vAkya.english[start:end], Language.ENGLISH, color
                     )
+                    cursor = end
 
-                # print(f"english typst code: {english}")
-                print(f"sanskrit typst code: {sanskrit}")
                 group = Group(
                     TypstText(english, scale=SCALE),
                     TypstText(translit, scale=SCALE),
@@ -235,14 +232,8 @@ class SlokaFile:
                         FadeOut(group),
                     )
                 )
-        # reference.
 
         return Succession(*animations)
-
-
-class Reference(NamedTuple):
-    english: str
-    gloss_index: int
 
 
 # Source - https://stackoverflow.com/a/1884277
@@ -254,23 +245,20 @@ def find_nth(haystack: str, needle: str, n: int) -> int:
     return start
 
 
-token_count = 0
-colors = [RED, BLUE, YELLOW, GREEN, PINK, ORANGE]
-
-
-def process_token(english: str, token: Union[SimpleToken, CompoundToken, str]):
-    # references: List[Tuple[str, List[Reference]]] = []
-
-    # mapping from the gloss index to the slp1
-    # repeat occurrences of the slp1 should require finding a different gloss index
-    refs: Dict[Tuple[int, int], str] = {}
+def process_token(
+    english: str,
+    token: Union[SimpleToken, CompoundToken, str],
+    visited: Set[tuple[int, int]],
+):
+    refs: List[tuple[str, List[tuple[int, int]]]] = []
 
     if isinstance(token, SimpleToken):
-        # print(f"simpletoken: {token}")
-        # gloss_refs = []
+        gloss_refs: List[tuple[int, int]] = []
+
         for gloss in token.glosses:
+            n = 1
             while True:
-                n = 1
+                print("meowing")
                 gi = find_nth(english, gloss.text, n)
 
                 assert gi >= 0, (
@@ -286,35 +274,25 @@ def process_token(english: str, token: Union[SimpleToken, CompoundToken, str]):
                 )
 
                 # If we've already found this instance of the gloss text
-                if index in refs:
+                if index in visited:
                     # Find the next one
                     n += 1
                 else:
-                    refs[index] = token.slp1
+                    gloss_refs.append(index)
+                    visited.add(index)
                     break
 
-            # gloss_refs.append(Reference(gloss.text, gloss_index))
-            # references.setdefault(token.slp1, []).append(
-            #     Reference(gloss.text, gloss_index)
-            # )
-
-        # references.append((token.slp1, gloss_refs))
-
-        # print(f"simpletoken gloss references: {references}")
+        refs.append((token.slp1, gloss_refs))
         return refs
     elif isinstance(token, CompoundToken):
-        # print(f"compoundtoken: {token}")
         # assume for now that there are no "etymological" glosses and that
         # compound tokens MUST be recursed in order to reveal full meanings
         for part in token.parts:
             # recurse on child tokens
-            refs |= process_token(english, part)
-
+            refs += process_token(english, part, visited)
         return refs
     else:
-        print(f"strtoken: {token}")
-        # strtokens should only be punctuation which should remain white so we can make this base case and that's fine
-        # references |= process_token(english, SimpleToken(token, [Gloss(token)]))
+        refs.append((token, []))
         return refs
 
 
