@@ -417,10 +417,15 @@ def build_colorings(tokens: List[TokenType], colors: List[str]) -> Dict[str, str
     idx = 0
     for token in tokens:
         for slp1 in collect_leaf_slp1s(token):
-            if slp1 not in colorings and any(c.isalnum() for c in slp1):
-                colorings[slp1] = colors[idx % len(colors)]
+            unswarad = unswara(slp1)
+            if unswarad not in colorings and any(c.isalnum() for c in unswarad):
+                colorings[unswarad] = colors[idx % len(colors)]
                 idx += 1
     return colorings
+
+
+def unswara(s):
+    return s.replace("\\'", "").replace("\\_", "")
 
 
 def build_display_token(
@@ -456,31 +461,54 @@ def build_display_token(
                     visited.add(index)
                     break
 
+        unswarad = unswara(token.slp1)
+
         leaf = DisplayToken(
-            slp1=token.slp1,
-            color=colorings.get(token.slp1, WHITE),
+            slp1=unswarad,
+            color=colorings.get(unswarad, WHITE),
             children=[],
             english_spans=spans,
         )
+
+        if unswarad != token.slp1:
+            dt = DisplayToken(
+                slp1=unswarad,
+                color=WHITE,
+                children=[leaf],
+                english_spans=[],
+            )
+        else:
+            dt = leaf
+
         # Wrap in a single-child compound so color is only revealed on expansion
         return DisplayToken(
             slp1=token.slp1,
             color=WHITE,
-            children=[leaf],
+            children=[dt],
             english_spans=[],
         )
 
     elif isinstance(token, CompoundToken):
+        unswarad = token.slp1.replace("\\'", "").replace("\\_", "")
         children = [
             build_display_token(english, part, visited, colorings)
             for part in token.parts
         ]
-        return DisplayToken(
-            slp1=token.slp1,
+        leaf = DisplayToken(
+            slp1=unswarad,
             color=WHITE,
             children=children,
             english_spans=[],  # spans live only on leaves
         )
+        if unswarad != token.slp1:
+            return DisplayToken(
+                slp1=token.slp1,
+                color=WHITE,
+                children=[leaf],
+                english_spans=[],  # spans live only on leaves
+            )
+        else:
+            return leaf
 
     else:  # str punctuation
         return DisplayToken(
