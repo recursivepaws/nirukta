@@ -5,7 +5,6 @@ import re
 from typing import Dict, List, Set, Union
 
 from aksharamukha import transliterate
-
 from janim.imports import (
     BLUE,
     DOWN,
@@ -179,7 +178,7 @@ class SlokaFile:
         sloka.points.arrange(DOWN)
         animations = []
         for line in sloka:
-            animations.append(Write(line, duration=6.0))
+            animations.append(Write(line, duration=4.0))
 
         citation = TypstText(typst_code(self.citation, Language.SANSKRIT), scale=SCALE)
         citation.points.next_to(sloka, DOWN)

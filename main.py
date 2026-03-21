@@ -14,6 +14,7 @@ def get_sloka_file() -> str:
         return cached
 
     sloka_files = sorted(glob.glob("./slokas/*.sloka"))
+    sloka_files += sorted(glob.glob("./slokas/**/*.sloka"))
     if not sloka_files:
         print("No .sloka files found in ./slokas/")
         exit(1)
