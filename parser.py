@@ -88,6 +88,7 @@ class Language(Enum):
 
 
 TYPST_CMD_RE = re.compile(r"(#\w+\(\))")
+MISSING_CHUNK_RE = re.compile(r"#\w+\(\)|[a-zA-Z0-9']+|[^a-zA-Z0-9'\s#]+|#")
 
 
 def typst_code_safe(text: str, language: Language, color: str = WHITE) -> str:
@@ -294,30 +295,41 @@ class SlokaFile:
                     for [start, end], color in sorted(
                         all_tuples, key=lambda item: item[0]
                     ):
+                        # Emit any unspanned text before this span
                         if start > cursor:
                             missing_text = vAkya.english[cursor:start]
                             plain_english += len(missing_text)
-                            for x in (
-                                missing_text.split()
-                            ):  # split() handles all whitespace, no empty strings
-                                english += (
-                                    typst_code_safe(x, Language.ENGLISH, WHITE) + " "
-                                )
+                            for m in MISSING_CHUNK_RE.finditer(missing_text):
+                                piece = m.group()
+                                if TYPST_CMD_RE.fullmatch(piece):
+                                    english += piece
+                                else:
+                                    english += typst_code(
+                                        piece, Language.ENGLISH, WHITE
+                                    )
+                                    # Only add a space if the original text has a space right after this piece
+                                    next_pos = m.end()
+                                    if (
+                                        next_pos < len(missing_text)
+                                        and missing_text[next_pos] == " "
+                                    ):
+                                        english += " "
+
                         if start == end:
                             break
 
+                        # Emit the colored span
                         english_token = vAkya.english[start:end]
                         plain_english += len(english_token)
-                        english += typst_code(english_token, Language.ENGLISH, color)
+                        english += typst_code_safe(
+                            english_token, Language.ENGLISH, color
+                        )
                         cursor = end
 
-                        # If the character right after this span is a space, consume it and emit a separator.
-                        # This prevents the space from being silently dropped by split(" ") → ["", ""].
+                        # Consume a trailing space so missing_text never starts with one
                         if cursor < len(vAkya.english) and vAkya.english[cursor] == " ":
                             english += " "
                             cursor += 1
-
-                        cursor = end
 
                     states[0].append(TypstText(sanskrit, scale=SCALE))
                     states[1].append(TypstText(translit, scale=SCALE))
