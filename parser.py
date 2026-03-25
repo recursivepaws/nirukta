@@ -22,7 +22,6 @@ from janim.imports import (
     GrowFromEdge,
     ShrinkToEdge,
     Succession,
-    SupportsAnim,
     TransformMatchingDiff,
     TypstText,
     Wait,
@@ -30,6 +29,7 @@ from janim.imports import (
     normalize,
     np,
 )
+from janim.typing import SupportsAnim
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
@@ -241,6 +241,48 @@ class Line:
     vAkyAni: List[VerseLine]
 
 
+@dataclass
+class Sloka:
+    """"""
+
+    lines: List[Line]
+
+    def render_intro(
+        self, line_duration=4.0, fade_out=False
+    ) -> tuple[Group, List[SupportsAnim]]:
+        sloka = []
+
+        for line in self.lines:
+            sanskrit = ""
+            for vAkya in line.vAkyAni:
+                for token in vAkya.tokens:
+                    if isinstance(token, str):
+                        sanskrit += token
+                    else:
+                        sanskrit += token.slp1
+
+                    sanskrit += " "
+
+            sloka.append(
+                TypstText(
+                    set_font(typst_code(sanskrit, Language.SANSKRIT), INTRO_FONT),
+                    scale=SCALE,
+                )
+            )
+
+        sloka = Group(*sloka)
+        sloka.points.arrange(DOWN)
+
+        animations = []
+        for line in sloka:
+            animations.append(Write(line, duration=line_duration))
+
+        if fade_out:
+            animations.append(FadeOut(sloka))
+
+        return (sloka, animations)
+
+
 def extract_rgb_values(s):
     return "".join(re.findall(r'rgb\("(#[0-9A-Fa-f]{6})"\)', s))
 
@@ -264,45 +306,41 @@ class NiruktaFile:
 @dataclass
 class SutraFile(NiruktaFile):
     citation: str
-    slokas: List[List[Line]]
+    slokas: List[Sloka]
 
     def teach(self) -> Succession:
-        return Succession(Write(TypstText(self.citation)))
+        animations = []
+        citation = TypstText(
+            set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
+            scale=SCALE,
+        )
+        citation.points.move_to(ORIGIN)
+
+        # Introduce the text by its title
+        animations.extend(
+            [
+                Write(citation),
+                Wait(1.5),
+                FadeOut(citation),
+            ]
+        )
+
+        for sloka in self.slokas:
+            animations.extend(sloka.render_intro(fade_out=True)[1])
+
+            # meow
+            print("meow")
+
+        return Succession(*animations)
 
 
 @dataclass
 class SlokaFile(NiruktaFile):
     citation: str
-    lines: List[Line]
+    sloka: Sloka
 
     def teach(self) -> Succession:
-        sloka = []
-
-        for line in self.lines:
-            # english = ""
-            sanskrit = ""
-            # for each utterance we want to analyze separately
-            for vAkya in line.vAkyAni:
-                for token in vAkya.tokens:
-                    if isinstance(token, str):
-                        sanskrit += token
-                    else:
-                        sanskrit += token.slp1
-
-                    sanskrit += " "
-
-            sloka.append(
-                TypstText(
-                    set_font(typst_code(sanskrit, Language.SANSKRIT), INTRO_FONT),
-                    scale=SCALE,
-                )
-            )
-
-        sloka = Group(*sloka)
-        sloka.points.arrange(DOWN)
-        animations = []
-        for line in sloka:
-            animations.append(Write(line, duration=4.0))
+        sloka, animations = self.sloka.render_intro()
 
         citation = TypstText(
             set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
@@ -321,7 +359,7 @@ class SlokaFile(NiruktaFile):
 
         colors = [RED, BLUE, YELLOW, GREEN, PINK, ORANGE]
 
-        for line in self.lines:
+        for line in self.sloka.lines:
             # When doing translation pages we do an utterance at a time rather
             # than a line at a time.
             for vAkya in line.vAkyAni:
@@ -792,7 +830,7 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_sloka(self, _, visited_children):
         _, citation, _, lines, _ = visited_children
-        return SlokaFile(citation=citation, lines=list(lines))
+        return SlokaFile(citation=citation, sloka=Sloka(list(lines)))
 
     # -- citation -----------------------------------------------------------
 
@@ -887,19 +925,22 @@ class SlokaVisitor(NodeVisitor):
 
 class SutraVisitor(SlokaVisitor):
     def visit_sutra(self, _, visited_children):
-        first, rest, _ = visited_children
-        citation = first[0]
-        slokas = [first[1], *(s[1] for s in rest)]
+        [citation, first], rest, _ = visited_children
+        slokas = [first, *rest]
+
+        print(f"slokas: {len(slokas)}")
+        # for sloka in slokas:
+        #     assert isinstance(sloka, Sloka), f"not a sloka: {sloka}"
 
         return SutraFile(citation, slokas)
 
     def visit_inline_sloka(self, _, visited_children):
         _, _, _, lines, _ = visited_children
-        return lines
+        return Sloka(list(lines))
 
     def visit_sloka(self, _, visited_children):
         _, citation, _, lines, _ = visited_children
-        return [citation, lines]
+        return [citation, Sloka(list(lines))]
 
 
 # ---------------------------------------------------------------------------
