@@ -19,8 +19,8 @@ from janim.imports import (
     Aligned,
     FadeOut,
     Group,
-    GrowFromCenter,
-    ShrinkToCenter,
+    GrowFromEdge,
+    ShrinkToEdge,
     Succession,
     TransformMatchingDiff,
     TypstText,
@@ -106,21 +106,54 @@ def typst_code_safe(text: str, language: Language, color: str = WHITE) -> str:
     return result
 
 
-def typst_code(text: str, language: Language, color: str = WHITE):
+def Junicode_translit(iast: str, color: str) -> str:
+    """Like Junicode() but splits ṃ into m + combining dot for clean animation."""
+    if "ṃ" not in iast:
+        return Junicode(iast, color)
+
+    def T(s):
+        return f'#text(font: "Junicode", stroke: none, fill: rgb("{color}"))[{s}]'
+
+    parts = iast.split("ṃ")
+    inner = ""
+    for i, part in enumerate(parts):
+        if i < len(parts) - 1:
+            # everything up to and including the m of ṃ
+            inner += T(part + "m")
+            inner += r"#h(-0.175em)" + T("\u0323") + r"#h(0.175em)"
+        else:
+            # tail after the last ṃ
+            if part:
+                inner += T(part)
+
+    return f"#box[{inner}]"
+
+
+def transform_text(text: str, language: Language):
     match language:
         case Language.ENGLISH:
-            return Junicode(text, color)
+            return text
         case Language.TRANSLIT:
             iast = transliterate.process("SLP1", "IAST", text)
             if not iast:
                 raise ValueError(f'Cannot represent "{text}" in IAST')
-            return Junicode(iast, color)
+            return iast
         case Language.SANSKRIT:
             deva = transliterate.process("SLP1", "DEVANAGARI", text)
             if not deva:
                 raise ValueError(f'Cannot represent "{text}" in devanagari')
+            return deva
 
-            return Jaini(deva, color)
+
+def typst_code(text: str, language: Language, color: str = WHITE):
+    transformed = transform_text(text, language)
+    match language:
+        case Language.ENGLISH:
+            return Junicode(transformed, color)
+        case Language.TRANSLIT:
+            return Junicode(transformed, color)
+        case Language.SANSKRIT:
+            return Jaini(transformed, color)
 
 
 @dataclass
@@ -279,9 +312,8 @@ class SlokaFile:
                         sanskrit += (
                             typst_code(token.slp1, Language.SANSKRIT, token.color) + " "
                         )
-                        translit += (
-                            typst_code(token.slp1, Language.TRANSLIT, token.color) + " "
-                        )
+                        iast = transform_text(token.slp1, Language.TRANSLIT)
+                        translit += Junicode_translit(iast, token.color) + " "
 
                     all_tuples = [
                         ((start, end), token.color)
@@ -335,7 +367,7 @@ class SlokaFile:
                     states[1].append(TypstText(translit, scale=SCALE))
                     states[2].append(TypstText(english, scale=SCALE))
 
-                for s in states[2]:
+                for s in states[1]:
                     print(s.text)
 
                 for i in range(len(states[0])):
@@ -369,7 +401,14 @@ class SlokaFile:
                         ) != extract_rgb_values(states[0][i].text)
 
                         long = node_count_changed or not colors_changed
-                        duration = 0.8 if long else 0.25
+                        duration = 0.99 if long else 0.33
+
+                        mismatch = (
+                            lambda item, p, **kwargs: ShrinkToEdge(item, UP, **kwargs),
+                            lambda item, p, **kwargs: GrowFromEdge(
+                                item, DOWN, **kwargs
+                            ),
+                        )
 
                         transformation = [
                             *(
@@ -377,14 +416,7 @@ class SlokaFile:
                                     s[i - 1],
                                     s[i],
                                     duration=duration,
-                                    mismatch=(  # type: ignore[arg-type]
-                                        lambda item, p, **kwargs: ShrinkToCenter(
-                                            item, **kwargs
-                                        ),
-                                        lambda item, p, **kwargs: GrowFromCenter(
-                                            item, **kwargs
-                                        ),
-                                    ),
+                                    mismatch=mismatch,  # type: ignore[arg-type]
                                 )
                                 for s in states
                             ),
