@@ -34,6 +34,7 @@ from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
 SCALE = 2.0
+COLORS = [RED, BLUE, YELLOW, GREEN, PINK, ORANGE]
 
 
 # ---------------------------------------------------------------------------
@@ -282,84 +283,9 @@ class Sloka:
 
         return (sloka, animations)
 
-
-def extract_rgb_values(s):
-    return "".join(re.findall(r'rgb\("(#[0-9A-Fa-f]{6})"\)', s))
-
-
-class AnimationChange(Enum):
-    # Swara removal
-    SWARAS = "Swara"
-    # Other spelling changes
-    SPELLS = "Spelling"
-    # Color changes only
-    COLORS = "Colors"
-    # Node quantity changes
-    EXPAND = "Expansion"
-
-
-class NiruktaFile:
-    def teach(self) -> Succession:
-        return Succession()
-
-
-@dataclass
-class SutraFile(NiruktaFile):
-    citation: str
-    slokas: List[Sloka]
-
-    def teach(self) -> Succession:
+    def explain(self) -> List[SupportsAnim]:
         animations = []
-        citation = TypstText(
-            set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
-            scale=SCALE,
-        )
-        citation.points.move_to(ORIGIN)
-
-        # Introduce the text by its title
-        animations.extend(
-            [
-                Write(citation),
-                Wait(1.5),
-                FadeOut(citation),
-            ]
-        )
-
-        for sloka in self.slokas:
-            animations.extend(sloka.render_intro(fade_out=True)[1])
-
-            # meow
-            print("meow")
-
-        return Succession(*animations)
-
-
-@dataclass
-class SlokaFile(NiruktaFile):
-    citation: str
-    sloka: Sloka
-
-    def teach(self) -> Succession:
-        sloka, animations = self.sloka.render_intro()
-
-        citation = TypstText(
-            set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
-            scale=SCALE,
-        )
-        citation.points.next_to(sloka, DOWN)
-
-        animations.append(
-            Succession(
-                Wait(2.0),
-                Write(citation, duration=1.0),
-                Wait(1.0),
-                FadeOut(Group(sloka, citation)),
-            )
-        )
-
-        colors = [RED, BLUE, YELLOW, GREEN, PINK, ORANGE]
-
-        for line in self.sloka.lines:
+        for line in self.lines:
             # When doing translation pages we do an utterance at a time rather
             # than a line at a time.
             for vAkya in line.vAkyAni:
@@ -370,7 +296,7 @@ class SlokaFile(NiruktaFile):
                     refs += process_token(vAkya.english, token, visited)
 
                 visited = set()
-                colorings = build_colorings(vAkya.tokens, colors)
+                colorings = build_colorings(vAkya.tokens, COLORS)
                 display_tokens = [
                     build_display_token(vAkya.english, token, visited, colorings)
                     for token in vAkya.tokens
@@ -567,6 +493,84 @@ class SlokaFile(NiruktaFile):
                 animations.append(
                     Succession(Wait(2.0), Aligned(*(FadeOut(s[-1]) for s in states)))
                 )
+        return animations
+
+
+def extract_rgb_values(s):
+    return "".join(re.findall(r'rgb\("(#[0-9A-Fa-f]{6})"\)', s))
+
+
+class AnimationChange(Enum):
+    # Swara removal
+    SWARAS = "Swara"
+    # Other spelling changes
+    SPELLS = "Spelling"
+    # Color changes only
+    COLORS = "Colors"
+    # Node quantity changes
+    EXPAND = "Expansion"
+
+
+class NiruktaFile:
+    def teach(self) -> Succession:
+        return Succession()
+
+
+@dataclass
+class SutraFile(NiruktaFile):
+    citation: str
+    slokas: List[Sloka]
+
+    def teach(self) -> Succession:
+        animations = []
+        citation = TypstText(
+            set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
+            scale=SCALE,
+        )
+        citation.points.move_to(ORIGIN)
+
+        # Introduce the text by its title
+        animations.extend(
+            [
+                Write(citation),
+                Wait(1.5),
+                FadeOut(citation),
+            ]
+        )
+
+        for sloka in self.slokas:
+            animations.extend(sloka.render_intro(fade_out=True)[1])
+
+        for sloka in self.slokas:
+            animations.extend(sloka.explain())
+
+        return Succession(*animations)
+
+
+@dataclass
+class SlokaFile(NiruktaFile):
+    citation: str
+    sloka: Sloka
+
+    def teach(self) -> Succession:
+        sloka, animations = self.sloka.render_intro()
+
+        citation = TypstText(
+            set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
+            scale=SCALE,
+        )
+        citation.points.next_to(sloka, DOWN)
+
+        animations.append(
+            Succession(
+                Wait(2.0),
+                Write(citation, duration=1.0),
+                Wait(1.0),
+                FadeOut(Group(sloka, citation)),
+            )
+        )
+
+        animations.extend(self.sloka.explain())
 
         return Succession(*animations)
 
