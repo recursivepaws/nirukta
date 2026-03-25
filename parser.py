@@ -2,7 +2,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
 import re
-from typing import Dict, List, Set, Union
+from typing import Dict, List, Optional, Set, Union
 
 from aksharamukha import transliterate
 from janim.imports import (
@@ -249,8 +249,8 @@ class Sloka:
     lines: List[Line]
 
     def render_intro(
-        self, line_duration=4.0, fade_out=False
-    ) -> tuple[Group, List[SupportsAnim]]:
+        self, line_duration=4.0, citation: Optional[str] = None
+    ) -> List[SupportsAnim]:
         sloka = []
 
         for line in self.lines:
@@ -278,10 +278,28 @@ class Sloka:
         for line in sloka:
             animations.append(Write(line, duration=line_duration))
 
-        if fade_out:
-            animations.append(FadeOut(sloka))
-
-        return (sloka, animations)
+        if citation is not None:
+            citation_text = TypstText(
+                set_font(typst_code(citation, Language.SANSKRIT), INTRO_FONT),
+                scale=SCALE,
+            )
+            citation_text.points.next_to(sloka, DOWN)
+            animations.extend(
+                [
+                    Wait(2.0),
+                    Write(citation_text, duration=1.0),
+                    Wait(1.0),
+                    FadeOut(Group(sloka, citation_text)),
+                ]
+            )
+        else:
+            animations.extend(
+                [
+                    Wait(1.0),
+                    FadeOut(sloka),
+                ]
+            )
+        return animations
 
     def explain(self) -> List[SupportsAnim]:
         animations = []
@@ -539,7 +557,7 @@ class SutraFile(NiruktaFile):
         )
 
         for sloka in self.slokas:
-            animations.extend(sloka.render_intro(fade_out=True)[1])
+            animations.extend(sloka.render_intro())
 
         for sloka in self.slokas:
             animations.extend(sloka.explain())
@@ -553,23 +571,7 @@ class SlokaFile(NiruktaFile):
     sloka: Sloka
 
     def teach(self) -> Succession:
-        sloka, animations = self.sloka.render_intro()
-
-        citation = TypstText(
-            set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
-            scale=SCALE,
-        )
-        citation.points.next_to(sloka, DOWN)
-
-        animations.append(
-            Succession(
-                Wait(2.0),
-                Write(citation, duration=1.0),
-                Wait(1.0),
-                FadeOut(Group(sloka, citation)),
-            )
-        )
-
+        animations = self.sloka.render_intro(citation=self.citation)
         animations.extend(self.sloka.explain())
 
         return Succession(*animations)
