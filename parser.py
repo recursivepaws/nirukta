@@ -73,12 +73,15 @@ class LenientTransformMatchingDiff(TransformMatchingDiff):
             return 0
 
 
-def Junicode(text: str, color: str):
-    return f'#box[#text(font: "Junicode", stroke: none, fill: rgb("{color}"))[{text}]]'
+def text_box(text: str, color: str):
+    if color == "#FFFFFF":
+        return f"#box[#text[{text}]]"
+    else:
+        return f'#box[#text(fill: rgb("{color}"))[{text}]]'
 
 
-def Jaini(text: str, color: str):
-    return f'#box[#text(font: "Jaini", stroke: none, fill: rgb("{color}"))[{text}]]'
+def set_font(text: str, font: str):
+    return f'#set text(font: "{font}", stroke: none)\n{text}'
 
 
 class Language(Enum):
@@ -109,10 +112,10 @@ def typst_code_safe(text: str, language: Language, color: str = WHITE) -> str:
 def Junicode_translit(iast: str, color: str) -> str:
     """Like Junicode() but splits ṃ into m + combining dot for clean animation."""
     if "ṃ" not in iast:
-        return Junicode(iast, color)
+        return text_box(iast, color)
 
     def T(s):
-        return f'#text(font: "Junicode", stroke: none, fill: rgb("{color}"))[{s}]'
+        return f'#text(fill: rgb("{color}"))[{s}]'
 
     parts = iast.split("ṃ")
     inner = ""
@@ -147,13 +150,7 @@ def transform_text(text: str, language: Language):
 
 def typst_code(text: str, language: Language, color: str = WHITE):
     transformed = transform_text(text, language)
-    match language:
-        case Language.ENGLISH:
-            return Junicode(transformed, color)
-        case Language.TRANSLIT:
-            return Junicode(transformed, color)
-        case Language.SANSKRIT:
-            return Jaini(transformed, color)
+    return text_box(transformed, color)
 
 
 @dataclass
@@ -259,7 +256,10 @@ class SlokaFile:
                     sanskrit += " "
 
             sloka.append(
-                TypstText(typst_code(sanskrit, Language.SANSKRIT), scale=SCALE)
+                TypstText(
+                    set_font(typst_code(sanskrit, Language.SANSKRIT), "Jaini"),
+                    scale=SCALE,
+                )
             )
 
         sloka = Group(*sloka)
@@ -268,7 +268,9 @@ class SlokaFile:
         for line in sloka:
             animations.append(Write(line, duration=4.0))
 
-        citation = TypstText(typst_code(self.citation, Language.SANSKRIT), scale=SCALE)
+        citation = TypstText(
+            set_font(typst_code(self.citation, Language.SANSKRIT), "Jaini"), scale=SCALE
+        )
         citation.points.next_to(sloka, DOWN)
 
         animations.append(
@@ -363,9 +365,15 @@ class SlokaFile:
                             english += " "
                             cursor += 1
 
-                    states[0].append(TypstText(sanskrit, scale=SCALE))
-                    states[1].append(TypstText(translit, scale=SCALE))
-                    states[2].append(TypstText(english, scale=SCALE))
+                    states[0].append(
+                        TypstText(set_font(sanskrit, "Jaini"), scale=SCALE)
+                    )
+                    states[1].append(
+                        TypstText(set_font(translit, "Junicode"), scale=SCALE)
+                    )
+                    states[2].append(
+                        TypstText(set_font(english, "Junicode"), scale=SCALE)
+                    )
 
                 for s in states[1]:
                     print(s.text)
