@@ -12,7 +12,7 @@ Each video is made with whatever version this software was on at the time of the
 view the most recent video or the demo below.
 
 ![Demo Source Code](./demo.png)
-![Video Demo](./demo.mp4)
+![Video Demo](./demo.gif)
 
 ## videos:
 
