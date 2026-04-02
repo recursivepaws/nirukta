@@ -303,9 +303,8 @@ class IntroduceSloka(Timeline):
     def construct(self):
         sloka_group = self.sloka.group()
 
-        animations = []
         for line in sloka_group:
-            animations.append(Write(line, duration=4.0))
+            self.play(Write(line, duration=4.0))
 
         if self.citation is not None:
             citation_text = TypstText(
@@ -313,22 +312,17 @@ class IntroduceSloka(Timeline):
                 scale=SCALE,
             )
             citation_text.points.next_to(sloka_group, DOWN)
-            animations.extend(
-                [
-                    Wait(2.0),
-                    Write(citation_text, duration=1.0),
-                    Wait(1.0),
-                    FadeOut(Group(sloka_group, citation_text)),
-                ]
+            self.play(
+                Wait(2.0),
+                Write(citation_text, duration=1.0),
+                Wait(1.0),
+                FadeOut(Group(sloka_group, citation_text)),
             )
         else:
-            animations.extend(
-                [
-                    Wait(1.0),
-                    FadeOut(sloka_group),
-                ]
+            self.play(
+                Wait(1.0),
+                FadeOut(sloka_group),
             )
-        self.play(Succession(*animations))
 
 
 class ExplainLine(Timeline):
@@ -581,10 +575,20 @@ class SutraFile(Timeline):
             )
         )
 
-        for sloka in self.slokas:
-            introduction = IntroduceSloka(sloka).build().to_item().show()
-            self.forward_to(introduction.end)
-            # t.play(introduction)
+        sloka_groups = Group(*(s.group() for s in self.slokas))
+        sloka_groups[0].points.move_to(ORIGIN)
+        sloka_groups.points.arrange(DOWN)
+
+        for sloka_group in sloka_groups:
+            for line in sloka_group:
+                self.play(Write(line, duration=1.0))
+
+        self.play(FadeOut(sloka_groups))
+
+        # for sloka in self.slokas:
+        #     introduction = IntroduceSloka(sloka).build().to_item().show()
+        #     self.forward_to(introduction.end)
+        # t.play(introduction)
 
         for sloka in self.slokas:
             for line in sloka.lines:
