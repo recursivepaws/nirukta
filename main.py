@@ -1,18 +1,16 @@
 import importlib
-from janim.imports import Config, Timeline
+from janim.imports import Timeline
 import glob
 import os
 
-import typst
-import janim.utils.typst_compile as tc
 import parser
+import patches
 
-from parser import SutraFile, parse_sloka, SlokaFile, parse_sutra
+from parser import parse_sloka, parse_sutra
+from nirukta import Nirukta
 
 importlib.reload(parser)
-
-font_dir = os.path.join(os.path.dirname(__file__), "fonts")
-tc._typst_fonts = typst.Fonts(True, True, [font_dir])
+importlib.reload(patches)
 
 
 def is_nirukta_file(file: str):
@@ -65,7 +63,6 @@ def get_nirukta_file() -> str:
 
 chosen = get_nirukta_file()
 
-
 print(f"Loading {chosen}...")
 
 with open(chosen) as f:
@@ -78,9 +75,7 @@ else:
     nirukta = parse_sloka(source)
 
 
-class SlokaTime(Timeline):
-    CONFIG = Config(fps=60)
-
+class EntryPoint(Timeline):
     def construct(self):
-        animation = nirukta.build().to_item().show()
-        self.forward_to(animation.end)
+        timeline = Nirukta(nirukta).build().to_item().show()
+        self.forward_to(timeline.end)

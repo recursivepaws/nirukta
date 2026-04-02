@@ -829,7 +829,7 @@ SLOKA_GRAMMAR_STR = r"""
     # Sandhi: one or more components joined by '+', then '=' surface form.
     # Components may themselves be parenthesised sandhi groups, enabling
     # arbitrary nesting:  (a[x]+b[y]=ab)+c[z]=abc
-    compound_token  = comp_part plus_part* "=" slp1
+    compound_token  = comp_part plus_part* "=" slp1 gloss*
     plus_part       = "+" comp_part
     comp_part       = paren_compound / simple_token
     paren_compound  = "(" compound_token ")"
@@ -914,7 +914,7 @@ class SlokaVisitor(NodeVisitor):
     # -- compound (sandhi) tokens -------------------------------------------
 
     def visit_compound_token(self, _, visited_children):
-        first_part, plus_parts, _, surface = visited_children
+        first_part, plus_parts, _, surface, gloss = visited_children
         parts = [first_part] + list(plus_parts)
         return CompoundToken(parts=parts, slp1=surface)
 
@@ -933,7 +933,10 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_simple_token(self, _, visited_children):
         slp1, glosses = visited_children
-        return SimpleToken(slp1=slp1, glosses=list(glosses))
+        normal_glosses: List[Gloss] = [
+            gloss for gloss in glosses if not gloss.etymological
+        ]
+        return SimpleToken(slp1=slp1, glosses=normal_glosses)
 
     def visit_gloss(self, _, visited_children):
         return visited_children[0]
