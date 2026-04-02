@@ -32,7 +32,6 @@ from janim.imports import (
     normalize,
     np,
 )
-from janim.typing import SupportsAnim
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
@@ -251,32 +250,7 @@ class Sloka:
 
     lines: List[Line]
 
-
-def extract_rgb_values(s):
-    return "".join(re.findall(r'rgb\("(#[0-9A-Fa-f]{6})"\)', s))
-
-
-class AnimationChange(Enum):
-    # Swara removal
-    SWARAS = "Swara"
-    # Other spelling changes
-    SPELLS = "Spelling"
-    # Color changes only
-    COLORS = "Colors"
-    # Node quantity changes
-    EXPAND = "Expansion"
-
-
-class IntroduceSloka(Timeline):
-    lines: List[Line]
-    citation: Optional[str]
-
-    def __init__(self, lines: List[Line], citation: Optional[str] = None):
-        super().__init__()
-        self.lines = lines
-        self.citation = citation
-
-    def construct(self):
+    def group(self):
         sloka = []
 
         for line in self.lines:
@@ -299,9 +273,38 @@ class IntroduceSloka(Timeline):
 
         sloka = Group(*sloka)
         sloka.points.arrange(DOWN)
+        return sloka
+
+
+def extract_rgb_values(s):
+    return "".join(re.findall(r'rgb\("(#[0-9A-Fa-f]{6})"\)', s))
+
+
+class AnimationChange(Enum):
+    # Swara removal
+    SWARAS = "Swara"
+    # Other spelling changes
+    SPELLS = "Spelling"
+    # Color changes only
+    COLORS = "Colors"
+    # Node quantity changes
+    EXPAND = "Expansion"
+
+
+class IntroduceSloka(Timeline):
+    sloka: Sloka
+    citation: Optional[str]
+
+    def __init__(self, sloka: Sloka, citation: Optional[str] = None):
+        super().__init__()
+        self.sloka = sloka
+        self.citation = citation
+
+    def construct(self):
+        sloka_group = self.sloka.group()
 
         animations = []
-        for line in sloka:
+        for line in sloka_group:
             animations.append(Write(line, duration=4.0))
 
         if self.citation is not None:
@@ -309,20 +312,20 @@ class IntroduceSloka(Timeline):
                 set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
                 scale=SCALE,
             )
-            citation_text.points.next_to(sloka, DOWN)
+            citation_text.points.next_to(sloka_group, DOWN)
             animations.extend(
                 [
                     Wait(2.0),
                     Write(citation_text, duration=1.0),
                     Wait(1.0),
-                    FadeOut(Group(sloka, citation_text)),
+                    FadeOut(Group(sloka_group, citation_text)),
                 ]
             )
         else:
             animations.extend(
                 [
                     Wait(1.0),
-                    FadeOut(sloka),
+                    FadeOut(sloka_group),
                 ]
             )
         self.play(Succession(*animations))
@@ -579,7 +582,7 @@ class SutraFile(Timeline):
         )
 
         for sloka in self.slokas:
-            introduction = IntroduceSloka(sloka.lines).build().to_item().show()
+            introduction = IntroduceSloka(sloka).build().to_item().show()
             self.forward_to(introduction.end)
             # t.play(introduction)
 
@@ -599,7 +602,7 @@ class SlokaFile(Timeline):
         self.sloka = sloka
 
     def construct(self):
-        introduction = IntroduceSloka(self.sloka.lines, self.citation).build().to_item()
+        introduction = IntroduceSloka(self.sloka, self.citation).build().to_item()
         introduction.show()
         self.forward_to(introduction.end)
 
