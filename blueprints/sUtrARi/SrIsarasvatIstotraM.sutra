@@ -60,7 +60,9 @@ SAnta[tranquil]+rupa[form]=SAntarUpe{VOC} SaSi[moon]+Dare[bearer]=SaSiDare{VOC} 
 === sloka ===
 
 --- line ---
-nitya[constant]+Ananda[in][bliss]=nityAnande{VOC} nir[un]+ADara[supported]=nirADAre{VOC} nizkala[undivided]=nizkalAyE{DAT} namo[reverence] namaH[reverence] .
+nitya[constant]+Ananda[in][bliss]=nityAnande{COMP.BV.F.SG.VOC}
+nir[un]+ADara[supported]=nirADAre{COMP.TP.F.SG.VOC}
+nizkala[undivided]=nizkalAyE{ADJ.F.SG.DAT} namaH[reverence]=namo namaH[reverence] .
 "O you in constant bliss, O unsupported one - reverence, reverence to her who is undivided."
 
 --- line ---
@@ -75,7 +77,7 @@ vidyA[knowledge]+Dara[bearer]=vidyADare{VOC} viSA[large]+lAkzi[eyed]=viSAlAkzi{V
 
 --- line ---
 Sabda[Sabda]+brahma[Brahman]=Sabdabrahmi{VOC} catur[four]+hasta[handed]=caturhaste{VOC} sarva[all]+sidDa[accomplishment]=sarvasidDyE{DAT} namo[reverence] namaH[reverence] .. 8 ..
-"O you who are Sabda Brahman, O four-handed one - reverence, reverence her who is all accomplishment."
+"O you who are Sabda Brahman, O four-handed one - reverence, reverence to her who is all accomplishment."
 
 === sloka ===
 

@@ -1,8 +1,14 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import Enum
+import importlib
+import logging
 import re
+import traceback
+import inflection
 from typing import Dict, List, Optional, Set, Union
+from inflection import Case, SanskritInflection
+
 
 from aksharamukha import transliterate
 from janim.imports import (
@@ -35,7 +41,9 @@ from janim.imports import (
 from parsimonious.grammar import Grammar
 from parsimonious.nodes import NodeVisitor
 
-SCALE = 1.4
+importlib.reload(inflection)
+
+SCALE = 1.2
 COLORS = [RED, BLUE, YELLOW, GREEN, PINK, ORANGE, TEAL, MAROON]
 
 
@@ -95,7 +103,7 @@ LATIN_FONT = "Junicode"
 
 
 def set_font(text: str, font: str):
-    return f'#set text(font: "{font}", stroke: none)\n#set page(width: {200 * SCALE}pt)\n{text}'
+    return f'#set text(font: "{font}", stroke: none)\n#set page(width: {240 * SCALE}pt)\n{text}'
 
 
 class Language(Enum):
@@ -168,7 +176,7 @@ def typst_code(text: str, language: Language, color: str = WHITE):
 
 
 @dataclass
-class Gloss:
+class EnglishGloss:
     """A single English gloss attached to a Sanskrit token.
 
     etymological=False  ->  [] translation gloss, shown in animations
@@ -176,7 +184,6 @@ class Gloss:
     """
 
     text: str
-    etymological: bool = False
 
     def find_reference(
         self, english: str, visited: Set[tuple[int, int]]
@@ -204,6 +211,11 @@ class Gloss:
                 return index
 
 
+type EtymGloss = Union[SanskritInflection, Case]
+
+type Gloss = Union[EnglishGloss, EtymGloss]
+
+
 @dataclass
 class SimpleToken:
     """An unanalysed Sanskrit word with its glosses."""
@@ -216,7 +228,7 @@ class SimpleToken:
     ) -> List[tuple[int, int]]:
         gloss_refs: List[tuple[int, int]] = []
         for gloss in self.glosses:
-            if not gloss.etymological:
+            if isinstance(gloss, EnglishGloss):
                 ref = gloss.find_reference(english, visited)
                 visited.add(ref)
                 gloss_refs.append(ref)
@@ -234,6 +246,7 @@ class CompoundToken:
 
     parts: List[Union[SimpleToken, "CompoundToken"]]
     slp1: str
+    etym_gloss: Optional[EtymGloss] = field(default=None)
 
 
 @dataclass
@@ -567,17 +580,16 @@ class IntroduceSloka(Timeline):
                 scale=SCALE,
             )
             citation_text.points.next_to(sloka_group, DOWN)
-            self.play(
+            for animation in [
                 Wait(2.0),
                 Write(citation_text, duration=1.0),
                 Wait(1.0),
                 FadeOut(Group(sloka_group, citation_text)),
-            )
+            ]:
+                self.play(animation)
         else:
-            self.play(
-                Wait(1.0),
-                FadeOut(sloka_group),
-            )
+            self.play(Wait(1.0))
+            self.play(FadeOut(sloka_group))
 
 
 class ExplainSloka(Timeline):
@@ -618,7 +630,6 @@ class SutraFile(Timeline):
         return ORANGE
 
     def construct(self):
-        # animations = []
         citation = TypstText(
             set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
             scale=SCALE,
@@ -642,11 +653,6 @@ class SutraFile(Timeline):
                 self.play(Write(line, duration=1.0))
 
         self.play(FadeOut(sloka_groups))
-
-        # for sloka in self.slokas:
-        #     introduction = IntroduceSloka(sloka).build().to_item().show()
-        #     self.forward_to(introduction.end)
-        # t.play(introduction)
 
         for sloka in self.slokas:
             for line in sloka.lines:
@@ -764,6 +770,13 @@ def build_display_token(
 ) -> DisplayToken:
     if isinstance(token, SimpleToken):
         spans = token.gloss_refs(english, visited)
+        for gloss in token.glosses:
+            if isinstance(gloss, EnglishGloss):
+                print("not a case")
+            else:
+                print("a case")
+                print(f"gloss in token: {token.slp1}\n{gloss}\n\n")
+                # token.slp1 = f"token.slp1}\\}}"
         unswarad = unswara(token.slp1)
 
         leaf = DisplayToken(
@@ -792,11 +805,47 @@ def build_display_token(
         )
 
     elif isinstance(token, CompoundToken):
+        sandhi_compound = (
+            isinstance(token.etym_gloss, SanskritInflection)
+            and token.etym_gloss.compound_type is not None
+        )
+
         unswarad = token.slp1.replace("\\'", "").replace("\\_", "")
-        children = [
-            build_display_token(english, part, visited, colorings)
-            for part in token.parts
-        ]
+
+        children = []
+
+        if sandhi_compound:
+            children.append(build_display_token(english, "\\[", visited, colorings))
+
+        for i, part in enumerate(token.parts):
+            etymological_token_part = False
+            if isinstance(part, SimpleToken):
+                etym_glosses = list(
+                    gloss
+                    for gloss in part.glosses
+                    if not isinstance(gloss, EnglishGloss)
+                )
+                print(f"etymglosses: {etym_glosses}")
+                etymological_token_part = len(etym_glosses) > 0
+
+            if etymological_token_part:
+                children.append(build_display_token(english, "\\{", visited, colorings))
+
+            children.append(build_display_token(english, part, visited, colorings))
+
+            if etymological_token_part:
+                children.append(build_display_token(english, "\\}", visited, colorings))
+
+            if sandhi_compound:
+                if i < len(token.parts) - 1:
+                    children.append(
+                        build_display_token(english, "+", visited, colorings)
+                    )
+                else:
+                    children.append(
+                        build_display_token(english, "\\]", visited, colorings)
+                    )
+
         leaf = DisplayToken(
             slp1=unswarad,
             color=WHITE,
@@ -842,7 +891,7 @@ SLOKA_GRAMMAR_STR = r"""
     # Sandhi: one or more components joined by '+', then '=' surface form.
     # Components may themselves be parenthesised sandhi groups, enabling
     # arbitrary nesting:  (a[x]+b[y]=ab)+c[z]=abc
-    compound_token  = comp_part plus_part* "=" slp1 gloss*
+    compound_token  = comp_part plus_part* "=" slp1 etym_gloss?
     plus_part       = "+" comp_part
     comp_part       = paren_compound / simple_token
     paren_compound  = "(" compound_token ")"
@@ -928,8 +977,18 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_compound_token(self, _, visited_children):
         first_part, plus_parts, _, surface, gloss = visited_children
+        etym_glosses = list(gloss)
+        etym_gloss: Optional[EtymGloss] = (
+            etym_glosses[0] if len(etym_glosses) > 0 else None
+        )
+
         parts = [first_part] + list(plus_parts)
-        return CompoundToken(parts=parts, slp1=surface)
+
+        return CompoundToken(
+            parts=parts,
+            slp1=surface,
+            etym_gloss=etym_gloss,
+        )
 
     def visit_plus_part(self, _, visited_children):
         _, part = visited_children
@@ -953,11 +1012,23 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_trans_gloss(self, _, visited_children):
         _, content, _ = visited_children
-        return Gloss(text=content, etymological=False)
+        return EnglishGloss(text=content)
 
     def visit_etym_gloss(self, _, visited_children):
         _, content, _ = visited_children
-        return Gloss(text=content, etymological=True)
+        try:
+            inflection = SanskritInflection.parse(content)
+            print(f"inflection: {inflection}")
+            return inflection
+        except Exception:
+            try:
+                case = Case.parse(content)
+                print(f"case: {case}")
+                return case
+            except Exception:
+                print(f'Error! invalid etymological glossing: "{content}"\n')
+                logging.error(traceback.format_exc())
+                return None
 
     def visit_trans_content(self, node, _):
         return node.text
