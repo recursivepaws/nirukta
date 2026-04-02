@@ -245,6 +245,10 @@ class VerseLine(Timeline):
     def gui_name(self) -> str:
         return self.english
 
+    @property
+    def gui_color(self) -> str:
+        return BLUE
+
     def construct(self):
         refs: List[tuple[str, List[tuple[int, int]]]] = []
 
@@ -266,22 +270,22 @@ class VerseLine(Timeline):
 
         for i in range(len(frames) - 1):
             # compare this frame to the next frame
-            a = frames[i]
+            animation = frames[i]
             b = frames[i + 1]
 
-            if len(a) != len(b):
+            if len(animation) != len(b):
                 state_changes.append(AnimationChange.EXPAND)
             else:
                 swara_removal = False
                 spelling_intact = True
                 color_intact = True
-                for j in range(len(a)):
+                for j in range(len(animation)):
                     swara_removal |= (
-                        unswara(a[j].slp1) != a[j].slp1
-                        and unswara(a[j].slp1) == b[j].slp1
+                        unswara(animation[j].slp1) != animation[j].slp1
+                        and unswara(animation[j].slp1) == b[j].slp1
                     )
-                    spelling_intact &= a[j].slp1 == b[j].slp1
-                    color_intact &= a[j].color == b[j].color
+                    spelling_intact &= animation[j].slp1 == b[j].slp1
+                    color_intact &= animation[j].color == b[j].color
                 if swara_removal:
                     state_changes.append(AnimationChange.SWARAS)
                 elif not spelling_intact:
@@ -362,16 +366,15 @@ class VerseLine(Timeline):
 
             # Initial write on
             if i == 0:
-                self.play(
-                    Succession(
-                        Wait(1.0),
-                        Aligned(
-                            *(Write(s[i]) for s in states),
-                            duration=1.0,
-                        ),
-                        Wait(1.0),
-                    )
-                )
+                for animation in [
+                    Wait(1.0),
+                    Aligned(
+                        *(Write(s[i]) for s in states),
+                        duration=1.0,
+                    ),
+                    Wait(1.0),
+                ]:
+                    self.play(animation)
 
             # Transformation into current state
             if i > 0:
@@ -425,7 +428,8 @@ class VerseLine(Timeline):
                 if change_type == AnimationChange.COLORS:
                     self.play(Wait(0.25))
 
-        self.play(Succession(Wait(2.0), Aligned(*(FadeOut(s[-1]) for s in states))))
+        self.play(Wait(2.0))
+        self.play(Aligned(*(FadeOut(s[-1]) for s in states)))
 
 
 @dataclass
@@ -441,6 +445,10 @@ class Line(Timeline):
     @property
     def gui_name(self) -> str:
         return " | ".join(vAkya.english for vAkya in self.vAkyAni)
+
+    @property
+    def gui_color(self) -> str:
+        return GREEN
 
     def construct(self):
         # When doing translation pages we do an utterance at a time rather
@@ -506,6 +514,10 @@ class IntroduceSloka(Timeline):
         self.sloka = sloka
         self.citation = citation
 
+    @property
+    def gui_color(self) -> str:
+        return YELLOW
+
     def construct(self):
         sloka_group = self.sloka.group()
 
@@ -538,6 +550,10 @@ class ExplainSloka(Timeline):
         super().__init__()
         self.lines = lines
 
+    @property
+    def gui_color(self) -> str:
+        return YELLOW
+
     def construct(self):
         animations = []
         for line in self.lines:
@@ -560,6 +576,10 @@ class SutraFile(Timeline):
     def gui_name(self) -> str:
         return self.citation
 
+    @property
+    def gui_color(self) -> str:
+        return ORANGE
+
     def construct(self):
         # animations = []
         citation = TypstText(
@@ -569,13 +589,12 @@ class SutraFile(Timeline):
         citation.points.move_to(ORIGIN)
 
         # Introduce the text by its title
-        self.play(
-            Succession(
-                Write(citation),
-                Wait(1.5),
-                FadeOut(citation),
-            )
-        )
+        for animation in [
+            Write(citation),
+            Wait(1.5),
+            FadeOut(citation),
+        ]:
+            self.play(animation)
 
         sloka_groups = Group(*(s.group() for s in self.slokas))
         sloka_groups[0].points.move_to(ORIGIN)
@@ -610,6 +629,10 @@ class SlokaFile(Timeline):
     @property
     def gui_name(self) -> str:
         return self.citation
+
+    @property
+    def gui_color(self) -> str:
+        return ORANGE
 
     def construct(self):
         introduction = IntroduceSloka(self.sloka, self.citation).build().to_item()

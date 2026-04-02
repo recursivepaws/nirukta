@@ -1,11 +1,15 @@
 from typing import Union
-from janim.imports import Config, Timeline
+from janim.imports import RED, Config, Timeline
 from parser import SlokaFile, SutraFile
 
 
 class Nirukta(Timeline):
     nirukta: Union[SlokaFile, SutraFile]
     CONFIG = Config(fps=24)
+
+    @property
+    def gui_color(self) -> str:
+        return RED
 
     def __init__(self, nirukta: Union[SlokaFile, SutraFile]):
         super().__init__()
