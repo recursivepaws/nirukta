@@ -722,7 +722,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "aksharamukha", specifier = ">=2.3" },
-    { name = "janim", extras = ["gui"], specifier = ">=4.0.0a7" },
+    { name = "janim", extras = ["gui"], specifier = ">=4.0.0" },
     { name = "manim-devanagari", specifier = ">=0.2.2" },
     { name = "parsimonious", specifier = ">=0.11.0" },
 ]
