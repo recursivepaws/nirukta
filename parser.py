@@ -289,7 +289,7 @@ TokenType = Union[SimpleToken, CompoundToken, str]  # str for punctuation
 
 
 @dataclass
-class VerseLine(Timeline):
+class Utterance(Timeline):
     """One sentence-worth of Sanskrit tokens paired with its English rendering."""
 
     tokens: List[TokenType]
@@ -495,9 +495,9 @@ class VerseLine(Timeline):
 class Line(Timeline):
     """A stanza-level grouping of verse lines (between --- line --- markers)."""
 
-    vAkyAni: List[VerseLine]
+    vAkyAni: List[Utterance]
 
-    def __init__(self, vAkyAni: List[VerseLine]):
+    def __init__(self, vAkyAni: List[Utterance]):
         super().__init__()
         self.vAkyAni = vAkyAni
 
@@ -1007,7 +1007,7 @@ class SlokaVisitor(NodeVisitor):
         _, tokens, _, first, rest, _ = visited_children
         extra = [pair[1] for pair in rest]
         english = "#linebreak()".join([first] + extra)
-        return VerseLine(tokens=tokens, english=english)
+        return Utterance(tokens=tokens, english=english)
 
     # -- token sequence -----------------------------------------------------
 
