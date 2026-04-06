@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-import janim.utils.typst_compile as tc
 from typing import List
 
 from janim.imports import (
@@ -13,7 +12,6 @@ from janim.imports import (
     FadeOut,
     Group,
     SurroundingRect,
-    Text,
     Timeline,
     TypstText,
     Wait,
@@ -44,11 +42,6 @@ class SutraFileTimeline(Timeline):
         return ORANGE
 
     def construct(self):
-        txt = Text("The first line.\nThe second line.\nThe third line.")
-        txt.show()
-        self.play(Wait(3))
-        self.play(FadeOut(txt))
-
         citation = TypstText(
             set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
             scale=SCALE,
