@@ -181,7 +181,6 @@ class UtteranceTimeline(Timeline):
             # Initial write on
             if i == 0:
                 for animation in [
-                    Wait(1.0),
                     Aligned(
                         *(Write(s[i]) for s in states),
                         duration=1.0,

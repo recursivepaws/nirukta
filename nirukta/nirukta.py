@@ -1,11 +1,10 @@
 from __future__ import annotations
-from janim.imports import RED, Config, Timeline
+from janim.imports import RED, Timeline
 from nirukta.util import is_nirukta_file, file_to_timeline
 
 
 class Nirukta(Timeline):
     nirukta: Timeline
-    CONFIG = Config(fps=24)
 
     @property
     def gui_color(self) -> str:
