@@ -54,7 +54,7 @@ sarva[all]+devi[O Goddess]=sarvadevi namo[reverence] namaH[reverence] .
 "O Goddess of all, reverence, reverence."
 
 --- line ---
-SAnta[tranquil]+rupa[form]=SAntarUpe{VOC} SaSi[moon]+Dare[bearer]=SaSiDare{VOC} sarva[all]+yoga[disciplines]=sarvayoge{VOC} namo[reverence] namaH[reverence] .. 6 ..
+SAnta[tranquil]+rupa[form]=SAntarUpe{VOC} SaSi[moon]+Dare[bearer]=SaSiDare{VOC} sarva[all]+yoga[disciplines]=sarvayoge{VOC} namaH[reverence]=namo namaH[reverence] .. 6 ..
 "O you of tranquil form, O bearer of the moon, O you in whom all disciplines reside, reverence, reverence."
 
 === sloka ===
@@ -66,26 +66,26 @@ nizkala[undivided]=nizkalAyE{ADJ.F.SG.DAT} namaH[reverence]=namo namaH[reverence
 "O you in constant bliss, O unsupported one - reverence, reverence to her who is undivided."
 
 --- line ---
-vidyA[knowledge]+Dara[bearer]=vidyADare{VOC} viSA[large]+lAkzi[eyed]=viSAlAkzi{VOC} SudDa[pure]+jYana[knowledge]=SudDajYAne{VOC} namo[reverence] namaH[reverence] .. 7 ..
+vidyA[knowledge]+Dara[bearer]=vidyADare{VOC} viSA[large]+lAkzi[eyed]=viSAlAkzi{VOC} SudDa[pure]+jYana[knowledge]=SudDajYAne{VOC} namaH[reverence]=namo namaH[reverence] .. 7 ..
 "O bearer of knowledge, O large eyed one, O embodier of pure knowledge, reverence, reverence."
 
 === sloka ===
 
 --- line ---
-(SudDa[pure]+sPawika[crystal]+rUpa[form]=SudDasPawikarUpa)+yE[to]{DAT}=SudDasPawikarUpAyE{TP} sUkzma[subtle]+rupa[form]+e[O]=sUkzmarUpe{VOC} namo[reverence] namaH[reverence] .
+(SudDa[pure]+sPawika[crystal]+rUpa[form]=SudDasPawikarUpa)+yE[to]{DAT}=SudDasPawikarUpAyE{TP} sUkzma[subtle]+rupa[form]+e[O]=sUkzmarUpe{VOC} namaH[reverence]=namo namaH[reverence] .
 "O you of subtle form - reverence, reverence to her of pure crystal form."
 
 --- line ---
-Sabda[Sabda]+brahma[Brahman]=Sabdabrahmi{VOC} catur[four]+hasta[handed]=caturhaste{VOC} sarva[all]+sidDa[accomplishment]=sarvasidDyE{DAT} namo[reverence] namaH[reverence] .. 8 ..
+Sabda[Sabda]+brahma[Brahman]=Sabdabrahmi{VOC} catur[four]+hasta[handed]=caturhaste{VOC} sarva[all]+sidDa[accomplishment]=sarvasidDyE{DAT} namaH[reverence]=namo namaH[reverence] .. 8 ..
 "O you who are Sabda Brahman, O four-handed one - reverence, reverence to her who is all accomplishment."
 
 === sloka ===
 
 --- line ---
-mukta[pearls]+AlaNkfta[adorned]+sarva[every]+aNga[limb]=muktAlaNkftasarvANgyE{DAT} mUlADAra[root chakra]=mUlADAre{VOC} namo[reverence] namaH[reverence] .
+mukta[pearls]+AlaNkfta[adorned]+sarva[every]+aNga[limb]=muktAlaNkftasarvANgyE{DAT} mUlADAra[root chakra]=mUlADAre{VOC} namaH[reverence]=namo namaH[reverence] .
 "O you who are the root chakra - reverence, reverence to her whose every limb is adorned by pearls."
 
 --- line ---
-mUla[basis]+mantra[mantra]+svarUpa[self-form]=mUlamantrasvarUpAyE{DAT} mUla[origin]+Sakta[ability]=mUlaSaktyE{DAT} namo[Reverence] namaH[reverence] .. 9 ..
+mUla[basis]+mantra[mantra]+svarUpa[self-form]=mUlamantrasvarUpAyE{DAT} mUla[origin]+Sakta[ability]=mUlaSaktyE{DAT} namaH[Reverence]=namo namaH[reverence] .. 9 ..
 "Reverence, reverence to her whose self-form is the basis of mantra itself, to her who is the origin of ability."
 
