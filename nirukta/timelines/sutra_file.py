@@ -14,6 +14,7 @@ from janim.imports import (
     FadeIn,
     FadeOut,
     Group,
+    Indicate,
     Succession,
     SurroundingRect,
     Timeline,
@@ -119,15 +120,12 @@ class SutraFileTimeline(Timeline):
                             f"line_{li}_utterance_{vi}"
                         )
                         self.play(
-                            Aligned(
+                            Succession(
+                                Indicate(selection, color=WHITE),
                                 selection.anim.set(color=WHITE),
-                                Succession(
-                                    selection.anim.points.scale(1.2),
-                                    Wait(0.2),
-                                    selection.anim.points.scale(1 / 1.2),
-                                ),
-                                duration=1.0,
-                            )
+                                lag_ratio=0.4,
+                                duration=0.5,
+                            ),
                         )
 
                     vt = UtteranceTimeline(vAkya).build().to_item().show()
