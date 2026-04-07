@@ -1,17 +1,16 @@
+import sys
 import nirukta.patches  # pyright: ignore[reportUnusedImport]
 
 from janim.imports import RED, Timeline
-from nirukta.util import is_nirukta_file, file_to_timeline
-
-import importlib
-
 from janim.imports import Config
-from nirukta.util import choose_nirukta_file
 
-importlib.reload(nirukta)
+for key in list(sys.modules):
+    if key.startswith('nirukta'):
+        del sys.modules[key]
+
+from nirukta.util import choose_nirukta_file, is_nirukta_file, file_to_timeline
 
 chosen = choose_nirukta_file()
-
 
 class Nirukta(Timeline):
     CONFIG = Config(fps=60, preview_fps=60)
