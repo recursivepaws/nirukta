@@ -14,7 +14,7 @@ def is_nirukta_file(file: str):
 
 
 def choose_nirukta_file() -> str:
-    cached = os.environ.get("JANIM_SLOKA_FILE")
+    cached = os.environ.get("NIRUKTA_FILE")
     if cached:
         return cached
 
@@ -53,7 +53,7 @@ def choose_nirukta_file() -> str:
         else:
             prefix = chosen
 
-    os.environ["JANIM_SLOKA_FILE"] = chosen
+    os.environ["NIRUKTA_FILE"] = chosen
     return chosen
 
 
