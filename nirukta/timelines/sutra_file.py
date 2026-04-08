@@ -3,7 +3,7 @@ from typing import List, Optional
 
 from janim.imports import (
     DOWN,
-    GREY,
+    GREY_B,
     LEFT,
     MED_SMALL_BUFF,
     ORANGE,
@@ -33,6 +33,7 @@ from nirukta.models import Language, Sloka, SutraFile
 from nirukta.timelines import UtteranceTimeline
 from nirukta.timelines.line import LineTimeline
 from nirukta.render import (
+    Awaken,
     scale_with_stroke,
     set_font,
     text_box,
@@ -89,7 +90,6 @@ class SutraFileTimeline(Timeline):
                     sloka_text, UP, buff=MED_SMALL_BUFF, aligned_edge=LEFT
                 )
 
-                sloka_text.anim.set(color=GREY)
                 sloka_border = SurroundingRect(
                     Group(sloka_text, number_label), color=WHITE, buff=MED_SMALL_BUFF
                 )
@@ -104,7 +104,7 @@ class SutraFileTimeline(Timeline):
 
             def grey_anim(sloka_text: Group[TypstText]):
                 return Aligned(
-                    *(line.anim.set(color=GREY) for line in sloka_text), duration=1.0
+                    *(line.anim.set(color=GREY_B) for line in sloka_text), duration=1.0
                 )
 
             if numbered and sloka_text is not None:
@@ -121,14 +121,7 @@ class SutraFileTimeline(Timeline):
                         selection = sloka_text[li].get_label(
                             f"line_{li}_utterance_{vi}"
                         )
-                        self.play(
-                            Succession(
-                                Indicate(selection, color=WHITE),
-                                selection.anim.set(color=WHITE),
-                                lag_ratio=0.4,
-                                duration=0.5,
-                            ),
-                        )
+                        self.play(Awaken(selection))
 
                     vt = UtteranceTimeline(vAkya).build().to_item().show()
                     self.forward_to(vt.end)

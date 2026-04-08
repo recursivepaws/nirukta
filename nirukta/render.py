@@ -1,4 +1,8 @@
 from janim.imports import (
+    SupportsAnim,
+    AnimGroup,
+    Succession,
+    Indicate,
     DOWN,
     UP,
     FadeOut,
@@ -12,12 +16,28 @@ from janim.imports import (
 )
 from nirukta.constants import INTRO_FONT, SCALE, TYPST_CMD_RE
 from nirukta.models import Language, Sloka
-from janim.imports import WHITE
+from janim.imports import WHITE, C_LABEL_ANIM_ABSTRACT
 from aksharamukha import transliterate
 
 from dataclasses import dataclass, field
-from typing import Optional
 from nirukta.models import Animation
+
+
+class Awaken(AnimGroup):
+    label_color = C_LABEL_ANIM_ABSTRACT
+
+    def __init__(self, *anims: SupportsAnim, duration: float = 0.5, **kwargs) -> None:
+        group = Group(*anims)
+        super().__init__(
+            Succession(
+                # Maximally auspicious scaling factor
+                Indicate(group, scale_factor=1.108, color=WHITE),
+                # Change the color to white as it returns to regular size
+                group.anim.set(color=WHITE),
+                lag_ratio=0.4,
+                duration=duration,
+            )
+        )
 
 
 @dataclass
@@ -128,11 +148,15 @@ def set_font(text: str, font: str):
     return f'#set text(font: "{font}", stroke: none)\n#set page(width: {240 * SCALE}pt)\n{text}'
 
 
-def text_box(text: str, color: str):
-    if color == "#FFFFFF":
+def text_box(text: str, color: str, stroke_mode: bool = False):
+    if color == "#FFFFFF" and not stroke_mode:
         return f"#box[#text[{text}]]"
     else:
-        return f'#box[#text(fill: rgb("{color}"))[{text}]]'
+        color = color.lstrip("#")
+        if stroke_mode:
+            return f'#box[#text(fill: rgb(0, 0, 0, 0), stroke: 0.5pt + rgb("{color}"))[{text}]]'
+        else:
+            return f'#box[#text(fill: rgb("{color}"))[{text}]]'
 
 
 def typst_code_safe(text: str, language: Language, color: str = WHITE) -> str:
@@ -166,9 +190,11 @@ def transform_text(text: str, language: Language):
             return deva
 
 
-def typst_code(text: str, language: Language, color: str = WHITE):
+def typst_code(
+    text: str, language: Language, color: str = WHITE, stroke_mode: bool = False
+):
     transformed = transform_text(text, language)
-    return text_box(transformed, color)
+    return text_box(transformed, color, stroke_mode)
 
 
 def scale_with_stroke(group: Group, factor: float) -> Group:

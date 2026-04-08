@@ -1,14 +1,20 @@
 from dataclasses import dataclass
+from itertools import chain
 from typing import List
 
 from janim.imports import (
     BLUE,
     DOWN,
+    GREEN,
+    GREY,
+    GREY_B,
     ORIGIN,
     UP,
     WHITE,
     Aligned,
     FadeOut,
+    GREY_B,
+    FocusOn,
     Group,
     GrowFromEdge,
     Indicate,
@@ -33,9 +39,11 @@ from nirukta.constants import (
     SCALE,
     TYPST_CMD_RE,
     ALPHA_RE,
+    WHITESPACE_RE,
 )
 from nirukta.models import (
     Animation,
+    DisplayToken,
     Language,
     TokenType,
     Utterance,
@@ -46,6 +54,7 @@ from nirukta.models import (
 )
 from nirukta.strings import unswara
 from nirukta.render import (
+    Awaken,
     Diff,
     Junicode_translit,
     set_font,
@@ -90,9 +99,17 @@ class UtteranceTimeline(Timeline):
         for i in range(len(display_tokens)):
             if _ := ALPHA_RE.search(display_tokens[i].slp1):
                 display_tokens[i].is_root = True
+                display_tokens[i].color = GREY_B
                 log.debug(f"{display_tokens[i].slp1} is a `DisplayToken` root")
 
         frames = frames_for_vakya(display_tokens)
+
+        all_english_spans: List[tuple[int, int]] = DisplayToken(
+            "", WHITE, children=display_tokens, english_spans=[]
+        ).all_spans()
+        all_english_spans.append((len(self.english), len(self.english)))
+
+        log.debug(f"all english spans: {all_english_spans}")
 
         # sa, tr, en
         states: List[List[TypstText]] = [[], [], []]
@@ -135,8 +152,6 @@ class UtteranceTimeline(Timeline):
 
             assert len(diffs) != diff_count, "Unknown diff type"
 
-        diffs[0].initial = True
-
         for i, frame in enumerate(frames):
             sanskrit = ""
             translit = ""
@@ -147,49 +162,46 @@ class UtteranceTimeline(Timeline):
                 iast = transform_text(token.slp1, Language.TRANSLIT)
                 translit += f"{Junicode_translit(iast, token.color)}<{token.id}> "
 
-            all_tuples = [
+            frame_spans = [
                 ((start, end), token.color)
                 for token in frame
                 for start, end in token.english_spans
             ]
-            all_tuples.append(((len(self.english), len(self.english)), WHITE))
 
             cursor = 0
-            plain_english = 0
-            for [start, end], color in sorted(all_tuples, key=lambda item: item[0]):
-                # Emit any unspanned text before this span
-                if start > cursor:
-                    missing_text = self.english[cursor:start]
-                    plain_english += len(missing_text)
-                    for m in MISSING_CHUNK_RE.finditer(missing_text):
-                        piece = m.group()
-                        if TYPST_CMD_RE.fullmatch(piece):
-                            english += piece
+            for a in all_english_spans:
+                if a[0] > cursor:
+                    missing_text = self.english[cursor : a[0]]
+                    for chunk in MISSING_CHUNK_RE.finditer(missing_text):
+                        chunk = chunk.group()
+                        # Whitespace is already in the right format
+                        if WHITESPACE_RE.fullmatch(chunk):
+                            english += chunk
+                        # Typst Commands are already in the right format
+                        elif TYPST_CMD_RE.fullmatch(chunk):
+                            english += chunk
+                        # Everything else should be wrapped
                         else:
-                            english += typst_code(piece, Language.ENGLISH, WHITE)
-                            # Only add a space if the original text has a space right after this piece
-                            next_pos = m.end()
-                            if (
-                                next_pos < len(missing_text)
-                                and missing_text[next_pos] == " "
-                            ):
-                                english += " "
+                            english += typst_code(chunk, Language.ENGLISH, WHITE)
 
-                if start == end:
-                    break
+                        # Move cursor
+                        cursor += len(chunk)
 
-                # Emit the colored span
-                english_token = self.english[start:end]
-                plain_english += len(english_token)
-                english += typst_code_safe(english_token, Language.ENGLISH, color)
-                cursor = end
+                    assert cursor == a[0], "Cursor moved to span start"
 
-                # Consume a trailing space so missing_text never starts with one
-                if cursor < len(self.english) and self.english[cursor] == " ":
-                    english += " "
-                    cursor += 1
+                # If it is represented in the current frame
+                inactive = WHITE + "7D"
 
-            states[0].append(TypstText(set_font(sanskrit, SANSKRIT_FONT), scale=SCALE))
+                color = next((color for b, color in frame_spans if a == b), inactive)
+
+                english += typst_code(
+                    self.english[a[0] : a[1]],
+                    Language.ENGLISH,
+                    color,
+                )
+
+                cursor += a[1] - a[0]
+
             states[1].append(TypstText(set_font(translit, LATIN_FONT), scale=SCALE))
             states[2].append(TypstText(set_font(english, LATIN_FONT), scale=SCALE))
 
@@ -221,9 +233,7 @@ class UtteranceTimeline(Timeline):
                     self.play(
                         Aligned(
                             *(
-                                ShowCreationThenFadeAround(
-                                    dt, surrounding_rect_config={"color": WHITE}
-                                )
+                                Awaken(dt)
                                 for dt in [
                                     states[0][i - 1].get_label(diff.token_id),
                                     states[1][i - 1].get_label(diff.token_id),
