@@ -12,6 +12,7 @@ class DisplayToken:
     children: List["DisplayToken"]  # empty => leaf (SimpleToken or punct)
     english_spans: List[tuple[int, int]]  # the spans this token is responsible for
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    is_root: bool = field(default=False)
 
     @property
     def is_leaf(self) -> bool:

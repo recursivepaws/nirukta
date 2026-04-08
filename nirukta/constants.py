@@ -12,3 +12,4 @@ COLORS = [RED, BLUE, YELLOW, GREEN, PINK, ORANGE, TEAL, MAROON]
 TYPST_CMD_RE = re.compile(r"(#\w+\(\))")
 MISSING_CHUNK_RE = re.compile(r"#\w+\(\)|[a-zA-Z0-9']+|[^a-zA-Z0-9'\s#]+|#")
 DIGITS_RE = re.compile(r"\d+")
+ALPHA_RE = re.compile(r"[a-zA-Z]+")

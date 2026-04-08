@@ -20,6 +20,7 @@ from janim.imports import (
     TypstText,
     Wait,
     Write,
+    log,
     rush_into,
     linear,
 )
@@ -31,6 +32,7 @@ from nirukta.constants import (
     SANSKRIT_FONT,
     SCALE,
     TYPST_CMD_RE,
+    ALPHA_RE,
 )
 from nirukta.models import (
     Animation,
@@ -84,62 +86,56 @@ class UtteranceTimeline(Timeline):
             build_display_token(self.english, token, visited, colorings)
             for token in self.tokens
         ]
+
+        for i in range(len(display_tokens)):
+            if _ := ALPHA_RE.search(display_tokens[i].slp1):
+                display_tokens[i].is_root = True
+                log.debug(f"{display_tokens[i].slp1} is a `DisplayToken` root")
+
         frames = frames_for_vakya(display_tokens)
 
         # sa, tr, en
-        states = [[], [], []]
-        # state_changes = []
+        states: List[List[TypstText]] = [[], [], []]
         diffs: List[Diff] = []
-        expansion_ids = []
-        eii = 0
 
-        # load_gun = True
+        # is_root = True
+
         for i in range(len(frames) - 1):
             # compare this frame to the next frame
-            animation = frames[i]
-            b = frames[i + 1]
+            fa = frames[i]
+            fb = frames[i + 1]
 
-            # if load_gun:
-            #     load_gun = False
-            #     for j in range(len(animation)):
-            #         if animation[j].slp1 != b[j].slp1 or animation[j]:
-            #             print(f"appending {animation[j].id}")
-            #             expansion_ids.append(animation[j].id)
-            #             break
-            #     # expansion_ids.append(animation[j].id)
-            known_diffs = len(diffs)
+            # Keep track of known diffs to ensure compliance
+            diff_count = len(diffs)
 
-            if len(animation) != len(b):
-                # state_changes.append(AnimationChange.EXPAND)
-                for j in range(len(animation)):
-                    if animation[j].slp1 != b[j].slp1:
-                        diffs.append(Diff(Animation.EXPAND, animation[j].id))
-                        break
-            else:
-                for j in range(len(animation)):
-                    id = animation[j].id
-                    # Swaras changed
-                    if (
-                        unswara(animation[j].slp1) != animation[j].slp1
-                        and unswara(animation[j].slp1) == b[j].slp1
-                    ):
-                        diffs.append(Diff(Animation.SWARAS, id))
-                        break
-                    # Spelling changed
-                    elif animation[j].slp1 != b[j].slp1:
-                        diffs.append(Diff(Animation.SPELLS, id))
-                        break
-                    # Color changed
-                    elif animation[j].color != b[j].color:
-                        diffs.append(Diff(Animation.COLORS, id))
-                        break
+            # For each item in the new frame
+            for j in range(len(fa)):
+                id = fa[j].id
+                initial = fa[j].is_root
 
-                # else:
-                #     raise ValueError("I don't know what kind of change occurred")
+                # Expansion
+                if len(fa) != len(fb) and fa[j].slp1 != fb[j].slp1:
+                    diffs.append(Diff(Animation.EXPAND, id, initial))
+                # Swaras changed
+                elif (
+                    unswara(fa[j].slp1) != fa[j].slp1
+                    and unswara(fa[j].slp1) == fb[j].slp1
+                ):
+                    diffs.append(Diff(Animation.SWARAS, id, initial))
+                # Spelling changed
+                elif fa[j].slp1 != fb[j].slp1:
+                    diffs.append(Diff(Animation.SPELLS, id, initial))
+                # Color changed
+                elif fa[j].color != fb[j].color:
+                    diffs.append(Diff(Animation.COLORS, id, initial))
 
-            assert len(diffs) != known_diffs, "Unknown diff type"
+                # Exit once we've added to the list
+                if len(diffs) > diff_count:
+                    break
 
-        # print([*((lambda c: c.value)(s) for s in diffs)])
+            assert len(diffs) != diff_count, "Unknown diff type"
+
+        diffs[0].initial = True
 
         for i, frame in enumerate(frames):
             sanskrit = ""
@@ -197,10 +193,6 @@ class UtteranceTimeline(Timeline):
             states[1].append(TypstText(set_font(translit, LATIN_FONT), scale=SCALE))
             states[2].append(TypstText(set_font(english, LATIN_FONT), scale=SCALE))
 
-        # for s in states[1]:
-        #     print(s.text)
-
-        load_gun_v2 = True
         for i in range(len(states[0])):
             # Start the transliteration in the center
             states[1][i].points.move_to(ORIGIN)
@@ -211,23 +203,21 @@ class UtteranceTimeline(Timeline):
 
             # Initial write on
             if i == 0:
-                for animation in [
+                for fa in [
                     Aligned(
                         *(Write(s[i]) for s in states),
                         duration=1.0,
                     ),
                     Wait(1.0),
                 ]:
-                    self.play(animation)
+                    self.play(fa)
 
             # Transformation into current state
             if i > 0:
                 diff = diffs[i - 1]
                 assert isinstance(diff, Diff), f"Invalid Change Type: {diff}"
 
-                if diff.anim == Animation.EXPAND:
-                    # dt_label = expansion_ids[eii]
-
+                if diff.initial:
                     self.play(
                         Aligned(
                             *(
@@ -242,7 +232,6 @@ class UtteranceTimeline(Timeline):
                         ),
                         duration=0.4,
                     )
-                    eii += 1
 
                 self.play(
                     Aligned(

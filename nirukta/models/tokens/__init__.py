@@ -82,13 +82,6 @@ def build_display_token(
 ) -> DisplayToken:
     if isinstance(token, SimpleToken):
         spans = token.gloss_refs(english, visited)
-        # for gloss in token.glosses:
-        # if isinstance(gloss, EnglishGloss):
-        #     print("not a case")
-        # else:
-        #     print("a case")
-        #     print(f"gloss in token: {token.slp1}\n{gloss}\n\n")
-        #     # token.slp1 = f"token.slp1}\\}}"
         unswarad = unswara(token.slp1)
 
         leaf = DisplayToken(
@@ -108,14 +101,12 @@ def build_display_token(
         else:
             dt = leaf
 
-        # Wrap in a single-child compound so color is only revealed on expansion
         return DisplayToken(
             slp1=token.slp1,
             color=WHITE,
             children=[dt],
             english_spans=[],
         )
-
     elif isinstance(token, CompoundToken):
         sandhi_compound = (
             isinstance(token.etym_gloss, SanskritInflection)

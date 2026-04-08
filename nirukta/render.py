@@ -23,7 +23,8 @@ from nirukta.models import Animation
 @dataclass
 class Diff:
     anim: Animation
-    token_id: Optional[str] = field(default=None)
+    token_id: str
+    initial: bool = field(default=False)
 
     def name(self):
         return str(self.anim.value)
@@ -41,7 +42,7 @@ class Diff:
             case Animation.SWARAS:
                 return 0.44
             case Animation.SPELLS:
-                return 0.55
+                return 0.33
             case Animation.EXPAND:
                 return 0.55
 
