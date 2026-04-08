@@ -1,4 +1,4 @@
-from nirukta.models.enums import Language, AnimationChange
+from nirukta.models.enums import Language, Animation
 from nirukta.models.gloss import EnglishGloss, EtymGloss, Gloss
 from nirukta.models.tokens import (
     SimpleToken,

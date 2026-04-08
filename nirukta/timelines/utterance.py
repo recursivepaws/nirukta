@@ -33,7 +33,7 @@ from nirukta.constants import (
     TYPST_CMD_RE,
 )
 from nirukta.models import (
-    AnimationChange,
+    Animation,
     Language,
     TokenType,
     Utterance,
@@ -44,6 +44,7 @@ from nirukta.models import (
 )
 from nirukta.strings import unswara
 from nirukta.render import (
+    Diff,
     Junicode_translit,
     set_font,
     transform_text,
@@ -87,8 +88,8 @@ class UtteranceTimeline(Timeline):
 
         # sa, tr, en
         states = [[], [], []]
-        state_changes = []
-        diffs = []
+        # state_changes = []
+        diffs: List[Diff] = []
         expansion_ids = []
         eii = 0
 
@@ -106,34 +107,39 @@ class UtteranceTimeline(Timeline):
             #             expansion_ids.append(animation[j].id)
             #             break
             #     # expansion_ids.append(animation[j].id)
+            known_diffs = len(diffs)
 
             if len(animation) != len(b):
-                state_changes.append(AnimationChange.EXPAND)
+                # state_changes.append(AnimationChange.EXPAND)
                 for j in range(len(animation)):
                     if animation[j].slp1 != b[j].slp1:
-                        expansion_ids.append(animation[j].id)
+                        diffs.append(Diff(Animation.EXPAND, animation[j].id))
+                        break
             else:
                 for j in range(len(animation)):
+                    id = animation[j].id
                     # Swaras changed
                     if (
                         unswara(animation[j].slp1) != animation[j].slp1
                         and unswara(animation[j].slp1) == b[j].slp1
                     ):
-                        state_changes.append(AnimationChange.SWARAS)
+                        diffs.append(Diff(Animation.SWARAS, id))
                         break
                     # Spelling changed
                     elif animation[j].slp1 != b[j].slp1:
-                        state_changes.append(AnimationChange.SPELLS)
+                        diffs.append(Diff(Animation.SPELLS, id))
                         break
                     # Color changed
                     elif animation[j].color != b[j].color:
-                        state_changes.append(AnimationChange.COLORS)
+                        diffs.append(Diff(Animation.COLORS, id))
                         break
 
                 # else:
                 #     raise ValueError("I don't know what kind of change occurred")
 
-        print([*((lambda c: c.value)(s) for s in state_changes)])
+            assert len(diffs) != known_diffs, "Unknown diff type"
+
+        # print([*((lambda c: c.value)(s) for s in diffs)])
 
         for i, frame in enumerate(frames):
             sanskrit = ""
@@ -216,9 +222,11 @@ class UtteranceTimeline(Timeline):
 
             # Transformation into current state
             if i > 0:
-                change_type = state_changes[i - 1]
-                if change_type == AnimationChange.EXPAND:
-                    dt_label = expansion_ids[eii]
+                diff = diffs[i - 1]
+                assert isinstance(diff, Diff), f"Invalid Change Type: {diff}"
+
+                if diff.anim == Animation.EXPAND:
+                    # dt_label = expansion_ids[eii]
 
                     self.play(
                         Aligned(
@@ -227,8 +235,8 @@ class UtteranceTimeline(Timeline):
                                     dt, surrounding_rect_config={"color": WHITE}
                                 )
                                 for dt in [
-                                    states[0][i - 1].get_label(dt_label),
-                                    states[1][i - 1].get_label(dt_label),
+                                    states[0][i - 1].get_label(diff.token_id),
+                                    states[1][i - 1].get_label(diff.token_id),
                                 ]
                             )
                         ),
@@ -236,56 +244,23 @@ class UtteranceTimeline(Timeline):
                     )
                     eii += 1
 
-                assert isinstance(change_type, AnimationChange), "Invalid Change Type"
-                rate_func = linear
-
-                match change_type:
-                    case AnimationChange.COLORS:
-                        duration = 0.33
-                        load_gun_v2 = True
-                    case AnimationChange.SWARAS:
-                        duration = 0.44
-                    case AnimationChange.SPELLS:
-                        duration = 0.55
-                    case AnimationChange.EXPAND:
-                        duration = 0.55
-                        rate_func = rush_into
-
-                delay = duration * 0.15
-
-                # Swara removals get a special animation for optimal seamlessness
-                if change_type == AnimationChange.SWARAS:
-                    mismatch = (
-                        lambda item, p, **kwargs: FadeOut(
-                            item, at=delay, shift=UP * 0.1, **kwargs
-                        ),
-                        lambda item, p, **kwargs: GrowFromEdge(item, DOWN, **kwargs),
-                    )
-                else:
-                    mismatch = (
-                        lambda item, p, **kwargs: ShrinkToEdge(
-                            item, UP, at=delay, **kwargs
-                        ),
-                        lambda item, p, **kwargs: GrowFromEdge(item, DOWN, **kwargs),
-                    )
-
                 self.play(
                     Aligned(
                         *(
                             LenientTransformMatchingDiff(
                                 s[i - 1],
                                 s[i],
-                                duration=duration,
-                                mismatch=mismatch,  # type: ignore[arg-type]
-                                name=str(change_type.value),
+                                duration=diff.duration(),
+                                mismatch=diff.mismatch(),  # type: ignore[arg-type]
+                                name=diff.name(),
                             )
                             for s in states
                         ),
-                        rate_func=rate_func,
+                        rate_func=diff.rate_func(),
                     )
                 )
 
-                if change_type == AnimationChange.COLORS:
+                if diff == Animation.COLORS:
                     self.play(Wait(0.25))
 
         self.play(Wait(2.0))

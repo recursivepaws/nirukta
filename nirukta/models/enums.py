@@ -1,3 +1,4 @@
+from typing import Optional
 from enum import Enum
 
 
@@ -7,7 +8,7 @@ class Language(Enum):
     TRANSLIT = "translit"
 
 
-class AnimationChange(Enum):
+class Animation(Enum):
     # Swara removal
     SWARAS = "Swara"
     # Other spelling changes

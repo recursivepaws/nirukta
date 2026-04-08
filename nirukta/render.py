@@ -1,9 +1,69 @@
-from janim.imports import DOWN, Group, TypstText, VItem
-from nirukta.constants import INTRO_FONT, SCALE
+from janim.imports import (
+    DOWN,
+    UP,
+    FadeOut,
+    Group,
+    GrowFromEdge,
+    ShrinkToEdge,
+    TypstText,
+    VItem,
+    linear,
+    rush_into,
+)
+from nirukta.constants import INTRO_FONT, SCALE, TYPST_CMD_RE
 from nirukta.models import Language, Sloka
-from nirukta.constants import TYPST_CMD_RE
 from janim.imports import WHITE
 from aksharamukha import transliterate
+
+from dataclasses import dataclass, field
+from typing import Optional
+from nirukta.models import Animation
+
+
+@dataclass
+class Diff:
+    anim: Animation
+    token_id: Optional[str] = field(default=None)
+
+    def name(self):
+        return str(self.anim.value)
+
+    def rate_func(self):
+        if self.anim == Animation.EXPAND:
+            return rush_into
+        else:
+            return linear
+
+    def duration(self):
+        match self.anim:
+            case Animation.COLORS:
+                return 0.33
+            case Animation.SWARAS:
+                return 0.44
+            case Animation.SPELLS:
+                return 0.55
+            case Animation.EXPAND:
+                return 0.55
+
+    def delay(self):
+        return self.duration() * 0.15
+
+    def mismatch(self):
+        # Swara removals get a special animation for optimal seamlessness
+        if self.anim == Animation.SWARAS:
+            return (
+                lambda item, p, **kwargs: FadeOut(
+                    item, at=self.delay(), shift=UP * 0.1, **kwargs
+                ),
+                lambda item, p, **kwargs: GrowFromEdge(item, DOWN, **kwargs),
+            )
+        else:
+            return (
+                lambda item, p, **kwargs: ShrinkToEdge(
+                    item, UP, at=self.delay(), **kwargs
+                ),
+                lambda item, p, **kwargs: GrowFromEdge(item, DOWN, **kwargs),
+            )
 
 
 def sloka_group(sloka: Sloka) -> Group[TypstText]:
