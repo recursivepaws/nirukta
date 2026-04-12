@@ -28,6 +28,7 @@ from nirukta.render import (
     Awaken,
     scale_with_stroke,
     set_font,
+    sloka_group_english,
     typst_code,
     sloka_group,
 )
@@ -125,5 +126,11 @@ class SutraFileTimeline(Timeline):
 
             if numbered:
                 self.play(FadeOut(group))
+
+            sge = sloka_group_english(sloka)
+            self.play(Write(sge))
+            self.play(Wait(2.0))
+            self.play(FadeOut(sge))
+
 
         # self.play(FadeOut(group))

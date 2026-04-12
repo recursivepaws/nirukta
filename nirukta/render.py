@@ -22,7 +22,7 @@ from janim.imports import (
     rush_into,
     there_and_back,
 )
-from nirukta.constants import INTRO_FONT, SCALE, TYPST_CMD_RE
+from nirukta.constants import INTRO_FONT, LATIN_FONT, SCALE, TYPST_CMD_RE
 from nirukta.models import Language, Sloka
 from janim.imports import WHITE, C_LABEL_ANIM_ABSTRACT
 from aksharamukha import transliterate
@@ -139,6 +139,25 @@ def sloka_group(sloka: Sloka) -> Group[TypstText]:
             TypstText(
                 # set_font(typst_code(sanskrit, Language.SANSKRIT), INTRO_FONT),
                 set_font(sanskritcode, INTRO_FONT),
+                scale=SCALE,
+            )
+        )
+
+    group = Group(*group)
+    group.points.arrange(DOWN)
+    return group
+
+def sloka_group_english(sloka: Sloka) -> Group[TypstText]:
+    group = []
+
+    for li, line in enumerate(sloka.lines):
+        english = ""
+        for vi, vAkya in enumerate(line.vAkyAni):
+            english += vAkya.english + "#linebreak()"
+
+        group.append(
+            TypstText(
+                set_font(typst_code(english, Language.ENGLISH), LATIN_FONT),
                 scale=SCALE,
             )
         )
