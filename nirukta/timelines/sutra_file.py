@@ -17,21 +17,25 @@ from janim.imports import (
     SurroundingRect,
     Text,
     Timeline,
+    Transform,
     TypstText,
     Wait,
     Write,
 )
 from nirukta.constants import INACTIVE, INTRO_FONT, SCALE
 from nirukta.models import Language, Sloka, SutraFile
-from nirukta.timelines import UtteranceTimeline
+from nirukta.timelines import LenientTransformMatchingDiff, UtteranceTimeline
 from nirukta.render import (
     Awaken,
+    Sleep,
     scale_with_stroke,
     set_font,
     sloka_group_english,
+    sloka_thumbnail,
     typst_code,
     sloka_group,
 )
+from nirukta.timelines.explain_sloka import ExplainSloka
 
 
 @dataclass
@@ -67,70 +71,28 @@ class SutraFileTimeline(Timeline):
         ]:
             self.play(animation)
 
-        group = Group()
         for sloka in self.slokas:
-            sloka_text: Optional[Group[TypstText]] = None
-            numbered = False
+            explain = ExplainSloka(sloka).build().to_item().show()
+            self.forward_to(explain.end)
 
-            if sloka.number is not None:
-                sloka_text = sloka_group(sloka)
-                number_label = Group(
-                    Rect(0.4, 0.4, fill_alpha=0.3),
-                    Text(f"{sloka.number}", font_size=22),
-                )
-                number_label.points.next_to(
-                    sloka_text, UP, buff=MED_SMALL_BUFF, aligned_edge=LEFT
-                )
+            # thumbnail = sloka_thumbnail(sloka)
+            # initial = sloka_group(sloka)
+            # self.play(Write(initial), duration=0.33)
+            # self.play(LenientTransformMatchingDiff(initial, thumbnail[0]), duration=0.33)
+            # self.play(Aligned(FadeIn(thumbnail[1:]), Sleep(thumbnail[0])))
+            #
+            # for li, line in enumerate(sloka.lines):
+            #     for vi, vAkya in enumerate(line.vAkyAni):
+            #         if li != 0 or vi != 0:
+            #             self.play(Sleep(thumbnail[0]))
+            #
+            #         selection = thumbnail[0][li].get_label(
+            #             f"line_{li}_utterance_{vi}"
+            #         )
+            #         self.play(Awaken(selection))
+            #
+            #         vt = UtteranceTimeline(vAkya).build().to_item().show()
+            #         self.forward_to(vt.end)
+            #
+            # self.play(FadeOut(thumbnail))
 
-                sloka_border = SurroundingRect(
-                    Group(sloka_text, number_label), color=WHITE, buff=MED_SMALL_BUFF
-                )
-
-                group = scale_with_stroke(
-                    Group(number_label, sloka_text, sloka_border), 0.5
-                )
-                group.points.to_border(UL, buff=MED_SMALL_BUFF)
-
-                print(f"SLOKA NUMBER: {sloka.number}")
-                numbered = True
-
-            def grey_anim(sloka_text: Group[TypstText]):
-                return Aligned(
-                    *(line.anim.set(color=INACTIVE) for line in sloka_text),
-                    duration=0.33,
-                )
-
-            if numbered and sloka_text is not None:
-                self.play(Aligned(FadeIn(group), grey_anim(sloka_text)))
-
-            for li, line in enumerate(sloka.lines):
-                # animation = LineTimeline(line).build().to_item().show()
-
-                for vi, vAkya in enumerate(line.vAkyAni):
-                    if sloka_text is not None:
-                        if li != 0 or vi != 0:
-                            self.play(grey_anim(sloka_text))
-
-                        selection = sloka_text[li].get_label(
-                            f"line_{li}_utterance_{vi}"
-                        )
-                        self.play(Awaken(selection))
-
-                    vt = UtteranceTimeline(vAkya).build().to_item().show()
-                    self.forward_to(vt.end)
-
-                    # if sloka_text is not None:
-                    #     self.play(selection.anim.set(color=WHITE), duration=1.0)
-
-                # self.forward_to(animation.end)
-
-            if numbered:
-                self.play(FadeOut(group))
-
-            sge = sloka_group_english(sloka)
-            self.play(Write(sge))
-            self.play(Wait(2.0))
-            self.play(FadeOut(sge))
-
-
-        # self.play(FadeOut(group))

@@ -1,25 +1,42 @@
 from typing import List
 
-from janim.imports import YELLOW, Succession, Timeline
-from nirukta.models import Line
+from janim.imports import YELLOW, Aligned, FadeIn, FadeOut, Succession, Timeline, Write
+from nirukta.models import Line, Sloka
+from nirukta.render import Awaken, Sleep, sloka_group, sloka_thumbnail
+from nirukta.timelines import LenientTransformMatchingDiff, UtteranceTimeline
 from nirukta.timelines.line import LineTimeline
 
 
 class ExplainSloka(Timeline):
-    lines: List[Line]
+    sloka: Sloka
 
-    def __init__(self, lines: List[Line]):
+    def __init__(self, sloka: Sloka):
         super().__init__()
-        self.lines = lines
+        self.sloka = sloka
 
     @property
     def gui_color(self) -> str:
         return YELLOW
 
     def construct(self):
-        animations = []
-        for line in self.lines:
-            line_timeline = LineTimeline(line).build().to_item()
-            line_timeline.show()
-            self.forward_to(line_timeline.end)
-        self.play(Succession(*animations))
+        thumbnail = sloka_thumbnail(self.sloka)
+        # initial = sloka_group(self.sloka)
+        # self.play(Write(initial), duration=0.33)
+        # self.play(LenientTransformMatchingDiff(initial, thumbnail[0]), duration=0.33)
+        # self.play(Aligned(FadeIn(thumbnail[1:]), Sleep(thumbnail[0])))
+        self.play(Aligned(FadeIn(thumbnail), Sleep(thumbnail[0])))
+
+        for li, line in enumerate(self.sloka.lines):
+            for vi, vAkya in enumerate(line.vAkyAni):
+                if li != 0 or vi != 0:
+                    self.play(Sleep(thumbnail[0]))
+
+                selection = thumbnail[0][li].get_label(
+                    f"line_{li}_utterance_{vi}"
+                )
+                self.play(Awaken(selection))
+
+                vt = UtteranceTimeline(vAkya).build().to_item().show()
+                self.forward_to(vt.end)
+
+        self.play(FadeOut(thumbnail))
