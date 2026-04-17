@@ -39,4 +39,6 @@ class ExplainSloka(Timeline):
                 vt = UtteranceTimeline(vAkya).build().to_item().show()
                 self.forward_to(vt.end)
 
+
+        self.play(Sleep(thumbnail[0]))
         self.play(FadeOut(thumbnail))
