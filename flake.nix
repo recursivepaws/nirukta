@@ -69,6 +69,7 @@
             export LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.13/site-packages/PySide6:$LD_LIBRARY_PATH"
             echo "OpenGL context:"
             uv run opengl.py
+            uv run zsh
           '';
         };
       }
