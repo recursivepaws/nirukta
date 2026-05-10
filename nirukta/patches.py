@@ -2,9 +2,11 @@ import os
 import re
 import typst
 import janim.utils.typst_compile as tc
-from janim.gui.timeline_view import TimelineView
-from janim.gui.label import LazyLabelGroup, LabelGroup
-from PySide6.QtGui import QColor
+from janim.gui.timeline_view import TimelineView, LABEL_OBJ_NAME
+from janim.gui.label import LazyLabelGroup, Label, LabelGroup
+from janim.anims.animation import FOREVER, TimeRange
+from janim.anims.composition import AnimGroup
+from PySide6.QtGui import QColor, QPen
 from janim.utils.font.database import FontInfo, get_database
 from fontTools.ttLib import TTCollection, TTFont, TTLibError
 from janim.utils.font_manager import list_fonts, get_fontext_synonyms
@@ -56,7 +58,71 @@ if not getattr(TimelineView, "_init_label_group_patched", False):
     TimelineView.set_built = _patched_set_built
     TimelineView._init_label_group_patched = True  # type: ignore[attr-defined]
 
-_ADDR_SUFFIX_RE = re.compile(r" at 0x[0-9A-Fa-f]+ \(item at 0x[0-9A-Fa-f]+\)$")
+if not getattr(TimelineView, "_make_anim_label_group_patched", False):
+    _orig_make_anim_label_group = TimelineView.make_anim_label_group
+
+    @staticmethod
+    def _patched_make_anim_label_group(built):
+        def make_label_from_anim(anim, header=True):
+            name = anim.name or anim.__class__.__name__
+            color = QColor(*anim.label_color)
+            if isinstance(anim, AnimGroup) and not getattr(anim, "flat_label", False):
+                labels = [
+                    label
+                    for subanim in anim.anims
+                    if (label := make_label_from_anim(subanim)) is not None
+                ]
+                if not labels:
+                    return None
+                label = LabelGroup(
+                    name,
+                    TimeRange(
+                        min(lbl.t_range.at for lbl in labels),
+                        max(lbl.t_range.end for lbl in labels),
+                    ),
+                    *labels,
+                    collapse=anim.collapse,
+                    header=header,
+                    brush=color,  # pyright: ignore[reportArgumentType]
+                    highlight_pen=QPen(QColor(41, 171, 202), 3),  # pyright: ignore[reportArgumentType]
+                    highlight_brush=QColor(41, 171, 202, 40),  # pyright: ignore[reportArgumentType]
+                )
+            else:
+                label = Label(
+                    name,
+                    anim.t_range
+                    if anim.t_range.end is not FOREVER
+                    else TimeRange(anim.t_range.at, built.duration),
+                    brush=color,  # pyright: ignore[reportArgumentType]
+                )
+            setattr(label, LABEL_OBJ_NAME, anim)
+            return label
+
+        from janim.utils.rate_functions import linear as _linear
+
+        return LabelGroup(
+            "",
+            TimeRange(0, built.duration),
+            *[
+                label
+                for anim in built.timeline.anim_groups
+                if (
+                    label := make_label_from_anim(
+                        anim,
+                        len(anim.anims) != 1 or anim.rate_func is not _linear,
+                    )
+                )
+                is not None
+            ],
+            collapse=False,
+            header=False,
+        )
+
+    TimelineView.make_anim_label_group = _patched_make_anim_label_group
+    TimelineView._make_anim_label_group_patched = True  # type: ignore[attr-defined]
+
+
+_ADDR_SUFFIX_RE = re.compile(r" at 0x[0-9A-Fa-f]+ \(item at 0x[0-9A-Fa-f]+\)")
 
 if not getattr(TimelineView, "_make_subtimeline_name_patched", False):
     _orig_make_subtimeline_label_group = TimelineView.make_subtimeline_label_group

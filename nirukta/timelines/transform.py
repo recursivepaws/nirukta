@@ -4,6 +4,8 @@ from janim.imports import TransformMatchingDiff, normalize, np
 
 
 class LenientTransformMatchingDiff(TransformMatchingDiff):
+    flat_label = True
+
     @dataclass
     class _MatchWrapper(TransformMatchingDiff._MatchWrapper):
         def __eq__(self, other):
