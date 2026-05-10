@@ -13,15 +13,12 @@ from janim.imports import (
     ORIGIN,
     UP,
     WHITE,
-    Aligned,
     FadeOut,
     Timeline,
     TypstText,
     Wait,
     Write,
     log,
-    rush_into,
-    linear,
 )
 from nirukta.timelines.transform import LenientTransformMatchingDiff
 from nirukta.constants import (
@@ -55,7 +52,6 @@ from nirukta.render import (
     set_font,
     transform_text,
     typst_code,
-    typst_code_safe,
 )
 
 
@@ -69,6 +65,8 @@ def build_utterance_cached(vAkya: Utterance):
     key = hashlib.md5(pickle.dumps((vAkya.tokens, vAkya.english))).hexdigest()
     if key not in _built_cache:
         _built_cache[key] = UtteranceTimeline(vAkya).build()
+
+    log.info(f"Reusing utterance build: {vAkya.english}")
     return _built_cache[key]
 
 

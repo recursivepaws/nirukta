@@ -35,7 +35,7 @@ from nirukta.render import (
     typst_code,
     sloka_group,
 )
-from nirukta.timelines.explain_sloka import ExplainSloka
+from nirukta.timelines.explain_sloka import ExplainSloka, build_explain_sloka_cached
 
 
 @dataclass
@@ -72,7 +72,7 @@ class SutraFileTimeline(Timeline):
             self.play(animation)
 
         for sloka in self.slokas:
-            explain = ExplainSloka(sloka).build().to_item().show()
+            explain = build_explain_sloka_cached(sloka).to_item().show()
             self.forward_to(explain.end)
 
             # thumbnail = sloka_thumbnail(sloka)
@@ -95,4 +95,3 @@ class SutraFileTimeline(Timeline):
             #         self.forward_to(vt.end)
             #
             # self.play(FadeOut(thumbnail))
-
