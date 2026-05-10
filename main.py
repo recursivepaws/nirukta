@@ -1,12 +1,15 @@
+import os
 import sys
 import nirukta.patches  # pyright: ignore[reportUnusedImport]  # noqa: F401
 
 from janim.imports import RED, Timeline
 from janim.imports import Config
 
-for key in list(sys.modules):
-    if key.startswith("nirukta"):
-        del sys.modules[key]
+# Rebuild everything in the framework
+if os.environ.get("REBUILD"):
+    for key in list(sys.modules):
+        if key.startswith("nirukta"):
+            del sys.modules[key]
 
 from nirukta.util import choose_nirukta_file, is_nirukta_file, file_to_timeline  # noqa: E402
 

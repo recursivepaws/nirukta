@@ -3,7 +3,7 @@ from typing import List
 from janim.imports import YELLOW, Aligned, FadeIn, FadeOut, Succession, Timeline, Write
 from nirukta.models import Line, Sloka
 from nirukta.render import Awaken, Sleep, sloka_group, sloka_thumbnail
-from nirukta.timelines import LenientTransformMatchingDiff, UtteranceTimeline
+from nirukta.timelines import LenientTransformMatchingDiff, UtteranceTimeline, build_utterance_cached
 from nirukta.timelines.line import LineTimeline
 
 
@@ -36,7 +36,7 @@ class ExplainSloka(Timeline):
                 )
                 self.play(Awaken(selection))
 
-                vt = UtteranceTimeline(vAkya).build().to_item().show()
+                vt = build_utterance_cached(vAkya).to_item().show()
                 self.forward_to(vt.end)
 
 

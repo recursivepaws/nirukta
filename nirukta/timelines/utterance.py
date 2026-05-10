@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from itertools import chain
-from typing import List
+import hashlib
+import pickle
+from typing import Any, List
 
 from janim.imports import (
     BLUE,
@@ -51,6 +53,19 @@ from nirukta.render import (
     typst_code,
     typst_code_safe,
 )
+
+
+# Keyed by MD5 of pickled utterance data.
+# Persists across JAnim GUI rebuilds so unchanged utterances are never re-built.
+_built_cache: dict[str, Any] = {}
+
+
+def build_utterance_cached(vAkya: Utterance):
+    """Return a cached BuiltTimeline for *vAkya*, building it only on first use."""
+    key = hashlib.md5(pickle.dumps((vAkya.tokens, vAkya.english))).hexdigest()
+    if key not in _built_cache:
+        _built_cache[key] = UtteranceTimeline(vAkya).build()
+    return _built_cache[key]
 
 
 @dataclass
