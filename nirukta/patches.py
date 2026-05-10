@@ -6,10 +6,23 @@ from janim.gui.timeline_view import TimelineView, LABEL_OBJ_NAME
 from janim.gui.label import LazyLabelGroup, Label, LabelGroup
 from janim.anims.animation import FOREVER, TimeRange
 from janim.anims.composition import AnimGroup
+from janim.anims.transform import MethodTransform
 from PySide6.QtGui import QColor, QPen
 from janim.utils.font.database import FontInfo, get_database
 from fontTools.ttLib import TTCollection, TTFont, TTLibError
 from janim.utils.font_manager import list_fonts, get_fontext_synonyms
+
+# MethodTransform.__getattr__ accesses self.delayed_actions to record proxy calls.
+# During deserialization, delayed_actions hasn't been set yet, so accessing it
+# triggers __getattr__ again — infinite recursion. Guard against that case.
+_orig_mt_getattr = MethodTransform.__getattr__
+
+def _safe_mt_getattr(self, name):
+    if 'delayed_actions' not in object.__getattribute__(self, '__dict__'):
+        raise AttributeError(name)
+    return _orig_mt_getattr(self, name)
+
+MethodTransform.__getattr__ = _safe_mt_getattr
 
 # Override fonts dir to include custom fonts
 font_dir = os.path.join(os.path.dirname(__file__), "..", "fonts")
@@ -50,9 +63,9 @@ if not getattr(TimelineView, "_init_label_group_patched", False):
     def _patched_set_built(self, built, pause_progresses):
         _orig_set_built(self, built, pause_progresses)
         # Run after restore, so we always end up fully expanded
-        if self.subtimeline_label_group is not None:
-            for label in self.subtimeline_label_group.labels:
-                expand_all(label)
+        # if self.subtimeline_label_group is not None:
+        #     for label in self.subtimeline_label_group.labels:
+        #         expand_all(label)
         self.update()
 
     TimelineView.set_built = _patched_set_built

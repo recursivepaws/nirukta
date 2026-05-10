@@ -1,9 +1,9 @@
 import hashlib
-import pickle
+import dill as pickle
 from typing import Any, List
 
 from janim.imports import YELLOW, Aligned, FadeIn, FadeOut, Succession, Timeline, Write
-from janim.logger import log
+from nirukta.cache import build_cached
 from nirukta.models import Line, Sloka
 from nirukta.render import Awaken, Sleep, sloka_group, sloka_thumbnail
 from nirukta.timelines import (
@@ -13,20 +13,20 @@ from nirukta.timelines import (
 )
 from nirukta.timelines.line import LineTimeline
 
-# Keyed by MD5 of pickled utterance data.
-# Persists across JAnim GUI rebuilds so unchanged utterances are never re-built.
+# Keyed by MD5 of pickled sloka data.
+# Persists across JAnim GUI rebuilds so unchanged slokas are never re-built.
 _built_cache: dict[str, Any] = {}
 
 
 def build_explain_sloka_cached(sloka: Sloka):
-    """Return a cached BuiltTimeline for *vAkya*, building it only on first use."""
+    """Return a cached BuiltTimeline for *sloka*, building it only on first use."""
     key = hashlib.md5(pickle.dumps((sloka.lines, sloka.number))).hexdigest()
-    if key not in _built_cache:
-        _built_cache[key] = ExplainSloka(sloka).build()
-    else:
-        log.info(f"Reusing sloka build: {sloka.number}")
-
-    return _built_cache[key]
+    return build_cached(
+        _built_cache,
+        key,
+        lambda: ExplainSloka(sloka).build(),
+        label=f"sloka {sloka.number}",
+    )
 
 
 class ExplainSloka(Timeline):

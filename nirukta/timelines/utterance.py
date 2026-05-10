@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 import hashlib
-import pickle
+import dill as pickle
 from typing import Any, List
+
+from nirukta.cache import build_cached
 
 from janim.imports import (
     BLUE,
@@ -63,12 +65,9 @@ _built_cache: dict[str, Any] = {}
 def build_utterance_cached(vAkya: Utterance):
     """Return a cached BuiltTimeline for *vAkya*, building it only on first use."""
     key = hashlib.md5(pickle.dumps((vAkya.tokens, vAkya.english))).hexdigest()
-    if key not in _built_cache:
-        _built_cache[key] = UtteranceTimeline(vAkya).build()
-    else:
-        log.info(f"Reusing utterance build: {vAkya.english}")
-
-    return _built_cache[key]
+    return build_cached(
+        _built_cache, key, lambda: UtteranceTimeline(vAkya).build(), label=vAkya.english
+    )
 
 
 @dataclass
