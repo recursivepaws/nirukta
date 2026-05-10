@@ -21,6 +21,7 @@
           python313
 
           zstd
+          zlib
 
           # OpenGL
           mesa
