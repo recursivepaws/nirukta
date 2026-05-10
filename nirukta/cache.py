@@ -38,19 +38,21 @@ def build_cached(cache: dict, key: str, builder: Callable, label: str = "") -> A
     built = builder()
     cache[key] = built
 
+    tmp_file = cache_file.with_suffix(".tmp")
     try:
         cache_file.parent.mkdir(parents=True, exist_ok=True)
-        with open(cache_file, "wb") as f:
+        with open(tmp_file, "wb") as f:
             old_limit = sys.getrecursionlimit()
             sys.setrecursionlimit(_RECURSION_LIMIT)
             try:
                 pickle.dump(built, f)
             finally:
                 sys.setrecursionlimit(old_limit)
+        tmp_file.replace(cache_file)
         log.info(f"Saved to disk: {tag}")
     except Exception as e:
         log.warning(f"Disk cache write failed{tag}: {e}")
-        cache_file.unlink(missing_ok=True)
+        tmp_file.unlink(missing_ok=True)
 
     return built
 

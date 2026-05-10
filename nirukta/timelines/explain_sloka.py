@@ -3,7 +3,7 @@ import dill as pickle
 from typing import Any, List
 
 from janim.imports import YELLOW, Aligned, FadeIn, FadeOut, Succession, Timeline, Write
-from nirukta.cache import build_cached
+from janim.logger import log
 from nirukta.models import Line, Sloka
 from nirukta.render import Awaken, Sleep, sloka_group, sloka_thumbnail
 from nirukta.timelines import (
@@ -13,20 +13,19 @@ from nirukta.timelines import (
 )
 from nirukta.timelines.line import LineTimeline
 
-# Keyed by MD5 of pickled sloka data.
-# Persists across JAnim GUI rebuilds so unchanged slokas are never re-built.
+# Memory-only cache: disk caching is handled at the utterance level.
 _built_cache: dict[str, Any] = {}
 
 
 def build_explain_sloka_cached(sloka: Sloka):
     """Return a cached BuiltTimeline for *sloka*, building it only on first use."""
     key = hashlib.md5(pickle.dumps((sloka.lines, sloka.number))).hexdigest()
-    return build_cached(
-        _built_cache,
-        key,
-        lambda: ExplainSloka(sloka).build(),
-        label=f"sloka {sloka.number}",
-    )
+    if key in _built_cache:
+        log.info(f"Reusing from memory: (sloka {sloka.number})")
+        return _built_cache[key]
+    built = ExplainSloka(sloka).build()
+    _built_cache[key] = built
+    return built
 
 
 class ExplainSloka(Timeline):
