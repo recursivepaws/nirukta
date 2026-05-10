@@ -2,3 +2,4 @@ media
 videos
 __pycache__
 .devenv
+.cache
