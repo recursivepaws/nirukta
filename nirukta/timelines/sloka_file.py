@@ -27,7 +27,8 @@ class SlokaFileTimeline(Timeline):
         introduction.show()
         self.forward_to(introduction.end)
 
-        explanation = build_explain_sloka_cached(self.sloka).to_item()
+        # explanation = build_explain_sloka_cached(self.sloka).to_item()
+        explanation = ExplainSloka(self.sloka).build().to_item()
         explanation.show()
         self.forward_to(explanation.end)
 

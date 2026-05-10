@@ -72,7 +72,8 @@ class SutraFileTimeline(Timeline):
             self.play(animation)
 
         for sloka in self.slokas:
-            explain = build_explain_sloka_cached(sloka).to_item().show()
+            # explain = build_explain_sloka_cached(sloka).to_item().show()
+            explain = ExplainSloka(sloka).build().to_item().show()
             self.forward_to(explain.end)
 
             # thumbnail = sloka_thumbnail(sloka)
