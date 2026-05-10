@@ -65,8 +65,9 @@ def build_utterance_cached(vAkya: Utterance):
     key = hashlib.md5(pickle.dumps((vAkya.tokens, vAkya.english))).hexdigest()
     if key not in _built_cache:
         _built_cache[key] = UtteranceTimeline(vAkya).build()
+    else:
+        log.info(f"Reusing utterance build: {vAkya.english}")
 
-    log.info(f"Reusing utterance build: {vAkya.english}")
     return _built_cache[key]
 
 

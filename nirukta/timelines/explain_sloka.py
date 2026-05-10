@@ -23,8 +23,9 @@ def build_explain_sloka_cached(sloka: Sloka):
     key = hashlib.md5(pickle.dumps((sloka.lines, sloka.number))).hexdigest()
     if key not in _built_cache:
         _built_cache[key] = ExplainSloka(sloka).build()
+    else:
+        log.info(f"Reusing sloka build: {sloka.number}")
 
-    log.info(f"Reusing sloka build: {sloka.number}")
     return _built_cache[key]
 
 
