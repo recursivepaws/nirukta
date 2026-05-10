@@ -1,11 +1,14 @@
 from dataclasses import dataclass
-from itertools import chain
 import hashlib
 import pickle
 from typing import Any, List
 
 from janim.imports import (
     BLUE,
+    C_LABEL_ANIM_ABSTRACT,
+    C_LABEL_ANIM_IN,
+    C_LABEL_ANIM_OUT,
+    C_LABEL_ANIM_INDICATION,
     DOWN,
     ORIGIN,
     UP,
@@ -47,6 +50,7 @@ from nirukta.strings import unswara
 from nirukta.render import (
     Awaken,
     Diff,
+    FlatAligned,
     Junicode_translit,
     set_font,
     transform_text,
@@ -219,9 +223,11 @@ class UtteranceTimeline(Timeline):
             # Initial write on
             if i == 0:
                 for fa in [
-                    Aligned(
+                    FlatAligned(
                         *(Write(s[i]) for s in states),
                         duration=1.0,
+                        name="Write",
+                        label_color=C_LABEL_ANIM_IN,
                     ),
                     Wait(1.0),
                 ]:
@@ -234,30 +240,33 @@ class UtteranceTimeline(Timeline):
 
                 if diff.initial:
                     self.play(
-                        Aligned(
+                        FlatAligned(
                             *(
                                 Awaken(dt)
                                 for dt in [
                                     states[0][i - 1].get_label(diff.token_id),
                                     states[1][i - 1].get_label(diff.token_id),
                                 ]
-                            )
+                            ),
+                            name="Awaken",
+                            label_color=C_LABEL_ANIM_INDICATION,
                         ),
                         duration=0.4,
                     )
 
                 self.play(
-                    Aligned(
+                    FlatAligned(
                         *(
                             LenientTransformMatchingDiff(
                                 s[i - 1],
                                 s[i],
                                 duration=diff.duration(),
                                 mismatch=diff.mismatch(),  # type: ignore[arg-type]
-                                name=diff.name(),
                             )
                             for s in states
                         ),
+                        name=diff.name(),
+                        label_color=C_LABEL_ANIM_ABSTRACT,
                         rate_func=diff.rate_func(),
                     )
                 )
@@ -266,4 +275,10 @@ class UtteranceTimeline(Timeline):
                     self.play(Wait(0.25))
 
         self.play(Wait(1.0))
-        self.play(Aligned(*(FadeOut(s[-1]) for s in states)))
+        self.play(
+            FlatAligned(
+                *(FadeOut(s[-1]) for s in states),
+                name="FadeOut",
+                label_color=C_LABEL_ANIM_OUT,
+            )
+        )

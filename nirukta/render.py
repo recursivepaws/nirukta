@@ -1,4 +1,6 @@
 from janim.imports import (
+    C_LABEL_ANIM_DEFAULT,
+    C_LABEL_ANIM_OUT,
     GREEN,
     LEFT,
     MED_SMALL_BUFF,
@@ -8,6 +10,7 @@ from janim.imports import (
     Cmpt_Rgbas,
     DataUpdater,
     ItemUpdater,
+    RateFunc,
     Rect,
     SupportsAnim,
     AnimGroup,
@@ -38,8 +41,37 @@ from aksharamukha import transliterate
 from dataclasses import dataclass, field
 from nirukta.models import Animation
 
+
+class FlatAligned(Aligned):
+    flat_label = True
+    label_color = C_LABEL_ANIM_DEFAULT
+
+    def __init__(
+        self,
+        *anims: SupportsAnim,
+        at: float = 0,
+        duration: float | None = None,
+        rate_func: RateFunc = linear,
+        name: str | None = None,
+        collapse: bool = False,
+        label_color=None,
+    ):
+        super().__init__(
+            *anims,
+            at=at,
+            duration=duration,
+            rate_func=rate_func,
+            name=name,
+            collapse=collapse,
+        )
+
+        if label_color is not None:
+            self.label_color = label_color
+
+
 class Sleep(AnimGroup):
-    label_color = C_LABEL_ANIM_ABSTRACT
+    flat_label = True
+    label_color = C_LABEL_ANIM_OUT
 
     def __init__(self, *anims: SupportsAnim, duration: float = 0.33, **kwargs) -> None:
         group = Group(*anims)
@@ -66,7 +98,9 @@ class Sleep(AnimGroup):
             )
         )
 
+
 class Awaken(AnimGroup):
+    flat_label = True
     label_color = C_LABEL_ANIM_ABSTRACT
 
     def __init__(self, *anims: SupportsAnim, duration: float = 0.33, **kwargs) -> None:
@@ -170,7 +204,6 @@ def sloka_group(sloka: Sloka) -> Group[TypstText]:
             utterance_code = f"{typst_code(utterancetext, Language.SANSKRIT)}<line_{li}_utterance_{vi}>"
             sanskritcode += utterance_code + " "
 
-
         group.append(
             TypstText(
                 # set_font(typst_code(sanskrit, Language.SANSKRIT), INTRO_FONT),
@@ -182,6 +215,7 @@ def sloka_group(sloka: Sloka) -> Group[TypstText]:
     group = Group(*group)
     group.points.arrange(DOWN)
     return group
+
 
 def sloka_group_english(sloka: Sloka) -> Group[TypstText]:
     group = []
@@ -202,6 +236,7 @@ def sloka_group_english(sloka: Sloka) -> Group[TypstText]:
     group.points.arrange(DOWN)
     return group
 
+
 def sloka_thumbnail(sloka: Sloka) -> Group:
     sloka_text = sloka_group(sloka)
     if sloka.number is not None:
@@ -216,16 +251,10 @@ def sloka_thumbnail(sloka: Sloka) -> Group:
             Group(sloka_text, number_label), color=WHITE, buff=MED_SMALL_BUFF
         )
 
-        group = scale_with_stroke(
-            Group(sloka_text, sloka_border, number_label), 0.5
-        )
+        group = scale_with_stroke(Group(sloka_text, sloka_border, number_label), 0.5)
     else:
-        sloka_border = SurroundingRect(
-            sloka_text, color=WHITE, buff=MED_SMALL_BUFF
-        )
-        group = scale_with_stroke(
-            Group(sloka_text, sloka_border), 0.5
-        )
+        sloka_border = SurroundingRect(sloka_text, color=WHITE, buff=MED_SMALL_BUFF)
+        group = scale_with_stroke(Group(sloka_text, sloka_border), 0.5)
 
     group.points.to_border(UL, buff=MED_SMALL_BUFF)
     return group
