@@ -24,7 +24,7 @@ class IntroduceSloka(Timeline):
         for line in sloka_g:
             self.play(Write(line, duration=4.0))
 
-        if self.citation is not None:
+        if self.citation is not None and self.citation != "sloka":
             citation_text = TypstText(
                 set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
                 scale=SCALE,
