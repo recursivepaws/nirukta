@@ -4,7 +4,9 @@ from janim.imports import (
     GREEN,
     LEFT,
     MED_SMALL_BUFF,
+    ORANGE,
     RED,
+    TEAL,
     UL,
     Aligned,
     Cmpt_Rgbas,
@@ -211,6 +213,39 @@ def sloka_group(sloka: Sloka) -> Group[TypstText]:
                 scale=SCALE,
             )
         )
+
+    group = Group(*group)
+    group.points.arrange(DOWN)
+    return group
+
+
+def sloka_group_chandas(sloka: Sloka, chandas) -> Group:
+    """Like sloka_group() but each akshara is colored by prosodic weight.
+
+    Guru (heavy) → ORANGE  |  Laghu (light) → TEAL
+    Produces an identical layout to sloka_group() so LenientTransformMatchingDiff
+    can match glyphs purely as a color change.
+    """
+    group = []
+    for li, line in enumerate(sloka.lines):
+        sanskritcode = ""
+        for vi, vAkya in enumerate(line.vAkyAni):
+            utterance_code = ""
+            for token in vAkya.tokens:
+                if isinstance(token, str):
+                    utterance_code += text_box(token, WHITE)
+                else:
+                    match = chandas.classify(token.slp1)
+                    for pada in match.aksharas:
+                        for akshara in pada:
+                            color = ORANGE if akshara.weight == "G" else TEAL
+                            utterance_code += typst_code(
+                                akshara.text, Language.SANSKRIT, color
+                            )
+                utterance_code += " "
+            sanskritcode += f"{utterance_code}<line_{li}_utterance_{vi}> "
+
+        group.append(TypstText(set_font(sanskritcode, INTRO_FONT), scale=SCALE))
 
     group = Group(*group)
     group.points.arrange(DOWN)
