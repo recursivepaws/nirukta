@@ -219,13 +219,12 @@ def sloka_group_chandas(sloka: Sloka, chandas, blank: bool = False) -> Group:
     """Each akshara in a grid cell; cell background encodes prosodic weight.
 
     Guru (heavy) → ORANGE background  |  Laghu (light) → TEAL background
-    Text is white throughout. One row per sloka line.
+    Text is white throughout. One row per pada (hardcoded to 8 aksharas for anuṣṭubh).
     When blank=True, all box backgrounds are black (invisible) — same SVG
     structure but no visible color, suitable as an animation intermediate.
     """
-    group = []
-    for li, line in enumerate(sloka.lines):
-        cells = []
+    all_cells = []
+    for line in sloka.lines:
         for vAkya in line.vAkyAni:
             for token in vAkya.tokens:
                 if isinstance(token, str):
@@ -238,13 +237,19 @@ def sloka_group_chandas(sloka: Sloka, chandas, blank: bool = False) -> Group:
                         fill = (
                             "rgb(0, 0, 0, 0)" if blank else f'rgb("{bg.lstrip("#")}")'
                         )
-                        cells.append(
-                            f"box(fill: {fill}, inset: 6pt, radius: 3pt)"
+                        all_cells.append(
+                            f"box(fill: {fill}, width: 1.8em, height: 1.8em, radius: 0.4em)"
                             f"[#align(center + horizon)[#text(fill: white)[{deva}]]]"
                         )
 
-        n = len(cells)
-        grid_code = f"#grid(columns: (auto,) * {n}, gutter: 3pt, {', '.join(cells)})"
+    pada_size = 8
+    group = []
+    for i in range(0, len(all_cells), pada_size):
+        pada_cells = all_cells[i : i + pada_size]
+        n = len(pada_cells)
+        grid_code = (
+            f"#grid(columns: (auto,) * {n}, gutter: 3pt, {', '.join(pada_cells)})"
+        )
         group.append(TypstText(set_font(grid_code, INTRO_FONT), scale=SCALE))
 
     group = Group(*group)

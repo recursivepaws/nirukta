@@ -44,23 +44,9 @@ class IntroduceSloka(Timeline):
         chandas = _get_chandas()
         sloka_chandas_blank = sloka_group_chandas(self.sloka, chandas, blank=True)
         sloka_chandas = sloka_group_chandas(self.sloka, chandas)
-        self.play(
-            FlatAligned(
-                *(
-                    LenientTransformMatchingDiff(sloka_g[i], sloka_chandas_blank[i], duration=0.6)
-                    for i in range(len(sloka_g))
-                ),
-            )
-        )
+        self.play(LenientTransformMatchingDiff(sloka_g, sloka_chandas_blank, duration=0.6))
         # …then reveal the prosodic colors
-        self.play(
-            FlatAligned(
-                *(
-                    LenientTransformMatchingDiff(sloka_chandas_blank[i], sloka_chandas[i], duration=0.6)
-                    for i in range(len(sloka_g))
-                ),
-            )
-        )
+        self.play(LenientTransformMatchingDiff(sloka_chandas_blank, sloka_chandas, duration=0.6))
         self.play(Wait(2.0))
 
         if self.citation is not None and self.citation != "sloka":
