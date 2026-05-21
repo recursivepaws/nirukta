@@ -57,9 +57,7 @@
         devShells.default = pkgs.mkShell {
           packages = with pkgs; [ uv ] ++ runtimeLibs;
 
-          env.QT_QPA_PLATFORM = "wayland";
           env.QT_API = "pyside6";
-          env.QT_WAYLAND_DISABLE_WINDOWDECORATION = "1";
           env.LIBGL_ALWAYS_SOFTWARE = "0";
 
           env.LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath runtimeLibs;
@@ -70,7 +68,6 @@
             export LD_LIBRARY_PATH="$VIRTUAL_ENV/lib/python3.13/site-packages/PySide6:$LD_LIBRARY_PATH"
             echo "OpenGL context:"
             uv run opengl.py
-            uv run zsh
           '';
         };
       }
