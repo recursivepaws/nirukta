@@ -40,13 +40,23 @@ class IntroduceSloka(Timeline):
         for line in sloka_g:
             self.play(Write(line, duration=4.0))
 
-        # After full write-on, color each akshara by prosodic weight
+        # After full write-on, first move glyphs into grid boxes (no color)…
         chandas = _get_chandas()
+        sloka_chandas_blank = sloka_group_chandas(self.sloka, chandas, blank=True)
         sloka_chandas = sloka_group_chandas(self.sloka, chandas)
         self.play(
             FlatAligned(
                 *(
-                    LenientTransformMatchingDiff(sloka_g[i], sloka_chandas[i], duration=0.6)
+                    LenientTransformMatchingDiff(sloka_g[i], sloka_chandas_blank[i], duration=0.6)
+                    for i in range(len(sloka_g))
+                ),
+            )
+        )
+        # …then reveal the prosodic colors
+        self.play(
+            FlatAligned(
+                *(
+                    LenientTransformMatchingDiff(sloka_chandas_blank[i], sloka_chandas[i], duration=0.6)
                     for i in range(len(sloka_g))
                 ),
             )

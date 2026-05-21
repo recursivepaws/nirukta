@@ -1,23 +1,19 @@
 from janim.imports import (
     C_LABEL_ANIM_DEFAULT,
     C_LABEL_ANIM_OUT,
-    GREEN,
+    BLUE_E,
+    RED_E,
     LEFT,
     MED_SMALL_BUFF,
-    ORANGE,
-    RED,
-    TEAL,
     UL,
     Aligned,
     Cmpt_Rgbas,
     DataUpdater,
-    ItemUpdater,
     RateFunc,
     Rect,
     SupportsAnim,
     AnimGroup,
     Succession,
-    Indicate,
     DOWN,
     UP,
     FadeOut,
@@ -219,33 +215,37 @@ def sloka_group(sloka: Sloka) -> Group[TypstText]:
     return group
 
 
-def sloka_group_chandas(sloka: Sloka, chandas) -> Group:
-    """Like sloka_group() but each akshara is colored by prosodic weight.
+def sloka_group_chandas(sloka: Sloka, chandas, blank: bool = False) -> Group:
+    """Each akshara in a grid cell; cell background encodes prosodic weight.
 
-    Guru (heavy) → ORANGE  |  Laghu (light) → TEAL
-    Produces an identical layout to sloka_group() so LenientTransformMatchingDiff
-    can match glyphs purely as a color change.
+    Guru (heavy) → ORANGE background  |  Laghu (light) → TEAL background
+    Text is white throughout. One row per sloka line.
+    When blank=True, all box backgrounds are black (invisible) — same SVG
+    structure but no visible color, suitable as an animation intermediate.
     """
     group = []
     for li, line in enumerate(sloka.lines):
-        sanskritcode = ""
-        for vi, vAkya in enumerate(line.vAkyAni):
-            utterance_code = ""
+        cells = []
+        for vAkya in line.vAkyAni:
             for token in vAkya.tokens:
                 if isinstance(token, str):
-                    utterance_code += text_box(token, WHITE)
-                else:
-                    match = chandas.classify(token.slp1)
-                    for pada in match.aksharas:
-                        for akshara in pada:
-                            color = ORANGE if akshara.weight == "G" else TEAL
-                            utterance_code += typst_code(
-                                akshara.text, Language.SANSKRIT, color
-                            )
-                utterance_code += " "
-            sanskritcode += f"{utterance_code}<line_{li}_utterance_{vi}> "
+                    continue
+                match = chandas.classify(token.slp1)
+                for pada in match.aksharas:
+                    for akshara in pada:
+                        bg = BLUE_E if akshara.weight == "G" else RED_E
+                        deva = transform_text(akshara.text, Language.SANSKRIT)
+                        fill = (
+                            "rgb(0, 0, 0, 0)" if blank else f'rgb("{bg.lstrip("#")}")'
+                        )
+                        cells.append(
+                            f"box(fill: {fill}, inset: 6pt, radius: 3pt)"
+                            f"[#align(center + horizon)[#text(fill: white)[{deva}]]]"
+                        )
 
-        group.append(TypstText(set_font(sanskritcode, INTRO_FONT), scale=SCALE))
+        n = len(cells)
+        grid_code = f"#grid(columns: (auto,) * {n}, gutter: 3pt, {', '.join(cells)})"
+        group.append(TypstText(set_font(grid_code, INTRO_FONT), scale=SCALE))
 
     group = Group(*group)
     group.points.arrange(DOWN)
