@@ -243,18 +243,41 @@ def sloka_group_chandas(sloka: Sloka, chandas, blank: bool = False) -> Group:
                         )
 
     pada_size = 8
-    group = []
+
+    # Build grid rows with no labels — so arrange(DOWN) centers the grid itself
+    rows = []
     for i in range(0, len(all_cells), pada_size):
         pada_cells = all_cells[i : i + pada_size]
         n = len(pada_cells)
-        grid_code = (
-            f"#grid(columns: (auto,) * {n}, gutter: 3pt, {', '.join(pada_cells)})"
-        )
-        group.append(TypstText(set_font(grid_code, INTRO_FONT), scale=SCALE))
+        grid_code = f"#grid(columns: (auto,) * {n}, gutter: 3pt, {', '.join(pada_cells)})"
+        rows.append(TypstText(set_font(grid_code, INTRO_FONT), scale=SCALE))
 
-    group = Group(*group)
-    group.points.arrange(DOWN)
-    return group
+    grid = Group(*rows)
+    grid.points.arrange(DOWN)
+
+    if blank:
+        return grid
+
+    # Position title and labels relative to the centered grid
+    meter_deva = transform_text("anuzwuB", Language.SANSKRIT)
+    title = TypstText(
+        set_font(f"#text(fill: white, size: 1.4em)[{meter_deva}]", INTRO_FONT),
+        scale=SCALE,
+    )
+    title.points.next_to(grid, UP)
+
+    pada_labels = [transform_text(str(n), Language.SANSKRIT) for n in range(1, 5)]
+    labels = []
+    for pada_idx, row in enumerate(rows):
+        label_text = pada_labels[pada_idx] if pada_idx < len(pada_labels) else ""
+        label = TypstText(
+            set_font(f"#text(fill: white, size: 0.85em)[{label_text}]", INTRO_FONT),
+            scale=SCALE,
+        )
+        label.points.next_to(row, LEFT)
+        labels.append(label)
+
+    return Group(title, *rows, *labels)
 
 
 def sloka_group_english(sloka: Sloka) -> Group[TypstText]:
