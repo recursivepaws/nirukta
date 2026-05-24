@@ -4,6 +4,7 @@ from janim.imports import (
     LEFT,
     MED_SMALL_BUFF,
     UL,
+    AnimGroup,
     Rect,
     DOWN,
     UP,
@@ -18,6 +19,7 @@ from janim.imports import WHITE
 
 from nirukta.render import scale_with_stroke, set_font, transform_text, typst_code
 from nirukta.chandas import chandas
+from typing import Tuple, List
 
 _LONG_VOWELS_SLP1 = frozenset("AIUFXeEoO")
 
@@ -62,11 +64,12 @@ def _is_long_vowel(slp1: str) -> bool:
 
 def sloka_group_chandas(
     sloka: Sloka, blank: bool = False, matras: bool = False
-) -> Group:
+) -> AnimGroup:
     base_width = 1.8
 
     all_cells = []
     cell_idx = 0
+    cell_labels = []
     for line in sloka.lines:
         for vAkya in line.vAkyAni:
             for token in vAkya.tokens:
@@ -85,11 +88,13 @@ def sloka_group_chandas(
                             if (matras and _is_long_vowel(akshara.text))
                             else f"{base_width}em"
                         )
+                        cell_label = f"cell_{cell_idx}"
                         all_cells.append(
                             f"[#box(fill: {fill}, width: {width}, height: 1.8em, radius: 0.4em)"
                             f"[#align(center + horizon)[#text(fill: white)[{deva}]]]"
-                            f" <cell_{cell_idx}>]"
+                            f" <{cell_label}>]"
                         )
+                        cell_labels.append(cell_label)
                         cell_idx += 1
 
     pada_size = 8
@@ -105,7 +110,8 @@ def sloka_group_chandas(
     grid_code = f"#grid(rows: (auto,) * {n}, gutter: 0.5em, {', '.join(rows)})"
     grid = TypstText(set_font(grid_code, INTRO_FONT), scale=SCALE)
 
-    return Group(grid)
+    # return Group(grid)
+    return grid
     #
     # # Position title and labels relative to the centered grid
     # meter_deva = transform_text("anuzwuB", Language.SANSKRIT)
