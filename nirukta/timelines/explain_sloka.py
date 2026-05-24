@@ -5,7 +5,8 @@ from typing import Any, List
 from janim.imports import YELLOW, Aligned, FadeIn, FadeOut, Succession, Timeline, Write
 from janim.logger import log
 from nirukta.models import Line, Sloka
-from nirukta.render import Awaken, Sleep, sloka_group, sloka_thumbnail
+from nirukta.render import Awaken, Sleep
+from nirukta.sloka import sloka_group, sloka_thumbnail
 from nirukta.timelines import (
     LenientTransformMatchingDiff,
     UtteranceTimeline,

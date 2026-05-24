@@ -30,9 +30,11 @@ from nirukta.render import (
     Sleep,
     scale_with_stroke,
     set_font,
+    typst_code,
+)
+from nirukta.sloka import (
     sloka_group_english,
     sloka_thumbnail,
-    typst_code,
     sloka_group,
 )
 from nirukta.timelines.explain_sloka import ExplainSloka, build_explain_sloka_cached

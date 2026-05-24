@@ -1,6 +1,6 @@
 from janim.imports import ORANGE, FadeOut, Timeline, Wait, Write
 from nirukta.models import Sloka, SlokaFile
-from nirukta.render import sloka_group_english
+from nirukta.sloka import sloka_group_english
 from nirukta.timelines.explain_sloka import ExplainSloka, build_explain_sloka_cached
 from nirukta.timelines.introduce_sloka import IntroduceSloka
 
