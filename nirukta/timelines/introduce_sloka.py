@@ -2,7 +2,9 @@ from typing import Optional
 
 from janim.anims.transform import Transform
 from janim.imports import (
+    FadeIn,
     DOWN,
+    UP,
     YELLOW,
     FadeOut,
     Group,
@@ -11,6 +13,7 @@ from janim.imports import (
     Wait,
     Write,
     Aligned,
+    LEFT,
 )
 
 from nirukta.constants import INTRO_FONT, SCALE
@@ -18,12 +21,10 @@ from nirukta.models import Language, Sloka
 from nirukta.render import (
     FlatAligned,
     set_font,
+    transform_text,
     typst_code,
 )
-from nirukta.sloka import (
-    sloka_group,
-    sloka_group_chandas,
-)
+from nirukta.sloka import sloka_group, sloka_group_chandas, title_and_pada_labels
 from nirukta.timelines.transform import LenientTransformMatchingDiff
 
 
@@ -47,8 +48,8 @@ class IntroduceSloka(Timeline):
             self.play(Write(line, duration=4.0))
 
         # Move glyphs into grid boxes
-        sloka_chandas_blank = sloka_group_chandas(self.sloka, blank=True)
-        sloka_chandas = sloka_group_chandas(self.sloka)
+        (sloka_chandas_blank, _) = sloka_group_chandas(self.sloka, blank=True)
+        (sloka_chandas, chandas_labels) = sloka_group_chandas(self.sloka)
 
         self.play(
             LenientTransformMatchingDiff(sloka_g, sloka_chandas_blank, duration=0.6)
@@ -56,22 +57,23 @@ class IntroduceSloka(Timeline):
 
         # Reveal the prosodic colors
         self.play(Transform(sloka_chandas_blank, sloka_chandas, duration=0.6))
-        self.play(Wait(2.0))
+        self.play(Wait(1.0))
+        thing1 = title_and_pada_labels(sloka_chandas, chandas_labels)
+        self.play(FadeIn(thing1))
 
         # Expand boxes by vowel duration
-        sloka_matras = sloka_group_chandas(self.sloka, matras=True)
+        (sloka_matras, matras_labels) = sloka_group_chandas(self.sloka, matras=True)
+        thing2 = title_and_pada_labels(sloka_matras, matras_labels)
 
-        self.play(Transform(sloka_chandas, sloka_matras, duration=0.8))
+        self.play(
+            Aligned(
+                Transform(sloka_chandas, sloka_matras),
+                Transform(thing1, thing2),
+                duration=0.8,
+            )
+        )
+
         self.play(Wait(2.0))
-        # megatransform = []
-        # for i in range(len(chandas_labels)):
-        #     megatransform.append(
-        #         Transform(
-        #             sloka_chandas.get_label(chandas_labels[i]),
-        #             sloka_matras.get_label(matras_labels[i]),
-        #             duration=0.5,
-        #         )
-        #     )
 
         if self.citation is not None and self.citation != "sloka":
             citation_text = TypstText(

@@ -64,7 +64,7 @@ def _is_long_vowel(slp1: str) -> bool:
 
 def sloka_group_chandas(
     sloka: Sloka, blank: bool = False, matras: bool = False
-) -> AnimGroup:
+) -> tuple[TypstText, List[str]]:
     base_width = 1.8
 
     all_cells = []
@@ -100,18 +100,21 @@ def sloka_group_chandas(
     pada_size = 8
 
     rows = []
+    row_labels = []
     for i in range(0, len(all_cells), pada_size):
         row_cells = all_cells[i : i + pada_size]
         n = len(row_cells)
+        row_label = f"row_{i}"
         rows.append(
-            f"[#grid(columns: (auto,) * {n}, gutter: 0.5em, {', '.join(row_cells)})]"
+            f"[#box[#grid(columns: (auto,) * {n}, gutter: 0.5em, {', '.join(row_cells)})] <{row_label}>]"
         )
+        row_labels.append(row_label)
 
     grid_code = f"#grid(rows: (auto,) * {n}, gutter: 0.5em, {', '.join(rows)})"
     grid = TypstText(set_font(grid_code, INTRO_FONT), scale=SCALE)
 
     # return Group(grid)
-    return grid
+    return (grid, row_labels)
     #
     # # Position title and labels relative to the centered grid
     # meter_deva = transform_text("anuzwuB", Language.SANSKRIT)
@@ -133,6 +136,29 @@ def sloka_group_chandas(
     #     labels.append(label)
     #
     # return Group(title, *rows, *labels)
+
+
+def title_and_pada_labels(texttttt: TypstText, labels: List[str]) -> Group:
+    # Position title and labels relative to the centered grid
+    meter_deva = transform_text("anuzwuB", Language.SANSKRIT)
+    title = TypstText(
+        set_font(f"#text(fill: white, size: 1.4em)[{meter_deva}]", INTRO_FONT),
+        scale=SCALE,
+    )
+    title.points.next_to(texttttt, UP)
+    pada_labels = [transform_text(str(n), Language.SANSKRIT) for n in range(1, 5)]
+    labelz = []
+    for pada_idx, c_label in enumerate(labels):
+        label_text = pada_labels[pada_idx] if pada_idx < len(pada_labels) else ""
+        label = TypstText(
+            set_font(f"#text(fill: white, size: 0.85em)[{label_text}]", INTRO_FONT),
+            scale=SCALE,
+        )
+        print(texttttt.text)
+        label.points.next_to(texttttt.get_label(c_label), LEFT)
+        labelz.append(label)
+
+    return Group(title, *labelz)
 
 
 def sloka_group_english(sloka: Sloka) -> Group[TypstText]:
