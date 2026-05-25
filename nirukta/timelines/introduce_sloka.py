@@ -16,7 +16,7 @@ from janim.imports import (
     LEFT,
 )
 
-from nirukta.constants import INTRO_FONT, SCALE
+from nirukta.constants import SANSKRIT_FONT, SCALE
 from nirukta.models import Language, Sloka
 from nirukta.render import (
     FlatAligned,
@@ -24,7 +24,11 @@ from nirukta.render import (
     transform_text,
     typst_code,
 )
-from nirukta.sloka import sloka_group, sloka_group_chandas, title_and_pada_labels
+from nirukta.sloka import (
+    sloka_group_chandas,
+    sloka_group_reformed,
+    title_and_pada_labels,
+)
 from nirukta.timelines.transform import LenientTransformMatchingDiff
 
 
@@ -42,7 +46,7 @@ class IntroduceSloka(Timeline):
         return YELLOW
 
     def construct(self):
-        sloka_g = sloka_group(self.sloka)
+        sloka_g = sloka_group_reformed(self.sloka)
 
         for line in sloka_g:
             self.play(Write(line, duration=4.0))
@@ -79,7 +83,7 @@ class IntroduceSloka(Timeline):
 
         if self.citation is not None and self.citation != "sloka":
             citation_text = TypstText(
-                set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
+                set_font(typst_code(self.citation, Language.SANSKRIT), SANSKRIT_FONT),
                 scale=SCALE,
             )
             print(citation_text.text)

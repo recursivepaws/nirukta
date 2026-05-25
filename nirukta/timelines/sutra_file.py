@@ -8,6 +8,7 @@ from janim.imports import (
     ORIGIN,
     RIGHT,
     UL,
+    DL,
     UP,
     UR,
     WHITE,
@@ -26,7 +27,7 @@ from janim.imports import (
     Wait,
     Write,
 )
-from nirukta.constants import INACTIVE, INTRO_FONT, SCALE
+from nirukta.constants import INACTIVE, SANSKRIT_FONT, SCALE
 from nirukta.models import Language, Sloka, SutraFile
 from nirukta.timelines import (
     IntroduceSloka,
@@ -43,8 +44,8 @@ from nirukta.render import (
 from nirukta.sloka import (
     sloka_group_chandas,
     sloka_group_english,
+    sloka_group_reformed,
     sloka_thumbnail,
-    sloka_group,
 )
 from nirukta.timelines.explain_sloka import ExplainSloka, build_explain_sloka_cached
 
@@ -69,7 +70,7 @@ class SutraFileTimeline(Timeline):
 
     def construct(self):
         citation = TypstText(
-            set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
+            set_font(typst_code(self.citation, Language.SANSKRIT), SANSKRIT_FONT),
             scale=SCALE,
         )
         citation.points.move_to(ORIGIN)
@@ -83,17 +84,16 @@ class SutraFileTimeline(Timeline):
             self.play(animation)
 
         # Listening side by side with pronunciation guide
-        for sloka in self.slokas:
-            sloka.meter()
-            # slp1 = sloka.slp1()
+        # for sloka in self.slokas:
+        #     sloka.meter()
+        # slp1 = sloka.slp1()
 
-            # sloka.
-            # verse = MI.identify_meter(slp1)             # from_scheme auto-detected; output IAST
-            # print(verse.meter_label)
-            # print(verse.summarize())
-            # verse = MI.identify_meter(slp1, resplit_option='none')
-            # verse = MI.identify_meter(slp1, from_scheme='SLP', resplit_option='resplit_lite')
-
+        # sloka.
+        # verse = MI.identify_meter(slp1)             # from_scheme auto-detected; output IAST
+        # print(verse.meter_label)
+        # print(verse.summarize())
+        # verse = MI.identify_meter(slp1, resplit_option='none')
+        # verse = MI.identify_meter(slp1, from_scheme='SLP', resplit_option='resplit_lite')
 
         for sloka in self.slokas:
             # introduction = IntroduceSloka(sloka).build().to_item()
@@ -102,33 +102,51 @@ class SutraFileTimeline(Timeline):
             # right = sloka_group(sloka)
             # left.points.scale(0.5)
             # right.points.scale(0.5)
-            # left.points.to_border(UL, buff=MED_SMALL_BUFF)
             # right.points.to_border(UR, buff=MED_SMALL_BUFF)
 
             scaledown = 0.5
 
-            lt = sloka_group(sloka)
-            rt = sloka_group(sloka)
-            left = RectClip(lt, anchor=ORIGIN, border=False)
-            left.points.scale(scaledown)
-            left.transform.set(scale=scaledown)
-            right = RectClip(rt, anchor=ORIGIN, border=False)
-            right.transform.set(scale=scaledown)
-            right.points.scale(scaledown)
+            def place_in_corner(clip, corner):
+                # TODO: fiddle w this
+                clip.transform.set(scale=scaledown * 1.3)
+                clip.points.scale(scaledown)
+                clip.points.to_border(corner, buff=0)
 
+            listen_deva = sloka_group_reformed(sloka, devanagari=True)
+            speak_deva = sloka_group_reformed(sloka, devanagari=True)
+
+            listen_iast = sloka_group_reformed(sloka, devanagari=False)
+            # speak_iast = sloka_group_reformed(sloka, devanagari=False)
+
+            listen_deva_clip = RectClip(listen_deva, anchor=ORIGIN, border=True)
+            speak_deva_clip = RectClip(speak_deva, anchor=ORIGIN, border=True)
+            listen_iast_clip = RectClip(listen_iast, anchor=ORIGIN, border=True)
+            # speak_iast_clip = RectClip(speak_iast, anchor=ORIGIN, border=True)
+
+            place_in_corner(listen_deva_clip, UL)
+            place_in_corner(listen_iast_clip, DL)
+            place_in_corner(speak_deva_clip, UR)
 
             self.play(
-
                 Succession(
-                FadeIn(Group(lt, left, rt, right)),
-                Wait(1.0),
-                Aligned(
-                    left.anim.points.shift(LEFT * scaledown * 6),
-                    right.anim.points.shift(RIGHT * scaledown * 6),
+                    FadeIn(
+                        Group(
+                            listen_deva,
+                            listen_deva_clip,
+                            listen_iast,
+                            listen_iast_clip,
+                            speak_deva,
+                            speak_deva_clip,
+                        )
+                    ),
+                    Wait(1.0),
+                    # Aligned(
+                    # left.anim.points.shift(LEFT * scaledown * 6),
+                    # right.anim.points.shift(RIGHT * scaledown * 6),
                     # right.anim.points.scale(0.2)
-                ),
-                Wait(1.0),
-                # FadeOut(Group(lt, left, rt, right))
+                    # ),
+                    Wait(1.0),
+                    # FadeOut(Group(lt, left, rt, right))
                 )
             )
 
@@ -137,44 +155,56 @@ class SutraFileTimeline(Timeline):
             g = Group(blank.text, blank.keys, chandas.text, chandas.keys)
             # g.points.shift(RIGHT * 3)
 
-            right.apply(*g)
+            speak_deva_clip.apply(*g)
             # blank.text.points.scale(0.5)
             # blank.text.points.to_border(UR, buff=MED_SMALL_BUFF)
 
-            self.play(LenientTransformMatchingDiff(rt, blank.text))
+            self.play(LenientTransformMatchingDiff(speak_deva, blank.text))
             self.play(Transform(blank.text, chandas.text))
             self.play(Wait(1.0))
             self.play(FadeIn(chandas.keys))
-            self.play(FadeOut(Group(lt, left, chandas.keys, chandas.text, right)))
+            self.play(
+                FadeOut(
+                    Group(
+                        listen_deva,
+                        listen_deva_clip,
+                        listen_iast,
+                        listen_iast_clip,
+                        chandas.keys,
+                        chandas.text,
+                        speak_deva_clip,
+                    )
+                )
+            )
 
     # group.points.scale(factor)
-            # scale_with_stroke(left, 0.5)
-            # scale_with_stroke(right, 0.5)
-            # introduction.show()
-            # self.forward_to(introduction.end)
+    # scale_with_stroke(left, 0.5)
+    # scale_with_stroke(right, 0.5)
+    # introduction.show()
+    # self.forward_to(introduction.end)
 
-        # for sloka in self.slokas:
-        #     # explain = build_explain_sloka_cached(sloka).to_item().show()
-        #     explain = ExplainSloka(sloka).build().to_item().show()
-        #     self.forward_to(explain.end)
+    # for sloka in self.slokas:
+    #     # explain = build_explain_sloka_cached(sloka).to_item().show()
+    #     explain = ExplainSloka(sloka).build().to_item().show()
+    #     self.forward_to(explain.end)
 
-            # thumbnail = sloka_thumbnail(sloka)
-            # initial = sloka_group(sloka)
-            # self.play(Write(initial), duration=0.33)
-            # self.play(LenientTransformMatchingDiff(initial, thumbnail[0]), duration=0.33)
-            # self.play(Aligned(FadeIn(thumbnail[1:]), Sleep(thumbnail[0])))
-            #
-            # for li, line in enumerate(sloka.lines):
-            #     for vi, vAkya in enumerate(line.vAkyAni):
-            #         if li != 0 or vi != 0:
-            #             self.play(Sleep(thumbnail[0]))
-            #
-            #         selection = thumbnail[0][li].get_label(
-            #             f"line_{li}_utterance_{vi}"
-            #         )
-            #         self.play(Awaken(selection))
-            #
-            #         vt = UtteranceTimeline(vAkya).build().to_item().show()
-            #         self.forward_to(vt.end)
-            #
-            # self.play(FadeOut(thumbnail))
+    # thumbnail = sloka_thumbnail(sloka)
+    # initial = sloka_group(sloka)
+    # self.play(Write(initial), duration=0.33)
+    # self.play(LenientTransformMatchingDiff(initial, thumbnail[0]), duration=0.33)
+    # self.play(Aligned(FadeIn(thumbnail[1:]), Sleep(thumbnail[0])))
+    #
+    # for li, line in enumerate(sloka.lines):
+    #     for vi, vAkya in enumerate(line.vAkyAni):
+    #         if li != 0 or vi != 0:
+    #             self.play(Sleep(thumbnail[0]))
+    #
+    #         selection = thumbnail[0][li].get_label(
+    #             f"line_{li}_utterance_{vi}"
+    #         )
+    #         self.play(Awaken(selection))
+    #
+    #         vt = UtteranceTimeline(vAkya).build().to_item().show()
+    #         self.forward_to(vt.end)
+    #
+    # self.play(FadeOut(thumbnail))

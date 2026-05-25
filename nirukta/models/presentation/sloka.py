@@ -41,18 +41,19 @@ class Sloka:
         slp1 += "\n"
         return slp1
 
-    def meter(self) -> tuple[str, List[Akshara]]:
+    def meter(self) -> tuple[str, List[List[Akshara]]]:
         verse = identify(self.slp1(), from_scheme="SLP")
         # print(list(map(lambda x: x.split(''), )))
         weight_lines = verse.syllable_weights.split("\n")
         text_lines = verse.text_syllabified.split("\n")
 
-        padas = []
+        padas: List[List[Akshara]] = []
         for li in range(len(text_lines)):
             line_sounds = list(filter(lambda x: len(x) > 0, text_lines[li].split(" ")))
             print(line_sounds)
             print(weight_lines[li])
-            aksharas = []
+
+            aksharas: List[Akshara] = []
             for si in range(len(line_sounds)):
                 aksharas.append(
                     Akshara(text=line_sounds[si], weight=weight_lines[li][si])

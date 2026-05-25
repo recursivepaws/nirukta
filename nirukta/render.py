@@ -22,7 +22,7 @@ from janim.imports import (
     smooth,
     there_and_back,
 )
-from nirukta.constants import INACTIVE, INTRO_FONT, LATIN_FONT, SCALE, TYPST_CMD_RE
+from nirukta.constants import INACTIVE, SCALE, TYPST_CMD_RE
 from nirukta.models import Language, Sloka
 from janim.imports import WHITE, C_LABEL_ANIM_ABSTRACT
 from aksharamukha import transliterate

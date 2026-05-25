@@ -14,7 +14,7 @@ from janim.imports import (
     Text,
     TypstText,
 )
-from nirukta.constants import INTRO_FONT, LATIN_FONT, SCALE
+from nirukta.constants import SANSKRIT_FONT, LATIN_FONT, SCALE
 from nirukta.models import Language, Sloka
 from janim.imports import WHITE
 
@@ -22,8 +22,10 @@ from nirukta.render import scale_with_stroke, set_font, transform_text, typst_co
 from nirukta.chandas import chandas
 from typing import List
 
+from nirukta.typst import arrange_vertical, box_cell, arrange_horizontal
 
-def sloka_group(sloka: Sloka) -> Group[TypstText]:
+
+""" def sloka_group(sloka: Sloka) -> Group[TypstText]:
     group = []
 
     for li, line in enumerate(sloka.lines):
@@ -46,7 +48,7 @@ def sloka_group(sloka: Sloka) -> Group[TypstText]:
 
         group.append(
             TypstText(
-                set_font(sanskritcode, INTRO_FONT),
+                set_font(sanskritcode, SANSKRIT_FONT),
                 scale=SCALE,
             )
         )
@@ -54,6 +56,45 @@ def sloka_group(sloka: Sloka) -> Group[TypstText]:
     group = Group(*group)
     group.points.arrange(DOWN)
     return group
+"""
+
+
+def sloka_group_reformed(sloka: Sloka, devanagari: bool = True) -> TypstText:
+    rows = []
+
+    if devanagari:
+        lang = Language.SANSKRIT
+        font = SANSKRIT_FONT
+    else:
+        lang = Language.TRANSLIT
+        font = LATIN_FONT
+
+    for li, line in enumerate(sloka.lines):
+        sanskritcode = ""
+        for vi, vAkya in enumerate(line.vAkyAni):
+            utterancetext = ""
+            for token in vAkya.tokens:
+                if isinstance(token, str):
+                    utterancetext += token
+                else:
+                    utterancetext += token.slp1
+
+                utterancetext += " "
+            utterance_code = (
+                f"{typst_code(utterancetext, lang)}<line_{li}_utterance_{vi}>"
+            )
+            sanskritcode += utterance_code + " "
+
+        sanskritcode = f"[{sanskritcode}]"
+        rows.append(sanskritcode)
+
+    grid = arrange_vertical(rows, gutter=0.6)
+    print(f"\n\ngrid:\n{grid}\n")
+
+    return TypstText(
+        set_font(grid, font),
+        scale=SCALE,
+    )
 
 
 @dataclass
@@ -72,50 +113,41 @@ def sloka_group_chandas(
 
     all_cells = []
     cell_idx = 0
-    cell_labels = []
 
     (meter_label, padas) = sloka.meter()
 
-    # for line in sloka.lines:
-    # for vAkya in line.vAkyAni:
-    # for token in vAkya.tokens:
-    #     if isinstance(token, str):
-    #         continue
-    #     match = chandas.classify(token.slp1)
     for pada in padas:
         for akshara in pada:
-            bg = BLUE_E if akshara.weight == "g" else RED_E
             deva = transform_text(akshara.text, Language.SANSKRIT)
-            fill = "rgb(0, 0, 0, 0)" if blank else f'rgb("{bg.lstrip("#")}")'
-            width = (
-                f"{base_width * 2 + gutter}em"
-                if (matras and akshara.is_long())
-                else f"{base_width}em"
-            )
-            cell_label = f"cell_{cell_idx}"
+            fill = None if blank else akshara.rgb_color()
             all_cells.append(
-                f"[#box(fill: {fill}, width: {width}, height: {base_width}em, radius: 0.4em)"
-                f"[#align(center + horizon)[#text(fill: white)[{deva}]]]"
-                f" <{cell_label}>]"
+                box_cell(
+                    content=deva,
+                    width=(
+                        base_width * 2 + gutter
+                        if (matras and akshara.is_long())
+                        else base_width
+                    ),
+                    idx=cell_idx,
+                    fill=fill,
+                )
             )
-            cell_labels.append(cell_label)
             cell_idx += 1
-
-    pada_size = len(padas[0])
 
     rows = []
     row_labels = []
-    for i in range(0, len(all_cells), pada_size):
-        row_cells = all_cells[i : i + pada_size]
-        n = len(row_cells)
-        row_label = f"row_{i}"
-        rows.append(
-            f"[#box[#grid(columns: (auto,) * {n}, gutter: {gutter}em, {', '.join(row_cells)})] <{row_label}>]"
-        )
+
+    i = 0
+    for idx, pada in enumerate(padas):
+        n = len(pada)
+        row_cells = all_cells[i : i + n]
+        rows.append(arrange_horizontal(row_cells, idx))
+        i += n
+        row_label = f"row_{idx}"
         row_labels.append(row_label)
 
     grid_code = f"#grid(rows: (auto,) * {n}, gutter: {gutter}em, {', '.join(rows)})"
-    grid = TypstText(set_font(grid_code, INTRO_FONT), scale=SCALE)
+    grid = TypstText(set_font(grid_code, SANSKRIT_FONT), scale=SCALE)
 
     if blank:
         return Keyed(text=grid, keys=Group())
@@ -130,7 +162,7 @@ def title_and_pada_labels(
     # Position title and labels relative to the centered grid
     meter_deva = transform_text(meter_label, Language.SANSKRIT)
     title = TypstText(
-        set_font(f"#text(fill: white, size: 1.4em)[{meter_deva}]", INTRO_FONT),
+        set_font(f"#text(fill: white, size: 1.4em)[{meter_deva}]", SANSKRIT_FONT),
         scale=SCALE,
     )
     title.points.next_to(texttttt, UP)
@@ -139,7 +171,7 @@ def title_and_pada_labels(
     for pada_idx, c_label in enumerate(labels):
         label_text = pada_labels[pada_idx] if pada_idx < len(pada_labels) else ""
         label = TypstText(
-            set_font(f"#text(fill: white, size: 0.85em)[{label_text}]", INTRO_FONT),
+            set_font(f"#text(fill: white, size: 0.85em)[{label_text}]", SANSKRIT_FONT),
             scale=SCALE,
         )
         label.points.next_to(texttttt.get_label(c_label), LEFT)
@@ -169,7 +201,7 @@ def sloka_group_english(sloka: Sloka) -> Group[TypstText]:
 
 
 def sloka_thumbnail(sloka: Sloka) -> Group:
-    sloka_text = sloka_group(sloka)
+    sloka_text = sloka_group_reformed(sloka)
     if sloka.number is not None:
         number_label = Group(
             Rect(0.4, 0.4, fill_alpha=0.3),
