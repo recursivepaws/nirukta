@@ -75,7 +75,7 @@ def sloka_group_chandas(
     matras: bool = False,
 ) -> Keyed:
     base_width = 1.8
-    gutter = 1.8
+    gutter = 0.5
 
     all_cells = []
     cell_idx = 0
