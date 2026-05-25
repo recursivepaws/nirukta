@@ -53,7 +53,7 @@ class IntroduceSloka(Timeline):
 
         self.play(
             LenientTransformMatchingDiff(
-                sloka_g, sloka_chandas_blank.text, duration=0.6
+                sloka_g, sloka_chandas_blank.text, duration=0.5
             )
         )
         self.play(Wait(1.0))
@@ -71,7 +71,7 @@ class IntroduceSloka(Timeline):
             Aligned(
                 Transform(sloka_chandas.text, sloka_matras.text),
                 Transform(sloka_chandas.keys, sloka_matras.keys),
-                duration=0.8,
+                duration=0.5,
             )
         )
 
