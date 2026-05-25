@@ -80,34 +80,38 @@ def sloka_group_chandas(
     all_cells = []
     cell_idx = 0
     cell_labels = []
-    for line in sloka.lines:
-        for vAkya in line.vAkyAni:
-            for token in vAkya.tokens:
-                if isinstance(token, str):
-                    continue
-                match = chandas.classify(token.slp1)
-                for pada in match.aksharas:
-                    for akshara in pada:
-                        bg = BLUE_E if akshara.weight == "L" else RED_E
-                        deva = transform_text(akshara.text, Language.SANSKRIT)
-                        fill = (
-                            "rgb(0, 0, 0, 0)" if blank else f'rgb("{bg.lstrip("#")}")'
-                        )
-                        width = (
-                            f"{base_width * 2 + gutter}em"
-                            if (matras and _is_long_vowel(akshara.text))
-                            else f"{base_width}em"
-                        )
-                        cell_label = f"cell_{cell_idx}"
-                        all_cells.append(
-                            f"[#box(fill: {fill}, width: {width}, height: {base_width}em, radius: 0.4em)"
-                            f"[#align(center + horizon)[#text(fill: white)[{deva}]]]"
-                            f" <{cell_label}>]"
-                        )
-                        cell_labels.append(cell_label)
-                        cell_idx += 1
 
-    pada_size = 8
+    (meter_label, padas) = sloka.meter()
+
+
+    # for line in sloka.lines:
+        # for vAkya in line.vAkyAni:
+            # for token in vAkya.tokens:
+            #     if isinstance(token, str):
+            #         continue
+            #     match = chandas.classify(token.slp1)
+    for pada in padas:
+        for (akt, akw) in pada:
+            bg = BLUE_E if akw == "l" else RED_E
+            deva = transform_text(akt, Language.SANSKRIT)
+            fill = (
+                "rgb(0, 0, 0, 0)" if blank else f'rgb("{bg.lstrip("#")}")'
+            )
+            width = (
+                f"{base_width * 2 + gutter}em"
+                if (matras and _is_long_vowel(akt))
+                else f"{base_width}em"
+            )
+            cell_label = f"cell_{cell_idx}"
+            all_cells.append(
+                f"[#box(fill: {fill}, width: {width}, height: {base_width}em, radius: 0.4em)"
+                f"[#align(center + horizon)[#text(fill: white)[{deva}]]]"
+                f" <{cell_label}>]"
+            )
+            cell_labels.append(cell_label)
+            cell_idx += 1
+
+    pada_size = len(padas[0])
 
     rows = []
     row_labels = []
@@ -126,13 +130,13 @@ def sloka_group_chandas(
     if blank:
         return Keyed(text=grid, keys=Group())
 
-    t = title_and_pada_labels(grid, row_labels)
+    t = title_and_pada_labels(meter_label, grid, row_labels)
     return Keyed(text=grid, keys=t)
 
 
-def title_and_pada_labels(texttttt: TypstText, labels: List[str]) -> Group:
+def title_and_pada_labels(meter_label: str, texttttt: TypstText, labels: List[str]) -> Group:
     # Position title and labels relative to the centered grid
-    meter_deva = transform_text("anuzwuB", Language.SANSKRIT)
+    meter_deva = transform_text(meter_label, Language.SANSKRIT)
     title = TypstText(
         set_font(f"#text(fill: white, size: 1.4em)[{meter_deva}]", INTRO_FONT),
         scale=SCALE,

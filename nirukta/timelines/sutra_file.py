@@ -83,6 +83,16 @@ class SutraFileTimeline(Timeline):
             self.play(animation)
 
         # Listening side by side with pronunciation guide
+        for sloka in self.slokas:
+            sloka.meter()
+            # slp1 = sloka.slp1()
+
+            # sloka.
+            # verse = MI.identify_meter(slp1)             # from_scheme auto-detected; output IAST
+            # print(verse.meter_label)
+            # print(verse.summarize())
+            # verse = MI.identify_meter(slp1, resplit_option='none')
+            # verse = MI.identify_meter(slp1, from_scheme='SLP', resplit_option='resplit_lite')
 
 
         for sloka in self.slokas:
@@ -125,7 +135,7 @@ class SutraFileTimeline(Timeline):
             blank = sloka_group_chandas(sloka, blank=True, matras=False)
             chandas = sloka_group_chandas(sloka, blank=False, matras=False)
             g = Group(blank.text, blank.keys, chandas.text, chandas.keys)
-            g.points.shift(RIGHT * 3)
+            # g.points.shift(RIGHT * 3)
 
             right.apply(*g)
             # blank.text.points.scale(0.5)

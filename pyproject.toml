@@ -9,6 +9,7 @@ dependencies = [
   "dill>=0.4.1",
   "janim[gui]>=4.1.0",
   "parsimonious>=0.11.0",
+  "skrutable>=2.6.3",
   "vidyut>=0.4.0",
 ]
 

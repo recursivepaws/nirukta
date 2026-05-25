@@ -450,6 +450,7 @@ dependencies = [
     { name = "dill" },
     { name = "janim", extra = ["gui"] },
     { name = "parsimonious" },
+    { name = "skrutable" },
     { name = "vidyut" },
 ]
 
@@ -459,6 +460,7 @@ requires-dist = [
     { name = "dill", specifier = ">=0.4.1" },
     { name = "janim", extras = ["gui"], specifier = ">=4.1.0" },
     { name = "parsimonious", specifier = ">=0.11.0" },
+    { name = "skrutable", specifier = ">=2.6.3" },
     { name = "vidyut", specifier = ">=0.4.0" },
 ]
 
@@ -871,6 +873,19 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/0b/b9/799308cb5f139d4150a200122cb44475f97e81b43a3281372d59216dd9bb/skia_pathops-0.9.1-cp310-abi3-musllinux_1_2_x86_64.whl", hash = "sha256:19202fd9799d5d5428a7d6f3eae0366304cd2cf4e5680541fabb016c54b44109", size = 4316602, upload-time = "2025-12-08T11:44:37.275Z" },
     { url = "https://files.pythonhosted.org/packages/85/3b/45ff339b49dd8eed91ade81842464c6ce955f84dd6805cbe1bafc2b1cd4b/skia_pathops-0.9.1-cp310-abi3-win32.whl", hash = "sha256:56c4b3bc9c281b12693f0f2771367c53a7a20104beac203fb5cb90cb2b9a4649", size = 1450920, upload-time = "2025-12-08T11:44:38.624Z" },
     { url = "https://files.pythonhosted.org/packages/bf/d1/698e85d5f7e2ce3b731232dc9f26e2cecb8afc66194aa494dc78c04194cc/skia_pathops-0.9.1-cp310-abi3-win_amd64.whl", hash = "sha256:e718f2e1284f05ccccde111b1280a79e33093c4af30c118a0b2f5b0753f0727e", size = 1782888, upload-time = "2025-12-08T11:44:39.983Z" },
+]
+
+[[package]]
+name = "skrutable"
+version = "2.6.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "numpy" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7f/04/d51ce33b748e808bf0e0a8b19033ebda123856fb0b87707d81f10ac0e280/skrutable-2.6.3.tar.gz", hash = "sha256:b457de2361bf4dbfce1bc036747834444406f677d94c9f5cde6c9a936c1a1a68", size = 71677, upload-time = "2026-05-16T01:58:04.415Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/31/6b/c6f28fcaa48df66df378e110be1145fcc708d82925bdd79104c406cc9a03/skrutable-2.6.3-py3-none-any.whl", hash = "sha256:4bbcbe16809aa693cfc4cfe34c43f321a3bdd4089c7bd499f1f8714e1847cfa6", size = 73253, upload-time = "2026-05-16T01:58:03.184Z" },
 ]
 
 [[package]]
