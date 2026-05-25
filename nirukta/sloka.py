@@ -74,8 +74,8 @@ def sloka_group_chandas(
     blank: bool = False,
     matras: bool = False,
 ) -> Keyed:
-    base_width = 1.8
-    gutter = 0.5
+    base_width = 1.6
+    gutter = 0.2
 
     all_cells = []
     cell_idx = 0
@@ -88,13 +88,13 @@ def sloka_group_chandas(
                 match = chandas.classify(token.slp1)
                 for pada in match.aksharas:
                     for akshara in pada:
-                        bg = BLUE_E if akshara.weight == "G" else RED_E
+                        bg = BLUE_E if akshara.weight == "L" else RED_E
                         deva = transform_text(akshara.text, Language.SANSKRIT)
                         fill = (
                             "rgb(0, 0, 0, 0)" if blank else f'rgb("{bg.lstrip("#")}")'
                         )
                         width = (
-                            f"{base_width * 2}em"
+                            f"{base_width * 2 + gutter}em"
                             if (matras and _is_long_vowel(akshara.text))
                             else f"{base_width}em"
                         )

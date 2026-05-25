@@ -56,6 +56,7 @@ class IntroduceSloka(Timeline):
                 sloka_g, sloka_chandas_blank.text, duration=0.6
             )
         )
+        self.play(Wait(1.0))
 
         # Reveal the prosodic colors
         self.play(Transform(sloka_chandas_blank.text, sloka_chandas.text, duration=0.6))
@@ -65,7 +66,6 @@ class IntroduceSloka(Timeline):
 
         # Expand boxes by vowel duration
         sloka_matras = sloka_group_chandas(self.sloka, matras=True)
-        # thing2 = title_and_pada_labels(sloka_matras, matras_labels)
 
         self.play(
             Aligned(

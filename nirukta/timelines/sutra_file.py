@@ -24,7 +24,11 @@ from janim.imports import (
 )
 from nirukta.constants import INACTIVE, INTRO_FONT, SCALE
 from nirukta.models import Language, Sloka, SutraFile
-from nirukta.timelines import LenientTransformMatchingDiff, UtteranceTimeline
+from nirukta.timelines import (
+    IntroduceSloka,
+    LenientTransformMatchingDiff,
+    UtteranceTimeline,
+)
 from nirukta.render import (
     Awaken,
     Sleep,
@@ -74,6 +78,9 @@ class SutraFileTimeline(Timeline):
             self.play(animation)
 
         for sloka in self.slokas:
+            introduction = IntroduceSloka(sloka).build().to_item()
+            introduction.show()
+            self.forward_to(introduction.end)
             # explain = build_explain_sloka_cached(sloka).to_item().show()
             explain = ExplainSloka(sloka).build().to_item().show()
             self.forward_to(explain.end)
