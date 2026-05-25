@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 
 from janim.imports import (
+    ORANGE,
     ORIGIN,
     FadeIn,
     FadeOut,
@@ -34,9 +35,17 @@ class RecitationTimeline(Timeline):
     chandas: bool
     corner: Vect
 
+    def __init__(self, sloka: Sloka, devanagari: bool, chandas: bool, corner: Vect):
+        super().__init__()
+        self.sloka = sloka
+        self.devanagari = devanagari
+        self.chandas = chandas
+        self.corner = corner
+
     def construct(self):
-        group = sloka_group_reformed(self.sloka, devanagari=True)
+        group = sloka_group_reformed(self.sloka, devanagari=self.devanagari)
         group_clip = RectClip(group, anchor=ORIGIN, border=True)
+        place_in_corner(group_clip, self.corner)
 
         self.play(
             Succession(
@@ -55,7 +64,8 @@ class RecitationTimeline(Timeline):
         if self.chandas:
             blank = sloka_group_chandas(self.sloka, blank=True, matras=False)
             chandas = sloka_group_chandas(self.sloka, blank=False, matras=False)
-            group_clip.apply(blank.text, blank.keys, chandas.text, chandas.keys)
+            g = Group(blank.text, blank.keys, chandas.text, chandas.keys)
+            group_clip.apply(*g)
 
             self.play(
                 Succession(
@@ -66,6 +76,7 @@ class RecitationTimeline(Timeline):
                     FadeOut(
                         Group(
                             group,
+                            group_clip,
                             chandas.keys,
                             chandas.text,
                         ),
