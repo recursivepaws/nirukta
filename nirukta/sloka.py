@@ -19,7 +19,6 @@ from nirukta.models import Language, Sloka
 from janim.imports import WHITE
 
 from nirukta.render import scale_with_stroke, set_font, transform_text, typst_code
-from nirukta.chandas import chandas
 from typing import List
 
 from nirukta.typst import arrange_vertical, box_cell, arrange_horizontal
@@ -170,7 +169,7 @@ def title_and_pada_labels(
     # Position title and labels relative to the centered grid
     meter_deva = transform_text(meter_label, Language.SANSKRIT)
     title = TypstText(
-        set_font(f"#text(fill: white, size: 1.4em)[{meter_deva}]", SANSKRIT_FONT),
+        set_font(f"#text(fill: white, size: 1.2em)[{meter_deva}]", SANSKRIT_FONT),
         scale=SCALE,
     )
     title.points.next_to(texttttt, UP)
