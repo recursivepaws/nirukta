@@ -26,7 +26,7 @@ MethodTransform.__getattr__ = _safe_mt_getattr
 
 # Override fonts dir to include custom fonts
 font_dir = os.path.join(os.path.dirname(__file__), "..", "fonts")
-tc._typst_fonts = typst.Fonts(False, False, [font_dir])
+tc._typst_fonts = typst.Fonts(False, True, [font_dir])
 
 db = get_database()
 
