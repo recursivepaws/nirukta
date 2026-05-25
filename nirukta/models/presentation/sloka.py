@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from aksharamukha import transliterate
 from typing import List, Optional
 
 from nirukta.constants import DIGITS_RE
@@ -6,7 +7,9 @@ from nirukta.constants import DIGITS_RE
 from nirukta.models.presentation.line import Line
 
 from skrutable.meter_identification import MeterIdentifier
+
 MI = MeterIdentifier()
+
 
 @dataclass
 class Sloka:
@@ -41,16 +44,16 @@ class Sloka:
         slp1 += "\n"
         return slp1
 
-    def meter(self):
-        verse = MI.identify_meter(self.slp1(), from_scheme='SLP')
+    def meter(self) -> tuple[str, List[tuple(str, str)]]:
+        verse = MI.identify_meter(self.slp1(), from_scheme="SLP")
         # print(list(map(lambda x: x.split(''), )))
-        weight_lines = verse.syllable_weights.split('\n')
-        text_lines = verse.text_syllabified.split('\n')
+        weight_lines = verse.syllable_weights.split("\n")
+        text_lines = verse.text_syllabified.split("\n")
 
         tups = []
         padas = []
         for li in range(len(text_lines)):
-            line_sounds = list(filter(lambda x: len(x) > 0, text_lines[li].split(' ')))
+            line_sounds = list(filter(lambda x: len(x) > 0, text_lines[li].split(" ")))
             print(line_sounds)
             print(weight_lines[li])
             for si in range(len(line_sounds)):
@@ -64,6 +67,11 @@ class Sloka:
         # print(verse.text_syllabified.split('\n'))
         #
         print(verse.meter_label)
+        print(verse.morae_per_line)
         print(padas)
-        return ((verse.meter_label, padas))
+
+        label = transliterate.process("IAST", "SLP1", verse.meter_label)
+        assert label is not None
+
+        return (label, padas)
         # print(verse.summarize())

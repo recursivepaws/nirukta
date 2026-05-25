@@ -83,20 +83,17 @@ def sloka_group_chandas(
 
     (meter_label, padas) = sloka.meter()
 
-
     # for line in sloka.lines:
-        # for vAkya in line.vAkyAni:
-            # for token in vAkya.tokens:
-            #     if isinstance(token, str):
-            #         continue
-            #     match = chandas.classify(token.slp1)
+    # for vAkya in line.vAkyAni:
+    # for token in vAkya.tokens:
+    #     if isinstance(token, str):
+    #         continue
+    #     match = chandas.classify(token.slp1)
     for pada in padas:
-        for (akt, akw) in pada:
-            bg = BLUE_E if akw == "l" else RED_E
+        for akt, akw in pada:
+            bg = BLUE_E if akw == "g" else RED_E
             deva = transform_text(akt, Language.SANSKRIT)
-            fill = (
-                "rgb(0, 0, 0, 0)" if blank else f'rgb("{bg.lstrip("#")}")'
-            )
+            fill = "rgb(0, 0, 0, 0)" if blank else f'rgb("{bg.lstrip("#")}")'
             width = (
                 f"{base_width * 2 + gutter}em"
                 if (matras and _is_long_vowel(akt))
@@ -134,7 +131,9 @@ def sloka_group_chandas(
     return Keyed(text=grid, keys=t)
 
 
-def title_and_pada_labels(meter_label: str, texttttt: TypstText, labels: List[str]) -> Group:
+def title_and_pada_labels(
+    meter_label: str, texttttt: TypstText, labels: List[str]
+) -> Group:
     # Position title and labels relative to the centered grid
     meter_deva = transform_text(meter_label, Language.SANSKRIT)
     title = TypstText(
