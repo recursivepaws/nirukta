@@ -26,6 +26,7 @@ from janim.imports import (
     Text,
     Timeline,
     Transform,
+    TransformableFrameClip,
     TypstText,
     Wait,
     Write,
@@ -52,6 +53,7 @@ from nirukta.sloka import (
     sloka_thumbnail,
 )
 from nirukta.timelines.explain_sloka import ExplainSloka, build_explain_sloka_cached
+from nirukta.timelines.recitation import RecitationTimeline
 
 
 @dataclass
@@ -110,8 +112,49 @@ class SutraFileTimeline(Timeline):
         # )
         # title.points.move_to(UL)
         # self.play(FadeIn(title))
+        # clip_h = 0.25
+        # clip_v = 0.25
+        # offset_x = -clip_h + col * (1 / cols)  # -0.25 or +0.25
+        # offset_y = clip_v - row * (1 / rows)  #  0.25 or -0.25
 
         for sloka in self.slokas:
+            listen_deva = (
+                RecitationTimeline(sloka=sloka, devanagari=True, chandas=False)
+                .build()
+                .to_item()
+                .show()
+            )
+            listen_iast = (
+                RecitationTimeline(sloka=sloka, devanagari=False, chandas=False)
+                .build()
+                .to_item()
+                .show()
+            )
+            recitation = (
+                RecitationTimeline(sloka=sloka, devanagari=True, chandas=True)
+                .build()
+                .to_item()
+                .show()
+            )
+            TransformableFrameClip(
+                listen_deva,
+                offset=(-0.25, 0.25),
+                scale=0.5,
+            ).show()
+            TransformableFrameClip(
+                listen_iast,
+                offset=(+0.25, 0.25),
+                scale=0.5,
+            ).show()
+            TransformableFrameClip(
+                recitation,
+                offset=(0, -0.25),
+                scale=0.5,
+            ).show()
+            self.forward_to(listen_deva.end)
+            # self.fade
+
+        """ for sloka in self.slokas:
             # introduction = IntroduceSloka(sloka).build().to_item()
 
             # left = sloka_group(sloka)
@@ -255,7 +298,7 @@ class SutraFileTimeline(Timeline):
                     ),
                 ),
                 duration=1.0,
-            )
+            ) """
 
         # self.play(FadeOut(title))
 
