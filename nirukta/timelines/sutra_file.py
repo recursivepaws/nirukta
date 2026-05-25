@@ -6,14 +6,18 @@ from janim.imports import (
     MED_SMALL_BUFF,
     ORANGE,
     ORIGIN,
+    RIGHT,
     UL,
     UP,
+    UR,
     WHITE,
     Aligned,
     FadeIn,
     FadeOut,
     Group,
     Rect,
+    RectClip,
+    Succession,
     SurroundingRect,
     Text,
     Timeline,
@@ -37,6 +41,7 @@ from nirukta.render import (
     typst_code,
 )
 from nirukta.sloka import (
+    sloka_group_chandas,
     sloka_group_english,
     sloka_thumbnail,
     sloka_group,
@@ -77,13 +82,71 @@ class SutraFileTimeline(Timeline):
         ]:
             self.play(animation)
 
+        # Listening side by side with pronunciation guide
+
+
         for sloka in self.slokas:
-            introduction = IntroduceSloka(sloka).build().to_item()
-            introduction.show()
-            self.forward_to(introduction.end)
-            # explain = build_explain_sloka_cached(sloka).to_item().show()
-            explain = ExplainSloka(sloka).build().to_item().show()
-            self.forward_to(explain.end)
+            # introduction = IntroduceSloka(sloka).build().to_item()
+
+            # left = sloka_group(sloka)
+            # right = sloka_group(sloka)
+            # left.points.scale(0.5)
+            # right.points.scale(0.5)
+            # left.points.to_border(UL, buff=MED_SMALL_BUFF)
+            # right.points.to_border(UR, buff=MED_SMALL_BUFF)
+
+            scaledown = 0.5
+
+            lt = sloka_group(sloka)
+            rt = sloka_group(sloka)
+            left = RectClip(lt, anchor=ORIGIN, border=False)
+            left.points.scale(scaledown)
+            left.transform.set(scale=scaledown)
+            right = RectClip(rt, anchor=ORIGIN, border=False)
+            right.transform.set(scale=scaledown)
+            right.points.scale(scaledown)
+
+
+            self.play(
+
+                Succession(
+                FadeIn(Group(lt, left, rt, right)),
+                Wait(1.0),
+                Aligned(
+                    left.anim.points.shift(LEFT * scaledown * 6),
+                    right.anim.points.shift(RIGHT * scaledown * 6),
+                    # right.anim.points.scale(0.2)
+                ),
+                Wait(1.0),
+                # FadeOut(Group(lt, left, rt, right))
+                )
+            )
+
+            blank = sloka_group_chandas(sloka, blank=True, matras=False)
+            chandas = sloka_group_chandas(sloka, blank=False, matras=False)
+            g = Group(blank.text, blank.keys, chandas.text, chandas.keys)
+            g.points.shift(RIGHT * 3)
+
+            right.apply(*g)
+            # blank.text.points.scale(0.5)
+            # blank.text.points.to_border(UR, buff=MED_SMALL_BUFF)
+
+            self.play(LenientTransformMatchingDiff(rt, blank.text))
+            self.play(Transform(blank.text, chandas.text))
+            self.play(Wait(1.0))
+            self.play(FadeIn(chandas.keys))
+            self.play(FadeOut(Group(lt, left, chandas.keys, chandas.text, right)))
+
+    # group.points.scale(factor)
+            # scale_with_stroke(left, 0.5)
+            # scale_with_stroke(right, 0.5)
+            # introduction.show()
+            # self.forward_to(introduction.end)
+
+        # for sloka in self.slokas:
+        #     # explain = build_explain_sloka_cached(sloka).to_item().show()
+        #     explain = ExplainSloka(sloka).build().to_item().show()
+        #     self.forward_to(explain.end)
 
             # thumbnail = sloka_thumbnail(sloka)
             # initial = sloka_group(sloka)
