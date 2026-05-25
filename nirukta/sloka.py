@@ -20,9 +20,7 @@ from janim.imports import WHITE
 
 from nirukta.render import scale_with_stroke, set_font, transform_text, typst_code
 from nirukta.chandas import chandas
-from typing import Tuple, List
-
-_LONG_VOWELS_SLP1 = frozenset("AIUFXeEoO")
+from typing import List
 
 
 def sloka_group(sloka: Sloka) -> Group[TypstText]:
@@ -58,11 +56,6 @@ def sloka_group(sloka: Sloka) -> Group[TypstText]:
     return group
 
 
-def _is_long_vowel(slp1: str) -> bool:
-    """True if the SLP1 akshara contains a long vowel (dīrgha = 2 mātrās)."""
-    return any(c in _LONG_VOWELS_SLP1 for c in slp1)
-
-
 @dataclass
 class Keyed:
     text: TypstText
@@ -90,13 +83,13 @@ def sloka_group_chandas(
     #         continue
     #     match = chandas.classify(token.slp1)
     for pada in padas:
-        for akt, akw in pada:
-            bg = BLUE_E if akw == "g" else RED_E
-            deva = transform_text(akt, Language.SANSKRIT)
+        for akshara in pada:
+            bg = BLUE_E if akshara.weight == "g" else RED_E
+            deva = transform_text(akshara.text, Language.SANSKRIT)
             fill = "rgb(0, 0, 0, 0)" if blank else f'rgb("{bg.lstrip("#")}")'
             width = (
                 f"{base_width * 2 + gutter}em"
-                if (matras and _is_long_vowel(akt))
+                if (matras and akshara.is_long())
                 else f"{base_width}em"
             )
             cell_label = f"cell_{cell_idx}"
