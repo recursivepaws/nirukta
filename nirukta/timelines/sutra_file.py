@@ -124,7 +124,7 @@ class SutraFileTimeline(Timeline):
 
             def place_in_corner(clip, corner):
                 # TODO: fiddle w this
-                clip.transform.set(scale=scaledown * 1.3)
+                clip.transform.set(scale=scaledown)
                 clip.points.scale(scaledown)
                 clip.points.to_border(corner, buff=0)
 
@@ -132,17 +132,21 @@ class SutraFileTimeline(Timeline):
             speak_deva = sloka_group_reformed(sloka, devanagari=True)
 
             listen_iast = sloka_group_reformed(sloka, devanagari=False)
-            speak_iast = sloka_group_reformed(sloka, devanagari=False)
+            # speak_iast = sloka_group_reformed(sloka, devanagari=False)
 
             listen_deva_clip = RectClip(listen_deva, anchor=ORIGIN, border=True)
             speak_deva_clip = RectClip(speak_deva, anchor=ORIGIN, border=True)
             listen_iast_clip = RectClip(listen_iast, anchor=ORIGIN, border=True)
-            speak_iast_clip = RectClip(speak_iast, anchor=ORIGIN, border=True)
+            # speak_iast_clip = RectClip(speak_iast, anchor=ORIGIN, border=True)
 
             place_in_corner(listen_deva_clip, UL)
-            place_in_corner(listen_iast_clip, DL)
-            place_in_corner(speak_deva_clip, UR)
-            place_in_corner(speak_iast_clip, DR)
+            place_in_corner(listen_iast_clip, UR)
+            place_in_corner(speak_deva_clip, DOWN)
+            # speak_deva.points.scale((2.0, 1.0, 1.0))
+            speak_deva_clip.points.scale((2.0, 1.0, 1.0))
+
+            iiiii = SurroundingRect(speak_deva, buff=0)
+            # place_in_corner(speak_iast_clip, DR)
 
             listen_deva.points.shift(DOWN * 6)
             listen_deva.points.scale(0.5)
@@ -160,14 +164,15 @@ class SutraFileTimeline(Timeline):
                         ),
                         FadeIn(
                             Group(
+                                iiiii,
                                 listen_deva,
                                 listen_deva_clip,
                                 listen_iast,
                                 listen_iast_clip,
                                 speak_deva,
                                 speak_deva_clip,
-                                speak_iast,
-                                speak_iast_clip,
+                                # speak_iast,
+                                # speak_iast_clip,
                             )
                         ),
                     ),
@@ -188,34 +193,45 @@ class SutraFileTimeline(Timeline):
             chandas_deva = sloka_group_chandas(
                 sloka, blank=False, matras=False, devanagari=True
             )
-            blank_iast = sloka_group_chandas(
-                sloka, blank=True, matras=False, devanagari=False
-            )
-            chandas_iast = sloka_group_chandas(
-                sloka, blank=False, matras=False, devanagari=False
-            )
+            # blank_iast = sloka_group_chandas(
+            #     sloka, blank=True, matras=False, devanagari=False
+            # )
+            # chandas_iast = sloka_group_chandas(
+            #     sloka, blank=False, matras=False, devanagari=False
+            # )
 
             speak_deva_clip.apply(
-                blank_deva.text, blank_deva.keys, chandas_deva.text, chandas_deva.keys
+                iiiii,
+                blank_deva.text,
+                blank_deva.keys,
+                chandas_deva.text,
+                chandas_deva.keys,
             )
-            speak_iast_clip.apply(
-                blank_iast.text, blank_iast.keys, chandas_iast.text, chandas_iast.keys
-            )
+            # speak_iast_clip.apply(
+            #     blank_iast.text, blank_iast.keys, chandas_iast.text, chandas_iast.keys
+            # )
 
             self.play(
                 Aligned(
                     LenientTransformMatchingDiff(speak_deva, blank_deva.text),
-                    LenientTransformMatchingDiff(speak_iast, blank_iast.text),
+                    # LenientTransformMatchingDiff(speak_iast, blank_iast.text),
                 )
             )
             self.play(
                 Aligned(
                     Transform(blank_deva.text, chandas_deva.text),
-                    Transform(blank_iast.text, chandas_iast.text),
+                    # Transform(blank_iast.text, chandas_iast.text),
                 )
             )
             self.play(Wait(1.0))
-            self.play(FadeIn(Group(chandas_deva.keys, chandas_iast.keys)))
+            self.play(
+                FadeIn(
+                    Group(
+                        chandas_deva.keys,
+                        # chandas_iast.keys
+                    )
+                )
+            )
             self.prepare(
                 Aligned(
                     Aligned(
@@ -230,10 +246,11 @@ class SutraFileTimeline(Timeline):
                             listen_iast_clip,
                             chandas_deva.keys,
                             chandas_deva.text,
-                            chandas_iast.keys,
-                            chandas_iast.text,
+                            # chandas_iast.keys,
+                            # chandas_iast.text,
                             speak_deva_clip,
-                            speak_iast_clip,
+                            iiiii,
+                            # speak_iast_clip,
                         )
                     ),
                 ),

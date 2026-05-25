@@ -67,7 +67,7 @@ class Sloka:
         label = transliterate.process("IAST", "SLP1", verse.meter_label)
         assert label is not None
 
-        if "(" in label:
-            label = label.split("(")[0].strip()
+        # if "(" in label:
+        label = label.split(" ")[0].strip()
 
         return (label, padas)
