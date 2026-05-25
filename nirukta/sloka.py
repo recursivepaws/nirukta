@@ -1,3 +1,4 @@
+from attr import dataclass
 from janim.imports import (
     BLUE_E,
     RED_E,
@@ -62,10 +63,19 @@ def _is_long_vowel(slp1: str) -> bool:
     return any(c in _LONG_VOWELS_SLP1 for c in slp1)
 
 
+@dataclass
+class Keyed:
+    text: TypstText
+    keys: Group
+
+
 def sloka_group_chandas(
-    sloka: Sloka, blank: bool = False, matras: bool = False
-) -> tuple[TypstText, List[str]]:
+    sloka: Sloka,
+    blank: bool = False,
+    matras: bool = False,
+) -> Keyed:
     base_width = 1.8
+    gutter = 1.8
 
     all_cells = []
     cell_idx = 0
@@ -90,7 +100,7 @@ def sloka_group_chandas(
                         )
                         cell_label = f"cell_{cell_idx}"
                         all_cells.append(
-                            f"[#box(fill: {fill}, width: {width}, height: 1.8em, radius: 0.4em)"
+                            f"[#box(fill: {fill}, width: {width}, height: {base_width}em, radius: 0.4em)"
                             f"[#align(center + horizon)[#text(fill: white)[{deva}]]]"
                             f" <{cell_label}>]"
                         )
@@ -106,36 +116,18 @@ def sloka_group_chandas(
         n = len(row_cells)
         row_label = f"row_{i}"
         rows.append(
-            f"[#box[#grid(columns: (auto,) * {n}, gutter: 0.5em, {', '.join(row_cells)})] <{row_label}>]"
+            f"[#box[#grid(columns: (auto,) * {n}, gutter: {gutter}em, {', '.join(row_cells)})] <{row_label}>]"
         )
         row_labels.append(row_label)
 
-    grid_code = f"#grid(rows: (auto,) * {n}, gutter: 0.5em, {', '.join(rows)})"
+    grid_code = f"#grid(rows: (auto,) * {n}, gutter: {gutter}em, {', '.join(rows)})"
     grid = TypstText(set_font(grid_code, INTRO_FONT), scale=SCALE)
 
-    # return Group(grid)
-    return (grid, row_labels)
-    #
-    # # Position title and labels relative to the centered grid
-    # meter_deva = transform_text("anuzwuB", Language.SANSKRIT)
-    # title = TypstText(
-    #     set_font(f"#text(fill: white, size: 1.4em)[{meter_deva}]", INTRO_FONT),
-    #     scale=SCALE,
-    # )
-    # title.points.next_to(grid, UP)
-    #
-    # pada_labels = [transform_text(str(n), Language.SANSKRIT) for n in range(1, 5)]
-    # labels = []
-    # for pada_idx, row in enumerate(rows):
-    #     label_text = pada_labels[pada_idx] if pada_idx < len(pada_labels) else ""
-    #     label = TypstText(
-    #         set_font(f"#text(fill: white, size: 0.85em)[{label_text}]", INTRO_FONT),
-    #         scale=SCALE,
-    #     )
-    #     label.points.next_to(row, LEFT)
-    #     labels.append(label)
-    #
-    # return Group(title, *rows, *labels)
+    if blank:
+        return Keyed(text=grid, keys=Group())
+
+    t = title_and_pada_labels(grid, row_labels)
+    return Keyed(text=grid, keys=t)
 
 
 def title_and_pada_labels(texttttt: TypstText, labels: List[str]) -> Group:
@@ -154,7 +146,6 @@ def title_and_pada_labels(texttttt: TypstText, labels: List[str]) -> Group:
             set_font(f"#text(fill: white, size: 0.85em)[{label_text}]", INTRO_FONT),
             scale=SCALE,
         )
-        print(texttttt.text)
         label.points.next_to(texttttt.get_label(c_label), LEFT)
         labelz.append(label)
 

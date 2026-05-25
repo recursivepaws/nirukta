@@ -48,27 +48,29 @@ class IntroduceSloka(Timeline):
             self.play(Write(line, duration=4.0))
 
         # Move glyphs into grid boxes
-        (sloka_chandas_blank, _) = sloka_group_chandas(self.sloka, blank=True)
-        (sloka_chandas, chandas_labels) = sloka_group_chandas(self.sloka)
+        sloka_chandas_blank = sloka_group_chandas(self.sloka, blank=True)
+        sloka_chandas = sloka_group_chandas(self.sloka)
 
         self.play(
-            LenientTransformMatchingDiff(sloka_g, sloka_chandas_blank, duration=0.6)
+            LenientTransformMatchingDiff(
+                sloka_g, sloka_chandas_blank.text, duration=0.6
+            )
         )
 
         # Reveal the prosodic colors
-        self.play(Transform(sloka_chandas_blank, sloka_chandas, duration=0.6))
+        self.play(Transform(sloka_chandas_blank.text, sloka_chandas.text, duration=0.6))
         self.play(Wait(1.0))
-        thing1 = title_and_pada_labels(sloka_chandas, chandas_labels)
-        self.play(FadeIn(thing1))
+        # Reveal keys
+        self.play(FadeIn(sloka_chandas.keys))
 
         # Expand boxes by vowel duration
-        (sloka_matras, matras_labels) = sloka_group_chandas(self.sloka, matras=True)
-        thing2 = title_and_pada_labels(sloka_matras, matras_labels)
+        sloka_matras = sloka_group_chandas(self.sloka, matras=True)
+        # thing2 = title_and_pada_labels(sloka_matras, matras_labels)
 
         self.play(
             Aligned(
-                Transform(sloka_chandas, sloka_matras),
-                Transform(thing1, thing2),
+                Transform(sloka_chandas.text, sloka_matras.text),
+                Transform(sloka_chandas.keys, sloka_matras.keys),
                 duration=0.8,
             )
         )
@@ -81,12 +83,14 @@ class IntroduceSloka(Timeline):
                 scale=SCALE,
             )
             print(citation_text.text)
-            citation_text.points.next_to(sloka_chandas, DOWN)
+            citation_text.points.next_to(sloka_chandas.text, DOWN)
             for animation in [
                 Write(citation_text, duration=1.0),
                 Wait(1.0),
-                FadeOut(Group(sloka_matras, citation_text)),
+                FadeOut(
+                    Group(Group(sloka_matras.text, sloka_matras.keys), citation_text)
+                ),
             ]:
                 self.play(animation)
         else:
-            self.play(FadeOut(sloka_matras))
+            self.play(FadeOut(Group(sloka_matras.text, sloka_matras.keys)))
