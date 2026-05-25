@@ -10,7 +10,9 @@ from janim.imports import (
     UL,
     DL,
     UP,
+    DOWN,
     UR,
+    DR,
     WHITE,
     Aligned,
     FadeIn,
@@ -18,6 +20,7 @@ from janim.imports import (
     Group,
     Rect,
     RectClip,
+    ShrinkToEdge,
     Succession,
     SurroundingRect,
     Text,
@@ -38,6 +41,7 @@ from nirukta.render import (
     Awaken,
     Sleep,
     scale_with_stroke,
+    transform_text,
     set_font,
     typst_code,
 )
@@ -95,6 +99,18 @@ class SutraFileTimeline(Timeline):
         # verse = MI.identify_meter(slp1, resplit_option='none')
         # verse = MI.identify_meter(slp1, from_scheme='SLP', resplit_option='resplit_lite')
 
+        listen = "SravaRa"
+        # recite = "pAWa"
+        # title = TypstText(
+        #     set_font(
+        #         f"#text(fill: white, size: 1.2em)[{transform_text(listen, Language.SANSKRIT)}]",
+        #         SANSKRIT_FONT,
+        #     ),
+        #     scale=SCALE,
+        # )
+        # title.points.move_to(UL)
+        # self.play(FadeIn(title))
+
         for sloka in self.slokas:
             # introduction = IntroduceSloka(sloka).build().to_item()
 
@@ -116,28 +132,44 @@ class SutraFileTimeline(Timeline):
             speak_deva = sloka_group_reformed(sloka, devanagari=True)
 
             listen_iast = sloka_group_reformed(sloka, devanagari=False)
-            # speak_iast = sloka_group_reformed(sloka, devanagari=False)
+            speak_iast = sloka_group_reformed(sloka, devanagari=False)
 
             listen_deva_clip = RectClip(listen_deva, anchor=ORIGIN, border=True)
             speak_deva_clip = RectClip(speak_deva, anchor=ORIGIN, border=True)
             listen_iast_clip = RectClip(listen_iast, anchor=ORIGIN, border=True)
-            # speak_iast_clip = RectClip(speak_iast, anchor=ORIGIN, border=True)
+            speak_iast_clip = RectClip(speak_iast, anchor=ORIGIN, border=True)
 
             place_in_corner(listen_deva_clip, UL)
             place_in_corner(listen_iast_clip, DL)
             place_in_corner(speak_deva_clip, UR)
+            place_in_corner(speak_iast_clip, DR)
+
+            listen_deva.points.shift(DOWN * 6)
+            listen_deva.points.scale(0.5)
+            listen_iast.points.shift(DOWN * 6)
+            listen_iast.points.scale(0.5)
 
             self.play(
                 Succession(
-                    FadeIn(
-                        Group(
-                            listen_deva,
-                            listen_deva_clip,
-                            listen_iast,
-                            listen_iast_clip,
-                            speak_deva,
-                            speak_deva_clip,
-                        )
+                    Aligned(
+                        Aligned(
+                            listen_deva.anim.points.scale(2.0),
+                            listen_deva.anim.points.shift(UP * 6),
+                            listen_iast.anim.points.scale(2.0),
+                            listen_iast.anim.points.shift(UP * 6),
+                        ),
+                        FadeIn(
+                            Group(
+                                listen_deva,
+                                listen_deva_clip,
+                                listen_iast,
+                                listen_iast_clip,
+                                speak_deva,
+                                speak_deva_clip,
+                                speak_iast,
+                                speak_iast_clip,
+                            )
+                        ),
                     ),
                     Wait(1.0),
                     # Aligned(
@@ -150,32 +182,65 @@ class SutraFileTimeline(Timeline):
                 )
             )
 
-            blank = sloka_group_chandas(sloka, blank=True, matras=False)
-            chandas = sloka_group_chandas(sloka, blank=False, matras=False)
-            g = Group(blank.text, blank.keys, chandas.text, chandas.keys)
-            # g.points.shift(RIGHT * 3)
+            blank_deva = sloka_group_chandas(
+                sloka, blank=True, matras=False, devanagari=True
+            )
+            chandas_deva = sloka_group_chandas(
+                sloka, blank=False, matras=False, devanagari=True
+            )
+            blank_iast = sloka_group_chandas(
+                sloka, blank=True, matras=False, devanagari=False
+            )
+            chandas_iast = sloka_group_chandas(
+                sloka, blank=False, matras=False, devanagari=False
+            )
 
-            speak_deva_clip.apply(*g)
-            # blank.text.points.scale(0.5)
-            # blank.text.points.to_border(UR, buff=MED_SMALL_BUFF)
+            speak_deva_clip.apply(
+                blank_deva.text, blank_deva.keys, chandas_deva.text, chandas_deva.keys
+            )
+            speak_iast_clip.apply(
+                blank_iast.text, blank_iast.keys, chandas_iast.text, chandas_iast.keys
+            )
 
-            self.play(LenientTransformMatchingDiff(speak_deva, blank.text))
-            self.play(Transform(blank.text, chandas.text))
-            self.play(Wait(1.0))
-            self.play(FadeIn(chandas.keys))
             self.play(
-                FadeOut(
-                    Group(
-                        listen_deva,
-                        listen_deva_clip,
-                        listen_iast,
-                        listen_iast_clip,
-                        chandas.keys,
-                        chandas.text,
-                        speak_deva_clip,
-                    )
+                Aligned(
+                    LenientTransformMatchingDiff(speak_deva, blank_deva.text),
+                    LenientTransformMatchingDiff(speak_iast, blank_iast.text),
                 )
             )
+            self.play(
+                Aligned(
+                    Transform(blank_deva.text, chandas_deva.text),
+                    Transform(blank_iast.text, chandas_iast.text),
+                )
+            )
+            self.play(Wait(1.0))
+            self.play(FadeIn(Group(chandas_deva.keys, chandas_iast.keys)))
+            self.prepare(
+                Aligned(
+                    Aligned(
+                        listen_deva.anim.points.scale(0.5),
+                        listen_deva.anim.points.shift(UP * 6),
+                        listen_iast.anim.points.scale(0.5),
+                        listen_iast.anim.points.shift(UP * 6),
+                    ),
+                    FadeOut(
+                        Group(
+                            listen_deva_clip,
+                            listen_iast_clip,
+                            chandas_deva.keys,
+                            chandas_deva.text,
+                            chandas_iast.keys,
+                            chandas_iast.text,
+                            speak_deva_clip,
+                            speak_iast_clip,
+                        )
+                    ),
+                ),
+                duration=1.0,
+            )
+
+        # self.play(FadeOut(title))
 
     # group.points.scale(factor)
     # scale_with_stroke(left, 0.5)

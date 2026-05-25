@@ -23,7 +23,7 @@ scaledown = 0.5
 
 def place_in_corner(clip: RectClip, corner: Vect):
     # TODO: fiddle w this
-    clip.transform.set(scale=scaledown * 1.3)
+    clip.transform.set(scale=scaledown * 1.2)
     clip.points.scale(scaledown)
     clip.points.to_border(corner, buff=0)
 

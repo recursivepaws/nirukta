@@ -107,8 +107,16 @@ def sloka_group_chandas(
     sloka: Sloka,
     blank: bool = False,
     matras: bool = False,
+    devanagari: bool = True,
 ) -> Keyed:
-    base_width = 1.6
+    if devanagari:
+        lang = Language.SANSKRIT
+        font = SANSKRIT_FONT
+    else:
+        lang = Language.TRANSLIT
+        font = LATIN_FONT
+
+    base_width = 1.8
     gutter = 0.2
 
     all_cells = []
@@ -118,7 +126,7 @@ def sloka_group_chandas(
 
     for pada in padas:
         for akshara in pada:
-            deva = transform_text(akshara.text, Language.SANSKRIT)
+            deva = transform_text(akshara.text, lang)
             fill = None if blank else akshara.rgb_color()
             all_cells.append(
                 box_cell(
@@ -147,7 +155,7 @@ def sloka_group_chandas(
         row_labels.append(row_label)
 
     grid_code = f"#grid(rows: (auto,) * {n}, gutter: {gutter}em, {', '.join(rows)})"
-    grid = TypstText(set_font(grid_code, SANSKRIT_FONT), scale=SCALE)
+    grid = TypstText(set_font(grid_code, font), scale=SCALE)
 
     if blank:
         return Keyed(text=grid, keys=Group())
