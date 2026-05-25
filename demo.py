@@ -85,8 +85,9 @@ class MainTimeline(Timeline):
             )
             TransformableFrameClip(
                 tl,
-                clip=(clip_h, clip_v, clip_h, clip_v),
+                # clip=(clip_h, clip_v, clip_h, clip_v),
                 offset=(offset_x, offset_y),
+                scale=0.5,
             ).show()
 
             center = (
