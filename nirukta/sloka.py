@@ -18,7 +18,7 @@ from nirukta.constants import SANSKRIT_FONT, LATIN_FONT, SCALE
 from nirukta.models import Language, Sloka
 from janim.imports import WHITE
 
-from nirukta.render import scale_with_stroke, set_font, transform_text, typst_code
+from nirukta.render import set_font, transform_text, typst_code
 from typing import List
 
 from nirukta.typst import arrange_vertical, box_cell, arrange_horizontal
@@ -58,7 +58,25 @@ from nirukta.typst import arrange_vertical, box_cell, arrange_horizontal
 """
 
 
-def sloka_group_reformed(sloka: Sloka, devanagari: bool = True) -> TypstText:
+def sloka_group_english(sloka: Sloka) -> TypstText:
+    rows = []
+
+    for line in sloka.lines:
+        english = ""
+        for vAkya in line.vAkyAni:
+            english += vAkya.english + "#linebreak()"
+
+        rows.append(typst_code(english, Language.ENGLISH))
+
+    grid = arrange_vertical(rows, gutter=0.6)
+
+    return TypstText(
+        set_font(grid, LATIN_FONT),
+        scale=SCALE,
+    )
+
+
+def sloka_group_reformed(sloka: Sloka, devanagari: bool) -> TypstText:
     rows = []
 
     if devanagari:
@@ -84,11 +102,9 @@ def sloka_group_reformed(sloka: Sloka, devanagari: bool = True) -> TypstText:
             )
             sanskritcode += utterance_code + " "
 
-        sanskritcode = f"[{sanskritcode}]"
-        rows.append(sanskritcode)
+        rows.append(f"[{sanskritcode}]")
 
     grid = arrange_vertical(rows, gutter=0.6)
-    print(f"\n\ngrid:\n{grid}\n")
 
     return TypstText(
         set_font(grid, font),
@@ -187,28 +203,8 @@ def title_and_pada_labels(
     return Group(title, *labelz)
 
 
-def sloka_group_english(sloka: Sloka) -> Group[TypstText]:
-    group = []
-
-    for li, line in enumerate(sloka.lines):
-        english = ""
-        for vi, vAkya in enumerate(line.vAkyAni):
-            english += vAkya.english + "#linebreak()"
-
-        group.append(
-            TypstText(
-                set_font(typst_code(english, Language.ENGLISH), LATIN_FONT),
-                scale=SCALE,
-            )
-        )
-
-    group = Group(*group)
-    group.points.arrange(DOWN)
-    return group
-
-
-def sloka_thumbnail(sloka: Sloka) -> Group:
-    sloka_text = sloka_group_reformed(sloka)
+""" def sloka_thumbnail(sloka: Sloka) -> Group:
+    sloka_text = sloka_group_reformed(sloka, devanagari=True)
     if sloka.number is not None:
         number_label = Group(
             Rect(0.4, 0.4, fill_alpha=0.3),
@@ -221,10 +217,10 @@ def sloka_thumbnail(sloka: Sloka) -> Group:
             Group(sloka_text, number_label), color=WHITE, buff=MED_SMALL_BUFF
         )
 
-        group = scale_with_stroke(Group(sloka_text, sloka_border, number_label), 0.5)
+        group = Group(sloka_text, sloka_border, number_label)
     else:
         sloka_border = SurroundingRect(sloka_text, color=WHITE, buff=MED_SMALL_BUFF)
-        group = scale_with_stroke(Group(sloka_text, sloka_border), 0.5)
+        group = Group(sloka_text, sloka_border)
 
     group.points.to_border(UL, buff=MED_SMALL_BUFF)
-    return group
+    return group """

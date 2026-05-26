@@ -20,6 +20,7 @@ chosen = choose_nirukta_file()
 # `janim write` (export) keeps full 1920×1080.
 _preview_mode = "run" in sys.argv
 
+
 class Nirukta(Timeline):
     CONFIG = Config(
         fps=60,
@@ -38,4 +39,4 @@ class Nirukta(Timeline):
     def construct(self):
         assert is_nirukta_file(chosen), "Invalid file"
         timeline = file_to_timeline(chosen).build().to_item().show()
-        self.forward_to(timeline.end)
+        self.forward(timeline.duration)

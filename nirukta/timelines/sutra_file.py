@@ -41,7 +41,6 @@ from nirukta.timelines import (
 from nirukta.render import (
     Awaken,
     Sleep,
-    scale_with_stroke,
     transform_text,
     set_font,
     typst_code,
@@ -50,8 +49,8 @@ from nirukta.sloka import (
     sloka_group_chandas,
     sloka_group_english,
     sloka_group_reformed,
-    sloka_thumbnail,
 )
+from nirukta.timelines.english import EnglishTimeline
 from nirukta.timelines.explain_sloka import ExplainSloka, build_explain_sloka_cached
 from nirukta.timelines.recitation import RecitationTimeline
 
@@ -136,6 +135,7 @@ class SutraFileTimeline(Timeline):
                 .to_item()
                 .show()
             )
+            translation = EnglishTimeline(sloka=sloka).build().to_item().show()
             TransformableFrameClip(
                 listen_deva,
                 offset=(-0.25, 0.25),
@@ -148,11 +148,24 @@ class SutraFileTimeline(Timeline):
             ).show()
             TransformableFrameClip(
                 recitation,
-                offset=(0, -0.25),
+                offset=(-0.25, -0.25),
                 scale=0.5,
             ).show()
-            self.forward_to(listen_deva.end)
-            # self.fade
+            TransformableFrameClip(
+                translation,
+                offset=(+0.25, -0.25),
+                scale=0.5,
+            ).show()
+
+            self.forward(
+                max(
+                    listen_deva.duration,
+                    listen_iast.duration,
+                    recitation.duration,
+                    translation.duration,
+                )
+            )
+            # self.prepare(FadeOut(translation), duration=1.0)
 
         """ for sloka in self.slokas:
             # introduction = IntroduceSloka(sloka).build().to_item()

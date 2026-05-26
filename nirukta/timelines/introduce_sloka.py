@@ -46,10 +46,12 @@ class IntroduceSloka(Timeline):
         return YELLOW
 
     def construct(self):
-        sloka_g = sloka_group_reformed(self.sloka)
+        sloka_g = sloka_group_reformed(self.sloka, devanagari=True)
 
-        for line in sloka_g:
-            self.play(Write(line, duration=4.0))
+        # for line in sloka_g:
+        self.play(Write(sloka_g, duration=4.0))
+
+        self.play(Wait(1.0))
 
         # Move glyphs into grid boxes
         sloka_chandas_blank = sloka_group_chandas(self.sloka, blank=True)
@@ -60,6 +62,7 @@ class IntroduceSloka(Timeline):
                 sloka_g, sloka_chandas_blank.text, duration=0.5
             )
         )
+
         self.play(Wait(1.0))
 
         # Reveal the prosodic colors
@@ -67,6 +70,8 @@ class IntroduceSloka(Timeline):
         self.play(Wait(1.0))
         # Reveal keys
         self.play(FadeIn(sloka_chandas.keys))
+
+        self.play(Wait(2.0))
 
         # Expand boxes by vowel duration
         sloka_matras = sloka_group_chandas(self.sloka, matras=True)

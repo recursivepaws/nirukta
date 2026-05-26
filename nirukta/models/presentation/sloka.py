@@ -50,8 +50,8 @@ class Sloka:
         padas: List[List[Akshara]] = []
         for li in range(len(text_lines)):
             line_sounds = list(filter(lambda x: len(x) > 0, text_lines[li].split(" ")))
-            print(line_sounds)
-            print(weight_lines[li])
+            # print(line_sounds)
+            # print(weight_lines[li])
 
             aksharas: List[Akshara] = []
             for si in range(len(line_sounds)):
@@ -60,9 +60,9 @@ class Sloka:
                 )
             padas.append(aksharas)
 
-        print(verse.meter_label)
-        print(verse.morae_per_line)
-        print(padas)
+        # print(verse.meter_label)
+        # print(verse.morae_per_line)
+        # print(padas)
 
         label = transliterate.process("IAST", "SLP1", verse.meter_label)
         assert label is not None
@@ -71,3 +71,25 @@ class Sloka:
         label = label.split(" ")[0].strip()
 
         return (label, padas)
+
+    def english_typst(self) -> List[str]:
+        english = []
+        for line in self.lines:
+            el = ""
+            for vAkya in line.vAkyAni:
+                el += vAkya.english + "\n"
+            english.append(el)
+
+        return english
+
+        # rows = []
+        #
+        # for line in self.lines:
+        #     english = ""
+        #     for vAkya in line.vAkyAni:
+        #         english += vAkya.english + "#linebreak()"
+        #
+        #     rows.append(typst_code(english, Language.ENGLISH))
+        #
+        # return
+        # return arrange_vertical(rows, gutter=0.6)

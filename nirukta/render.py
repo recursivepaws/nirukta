@@ -252,8 +252,8 @@ def typst_code(
     return text_box(transformed, color, stroke_mode)
 
 
-def scale_with_stroke(group: Group, factor: float) -> Group:
-    group.points.scale(factor)
-    for item in group.walk_descendants(VItem):
-        item.radius.set(item.radius.get() * factor)
-    return group
+# def scale_with_stroke(group: Group, factor: float) -> Group:
+#     group.points.scale(factor)
+#     for item in group.walk_descendants(VItem):
+#         item.radius.set(item.radius.get() * factor)
+#     return group
