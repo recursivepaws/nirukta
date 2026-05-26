@@ -2,6 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 
 from janim.imports import (
+    Config,
     LEFT,
     MED_SMALL_BUFF,
     ORANGE,
@@ -115,6 +116,25 @@ class SutraFileTimeline(Timeline):
         # clip_v = 0.25
         # offset_x = -clip_h + col * (1 / cols)  # -0.25 or +0.25
         # offset_y = clip_v - row * (1 / rows)  #  0.25 or -0.25
+        fw = Config.get.frame_width
+        fh = Config.get.frame_height
+        quad_w = fw / 2
+        quad_h = fh / 2
+
+        borders = []
+        for i in range(4):
+            col = i % 2
+            row = i // 2
+            center = (
+                (col + 0.5 - 1.0) * quad_w,
+                (1.0 - row - 0.5) * quad_h,
+                0,
+            )
+
+            border = Rect(quad_w, quad_h, color=WHITE, stroke_radius=0.03)
+            border.points.move_to(center)
+            borders.append(border)
+        self.play(FadeIn(Group(*borders)))
 
         for sloka in self.slokas:
             listen_deva = (
@@ -136,6 +156,7 @@ class SutraFileTimeline(Timeline):
                 .show()
             )
             translation = EnglishTimeline(sloka=sloka).build().to_item().show()
+
             TransformableFrameClip(
                 listen_deva,
                 offset=(-0.25, 0.25),
@@ -167,6 +188,7 @@ class SutraFileTimeline(Timeline):
             )
             # self.prepare(FadeOut(translation), duration=1.0)
 
+        self.play(FadeOut(Group(*borders)))
         """ for sloka in self.slokas:
             # introduction = IntroduceSloka(sloka).build().to_item()
 

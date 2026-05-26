@@ -24,25 +24,19 @@ class EnglishTimeline(Timeline):
         self.sloka = sloka
 
     def construct(self):
-        # group = sloka_group_english(self.sloka)
-
         rows = []
 
         for line in self.sloka.lines:
-            # english = ""
             for vAkya in line.vAkyAni:
-                # vAkya.tokens.def
-                # english += vAkya.english
-                code = typst_code(vAkya.english, Language.ENGLISH)
-                rows.append(f"[{code}]")
+                rows.append(typst_code(vAkya.english, Language.ENGLISH))
 
-            emptyrow = typst_code("", Language.ENGLISH)
-            rows.append(f"[{emptyrow}]")
+            # Add an empty row between lines
+            rows.append(typst_code("", Language.ENGLISH))
 
         print(f"there are {len(rows)} rows in the english text")
         print(f"{rows}")
 
-        grid = arrange_vertical(rows, gutter=0.6)
+        grid = arrange_vertical(list(map(lambda code: f"[{code}]", rows)), gutter=0.6)
 
         group = TypstText(
             set_font(grid, LATIN_FONT),

@@ -91,8 +91,8 @@ class MainTimeline(Timeline):
             ).show()
 
             center = (
-                (col + 0.5 - cols / 2) * quad_w,
-                (rows / 2 - row - 0.5) * quad_h,
+                (col + 0.5 - 1.0) * quad_w,
+                (1.0 - row - 0.5) * quad_h,
                 0,
             )
             border = Rect(quad_w, quad_h, color=WHITE, stroke_radius=0.03)
