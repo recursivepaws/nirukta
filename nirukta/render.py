@@ -197,7 +197,7 @@ def Junicode_translit(iast: str, color: str) -> str:
 
 def set_font(text: str, font: str):
     return (
-        f'#set text(font: "{font}", stroke: none)\n'
+        f'#set text(font: "{font}", size: 6pt, stroke: none)\n'
         # f"#set page(width: {266 * SCALE}pt)\n"
         f"{text}"
     )

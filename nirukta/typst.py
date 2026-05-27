@@ -1,13 +1,13 @@
 from typing import List, Optional
 
 
-cell_width = 1.6
+height = 1.8
 gutter = 0.2
 
 
 def box_cell(
     content: str,
-    width: Optional[float] = cell_width,
+    wide: bool,
     idx: Optional[int] = None,
     fill: Optional[str] = None,
 ) -> str:
@@ -15,8 +15,14 @@ def box_cell(
     if fill is None:
         fill = "rgb(0, 0, 0, 0)"
 
+    width=(
+        height * 2 + gutter
+        if wide
+        else height
+    )
+
     return (
-        f"[#box(fill: {fill}, width: {width}em, height: {cell_width}em, radius: 0.4em)"
+        f"[#box(fill: {fill}, width: {width}em, height: {height}em, radius: 0.4em)"
         f"[#align(center + horizon)[#text(fill: white)[{content}]]]"
         f"{'' if idx is None else f'<cell_{idx}>'}]"
     )

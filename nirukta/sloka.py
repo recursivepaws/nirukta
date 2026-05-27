@@ -131,8 +131,6 @@ def sloka_group_chandas(
         lang = Language.TRANSLIT
         font = LATIN_FONT
 
-    base_width = 1.8
-    gutter = 0.2
 
     all_cells = []
     cell_idx = 0
@@ -146,11 +144,7 @@ def sloka_group_chandas(
             all_cells.append(
                 box_cell(
                     content=deva,
-                    width=(
-                        base_width * 2 + gutter
-                        if (matras and akshara.is_long())
-                        else base_width
-                    ),
+                    wide=matras and akshara.is_long(),
                     idx=cell_idx,
                     fill=fill,
                 )
@@ -169,7 +163,7 @@ def sloka_group_chandas(
         row_label = f"row_{idx}"
         row_labels.append(row_label)
 
-    grid_code = f"#grid(rows: (auto,) * {n}, gutter: {gutter}em, {', '.join(rows)})"
+    grid_code = arrange_vertical(rows)
     grid = TypstText(set_font(grid_code, font), scale=SCALE)
 
     if blank:
