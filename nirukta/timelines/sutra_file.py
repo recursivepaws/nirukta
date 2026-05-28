@@ -5,6 +5,7 @@ from janim.imports import (
     ORANGE,
     ORIGIN,
     FadeOut,
+    Succession,
     Timeline,
     TypstText,
     Wait,
@@ -18,6 +19,7 @@ from nirukta.render import (
 )
 from nirukta.timelines import ExplainSloka
 from nirukta.timelines.english import EnglishTimeline
+from nirukta.timelines.introduce_quad import IntroduceQuadTimeline
 from nirukta.timelines.quadrants import QuadrantsTimeline
 from nirukta.timelines.recitation import RecitationTimeline
 
@@ -41,36 +43,24 @@ class SutraFileTimeline(Timeline):
         return ORANGE
 
     def construct(self):
-        citation = TypstText(
-            set_font(typst_code(self.citation, Language.SANSKRIT), SANSKRIT_FONT),
-            scale=SCALE,
-        )
-        citation.points.move_to(ORIGIN)
+        if self.citation != "unknown":
+            citation = TypstText(
+                set_font(typst_code(self.citation, Language.SANSKRIT), SANSKRIT_FONT),
+                scale=SCALE,
+            )
+            citation.points.move_to(ORIGIN)
 
-        # Introduce the text by its title
-        for animation in [
-            Write(citation),
-            Wait(1.5),
-            FadeOut(citation),
-        ]:
-            self.play(animation)
+            # Introduce the text by its title
+            self.play(
+                Succession(
+                    Write(citation),
+                    Wait(1.5),
+                    FadeOut(citation),
+                )
+            )
 
         for sloka in self.slokas:
-            quadrants = (
-                QuadrantsTimeline(
-                    [
-                        RecitationTimeline(sloka=sloka, devanagari=True, chandas=False),
-                        RecitationTimeline(
-                            sloka=sloka, devanagari=False, chandas=False
-                        ),
-                        RecitationTimeline(sloka=sloka, devanagari=True, chandas=True),
-                        EnglishTimeline(sloka=sloka),
-                    ]
-                )
-                .build()
-                .to_item()
-                .show()
-            )
+            quadrants = IntroduceQuadTimeline(sloka).build().to_item().show()
             self.forward(quadrants.duration)
 
         for sloka in self.slokas:

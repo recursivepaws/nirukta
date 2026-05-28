@@ -4,7 +4,6 @@ from janim.anims.transform import Transform
 from janim.imports import (
     FadeIn,
     DOWN,
-    UP,
     YELLOW,
     FadeOut,
     Group,
@@ -13,21 +12,17 @@ from janim.imports import (
     Wait,
     Write,
     Aligned,
-    LEFT,
 )
 
 from nirukta.constants import SANSKRIT_FONT, SCALE
 from nirukta.models import Language, Sloka
 from nirukta.render import (
-    FlatAligned,
     set_font,
-    transform_text,
     typst_code,
 )
 from nirukta.sloka import (
     sloka_group_chandas,
     sloka_group_reformed,
-    title_and_pada_labels,
 )
 from nirukta.timelines.transform import LenientTransformMatchingDiff
 
