@@ -17,14 +17,16 @@ from janim.imports import (
 @dataclass
 class QuadrantsTimeline(Timeline):
     timelines: List[Timeline]
+    scale: float
 
-    def __init__(self, timelines: List[Timeline]):
+    def __init__(self, timelines: List[Timeline], scale: float = 0.5):
         # Exit early if args are invalid
         if len(timelines) > 4 or len(timelines) < 1:
             raise ValueError(f"Cannot display ${len(timelines)} in a quadrant layout.")
 
         super().__init__()
         self.timelines = timelines
+        self.scale = scale
 
     @property
     def gui_name(self) -> str:
@@ -62,7 +64,7 @@ class QuadrantsTimeline(Timeline):
         for idx, timeline in enumerate(self.timelines):
             built_timeline = timeline.build().to_item().show()
             TransformableFrameClip(
-                built_timeline, offset=offsets[idx], scale=0.5
+                built_timeline, offset=offsets[idx], scale=self.scale
             ).show()
             durations.append(built_timeline.duration)
 

@@ -34,7 +34,8 @@ class IntroduceQuadTimeline(Timeline):
                     RecitationTimeline(self.sloka, devanagari=False, chandas=False),
                     RecitationTimeline(self.sloka, devanagari=True, chandas=True),
                     EnglishTimeline(self.sloka),
-                ]
+                ],
+                scale=0.7,
             )
             .build()
             .to_item()
