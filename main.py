@@ -16,20 +16,22 @@ from nirukta.util import choose_nirukta_file, is_nirukta_file, file_to_timeline 
 chosen = choose_nirukta_file()
 
 
-# During `janim run` (preview), render at half resolution to reduce GPU load.
-# `janim write` (export) keeps full 1920×1080.
-_preview_mode = "run" in sys.argv
+# Keep previews performant with HD exports
+preview_mode = "run" in sys.argv
+if preview_mode:
+    config = Config(
+        fps=60,
+        preview_fps=30,
+        pixel_width=960,
+        pixel_height=540,
+        anti_alias_width=0.001,
+    )
+else:
+    config = Config(fps=60)
 
 
 class Nirukta(Timeline):
-    CONFIG = Config(
-        fps=60,
-        preview_fps=30,
-        pixel_width=960 if _preview_mode else 1920,
-        pixel_height=540 if _preview_mode else 1080,
-        anti_alias_width=0.001 if _preview_mode else 0.015,
-    )
-
+    CONFIG = config
     nirukta: Timeline
 
     @property

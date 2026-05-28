@@ -126,7 +126,7 @@ def sloka_group_chandas(
     columns = len(padas[0])
     ratio = min(Config.get.frame_width / columns, 1.0)
 
-    grid = TypstText(set_font(grid_code, font, f"{ratio}em"))
+    grid = TypstText(set_font(grid_code, font, ratio))
 
     if blank:
         return Keyed(text=grid, keys=Group())
@@ -142,9 +142,7 @@ def title_and_pada_labels(
     # Position title and labels relative to the centered grid
     meter_deva = transform_text(meter_label, Language.SANSKRIT)
     title = TypstText(
-        set_font(
-            f"#text(fill: white, size: {ratio * 1.2}em)[{meter_deva}]", SANSKRIT_FONT
-        ),
+        set_font(meter_deva, SANSKRIT_FONT, ratio=ratio * 1.2),
     )
     title.points.next_to(texttttt, UP)
     pada_labels = [transform_text(str(n), Language.SANSKRIT) for n in range(1, 5)]
@@ -152,10 +150,7 @@ def title_and_pada_labels(
     for pada_idx, c_label in enumerate(labels):
         label_text = pada_labels[pada_idx] if pada_idx < len(pada_labels) else ""
         label = TypstText(
-            set_font(
-                f"#text(fill: white, size: {ratio}em)[{label_text}]",
-                SANSKRIT_FONT,
-            ),
+            set_font(label_text, SANSKRIT_FONT, ratio=ratio),
         )
         label.points.next_to(texttttt.get_label(c_label), LEFT)
         labelz.append(label)

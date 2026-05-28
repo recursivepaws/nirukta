@@ -193,12 +193,14 @@ def Junicode_translit(iast: str, color: str) -> str:
     return f"#box[{inner}]"
 
 
-def set_font(text: str, font: str, size: str = "11pt"):
-    return (
-        f'#set text(font: "{font}", size: {size}, stroke: none)\n'
-        f"#set page(width: {266 * 1.3}pt)\n"
-        f"{text}"
-    )
+def set_font(text: str, font: str, ratio: float = 1.0, wrap: bool = False):
+    ratio *= 1.3
+    result = f'#set text(font: "{font}", size: {ratio}em, stroke: none)\n'
+    if wrap:
+        result += f"#set page(width: {266 * 1.3 * ratio}pt)\n"
+
+    result += f"{text}"
+    return result
 
 
 def text_box(text: str, color: str, stroke_mode: bool = False):
