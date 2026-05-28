@@ -38,7 +38,7 @@ class EnglishTimeline(Timeline):
         grid = arrange_vertical(list(map(lambda code: f"[{code}]", rows)), gutter=0.6)
 
         group = TypstText(
-            set_font(grid, LATIN_FONT),
+            set_font(grid, LATIN_FONT, wrap=True),
         )
 
         self.play(
