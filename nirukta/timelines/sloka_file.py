@@ -1,7 +1,6 @@
-from janim.imports import ORANGE, FadeOut, Timeline, Wait, Write
+from janim.imports import ORANGE, Timeline
 from nirukta.models import Sloka, SlokaFile
-from nirukta.sloka import sloka_group_english
-from nirukta.timelines.explain_sloka import ExplainSloka, build_explain_sloka_cached
+from nirukta.timelines.explain_sloka import ExplainSloka
 from nirukta.timelines.introduce_sloka import IntroduceSloka
 
 
@@ -23,16 +22,10 @@ class SlokaFileTimeline(Timeline):
         return ORANGE
 
     def construct(self):
-        introduction = IntroduceSloka(self.sloka, self.citation).build().to_item()
-        introduction.show()
-        self.forward_to(introduction.end)
+        introduction = (
+            IntroduceSloka(self.sloka, self.citation).build().to_item().show()
+        )
+        self.forward(introduction.duration)
 
-        # explanation = build_explain_sloka_cached(self.sloka).to_item()
-        explanation = ExplainSloka(self.sloka).build().to_item()
-        explanation.show()
-        self.forward_to(explanation.end)
-
-        # sge = sloka_group_english(self.sloka)
-        # self.play(Write(sge))
-        # self.play(Wait(2.0))
-        # self.play(FadeOut(sge))
+        explanation = ExplainSloka(self.sloka).build().to_item().show()
+        self.forward(explanation.duration)

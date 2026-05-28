@@ -2,16 +2,10 @@ from dataclasses import dataclass
 from typing import List
 
 from janim.imports import (
-    Config,
     ORANGE,
     ORIGIN,
-    WHITE,
-    FadeIn,
     FadeOut,
-    Group,
-    Rect,
     Timeline,
-    TransformableFrameClip,
     TypstText,
     Wait,
     Write,
@@ -22,6 +16,7 @@ from nirukta.render import (
     set_font,
     typst_code,
 )
+from nirukta.timelines import ExplainSloka
 from nirukta.timelines.english import EnglishTimeline
 from nirukta.timelines.quadrants import QuadrantsTimeline
 from nirukta.timelines.recitation import RecitationTimeline
@@ -77,3 +72,7 @@ class SutraFileTimeline(Timeline):
                 .show()
             )
             self.forward(quadrants.duration)
+
+        for sloka in self.slokas:
+            explain = ExplainSloka(sloka=sloka).build().to_item().show()
+            self.forward(explain.duration)

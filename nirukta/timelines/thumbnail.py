@@ -73,6 +73,7 @@ class ThumbnailTimeline(Timeline):
         # self.play(Write(initial), duration=0.33)
         # self.play(LenientTransformMatchingDiff(initial, thumbnail[0]), duration=0.33)
         # self.play(Aligned(FadeIn(thumbnail[1:]), Sleep(thumbnail[0])))
+
         self.play(Aligned(FadeIn(group), Sleep(sloka_text)))
 
         print()
