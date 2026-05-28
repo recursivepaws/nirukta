@@ -1,7 +1,6 @@
 from typing import List, Optional
 
 
-# page_width = 266
 height = 1.5
 gutter = 0.2
 

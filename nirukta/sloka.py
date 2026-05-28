@@ -1,62 +1,18 @@
 from attr import dataclass
 from janim.imports import (
-    BLUE_E,
-    RED_E,
     LEFT,
-    MED_SMALL_BUFF,
-    UL,
-    AnimGroup,
-    Rect,
-    DOWN,
     UP,
     Group,
-    SurroundingRect,
-    Text,
     TypstText,
     Config,
 )
-from nirukta.constants import SANSKRIT_FONT, LATIN_FONT, SCALE
+from nirukta.constants import SANSKRIT_FONT, LATIN_FONT
 from nirukta.models import Language, Sloka
-from janim.imports import WHITE
 
 from nirukta.render import set_font, transform_text, typst_code
 from typing import List
 
 from nirukta.typst import add_linebreaks, arrange_vertical, box_cell, arrange_horizontal
-
-
-""" def sloka_group(sloka: Sloka) -> Group[TypstText]:
-    group = []
-
-    for li, line in enumerate(sloka.lines):
-        sanskrit = ""
-        sanskritcode = ""
-        for vi, vAkya in enumerate(line.vAkyAni):
-            utterancetext = ""
-            for token in vAkya.tokens:
-                if isinstance(token, str):
-                    sanskrit += token
-                    utterancetext += token
-                else:
-                    sanskrit += token.slp1
-                    utterancetext += token.slp1
-
-                sanskrit += " "
-                utterancetext += " "
-            utterance_code = f"{typst_code(utterancetext, Language.SANSKRIT)}<line_{li}_utterance_{vi}>"
-            sanskritcode += utterance_code + " "
-
-        group.append(
-            TypstText(
-                set_font(sanskritcode, SANSKRIT_FONT),
-                scale=SCALE,
-            )
-        )
-
-    group = Group(*group)
-    group.points.arrange(DOWN)
-    return group
-"""
 
 
 def sloka_group_english(sloka: Sloka) -> TypstText:
@@ -74,7 +30,6 @@ def sloka_group_english(sloka: Sloka) -> TypstText:
 
     return TypstText(
         set_font(grid, LATIN_FONT),
-        scale=SCALE,
     )
 
 
@@ -112,7 +67,6 @@ def sloka_group_reformed(sloka: Sloka, devanagari: bool) -> TypstText:
 
     return TypstText(
         set_font(grid, font),
-        scale=SCALE,
     )
 
 
@@ -172,7 +126,7 @@ def sloka_group_chandas(
     columns = len(padas[0])
     ratio = min(Config.get.frame_width / columns, 1.0)
 
-    grid = TypstText(set_font(grid_code, font, f"{ratio}em"), scale=SCALE)
+    grid = TypstText(set_font(grid_code, font, f"{ratio}em"))
 
     if blank:
         return Keyed(text=grid, keys=Group())
@@ -191,7 +145,6 @@ def title_and_pada_labels(
         set_font(
             f"#text(fill: white, size: {ratio * 1.2}em)[{meter_deva}]", SANSKRIT_FONT
         ),
-        scale=SCALE,
     )
     title.points.next_to(texttttt, UP)
     pada_labels = [transform_text(str(n), Language.SANSKRIT) for n in range(1, 5)]
@@ -203,7 +156,6 @@ def title_and_pada_labels(
                 f"#text(fill: white, size: {ratio}em)[{label_text}]",
                 SANSKRIT_FONT,
             ),
-            scale=SCALE,
         )
         label.points.next_to(texttttt.get_label(c_label), LEFT)
         labelz.append(label)

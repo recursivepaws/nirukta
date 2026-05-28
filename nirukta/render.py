@@ -14,16 +14,14 @@ from janim.imports import (
     Group,
     GrowFromEdge,
     ShrinkToEdge,
-    VItem,
     ValueTracker,
     double_smooth,
     linear,
     rush_into,
     smooth,
-    there_and_back,
 )
-from nirukta.constants import INACTIVE, SCALE, TYPST_CMD_RE
-from nirukta.models import Language, Sloka
+from nirukta.constants import INACTIVE, TYPST_CMD_RE
+from nirukta.models import Language
 from janim.imports import WHITE, C_LABEL_ANIM_ABSTRACT
 from aksharamukha import transliterate
 
@@ -198,7 +196,7 @@ def Junicode_translit(iast: str, color: str) -> str:
 def set_font(text: str, font: str, size: str = "11pt"):
     return (
         f'#set text(font: "{font}", size: {size}, stroke: none)\n'
-        f"#set page(width: {266 * SCALE}pt)\n"
+        f"#set page(width: {266 * 1.3}pt)\n"
         f"{text}"
     )
 

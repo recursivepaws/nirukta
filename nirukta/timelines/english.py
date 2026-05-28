@@ -12,7 +12,6 @@ from nirukta.constants import LATIN_FONT
 from nirukta.models import Language, Sloka
 from nirukta.render import set_font, typst_code
 from nirukta.typst import arrange_vertical
-from nirukta.util import SCALE
 
 
 @dataclass
@@ -40,7 +39,6 @@ class EnglishTimeline(Timeline):
 
         group = TypstText(
             set_font(grid, LATIN_FONT),
-            scale=SCALE,
         )
 
         self.play(

@@ -84,7 +84,6 @@ class IntroduceSloka(Timeline):
         if self.citation is not None and self.citation != "sloka":
             citation_text = TypstText(
                 set_font(typst_code(self.citation, Language.SANSKRIT), SANSKRIT_FONT),
-                scale=SCALE,
             )
             print(citation_text.text)
             citation_text.points.next_to(sloka_g, DOWN)

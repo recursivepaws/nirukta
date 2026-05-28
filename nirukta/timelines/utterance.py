@@ -29,7 +29,6 @@ from nirukta.constants import (
     LATIN_FONT,
     MISSING_CHUNK_RE,
     SANSKRIT_FONT,
-    SCALE,
     TYPST_CMD_RE,
     ALPHA_RE,
     WHITESPACE_RE,
@@ -206,17 +205,17 @@ class UtteranceTimeline(Timeline):
 
                 cursor += a[1] - a[0]
 
-            states[0].append(TypstText(set_font(sanskrit, SANSKRIT_FONT), scale=SCALE))
-            states[1].append(TypstText(set_font(translit, LATIN_FONT), scale=SCALE))
-            states[2].append(TypstText(set_font(english, LATIN_FONT), scale=SCALE))
+            states[0].append(TypstText(set_font(sanskrit, SANSKRIT_FONT)))
+            states[1].append(TypstText(set_font(translit, LATIN_FONT)))
+            states[2].append(TypstText(set_font(english, LATIN_FONT)))
 
         for i in range(len(states[0])):
             # Start the transliteration in the center
             states[1][i].points.move_to(ORIGIN)
 
             # Move sa and en above and below
-            states[0][i].points.next_to(states[1][i], UP * SCALE)
-            states[2][i].points.next_to(states[1][i], DOWN * SCALE)
+            states[0][i].points.next_to(states[1][i], UP)
+            states[2][i].points.next_to(states[1][i], DOWN)
 
             # TODO: find a way to align on edges without making the english text move every expansion change
             # states[0][i].points.next_to( states[1][i], direction=UP * SCALE, aligned_edge=LEFT)

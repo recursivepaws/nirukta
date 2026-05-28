@@ -11,17 +11,14 @@ from janim.imports import (
     Wait,
     Write,
 )
-from nirukta.constants import SANSKRIT_FONT, SCALE
+from nirukta.constants import SANSKRIT_FONT
 from nirukta.models import Language, Sloka, SutraFile
 from nirukta.render import (
     set_font,
     typst_code,
 )
 from nirukta.timelines import ExplainSloka
-from nirukta.timelines.english import EnglishTimeline
 from nirukta.timelines.introduce_quad import IntroduceQuadTimeline
-from nirukta.timelines.quadrants import QuadrantsTimeline
-from nirukta.timelines.recitation import RecitationTimeline
 
 
 @dataclass
@@ -46,7 +43,6 @@ class SutraFileTimeline(Timeline):
         if self.citation != "unknown":
             citation = TypstText(
                 set_font(typst_code(self.citation, Language.SANSKRIT), SANSKRIT_FONT),
-                scale=SCALE,
             )
             citation.points.move_to(ORIGIN)
 
