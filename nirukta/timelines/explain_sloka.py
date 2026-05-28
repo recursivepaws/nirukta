@@ -10,9 +10,7 @@ from janim.imports import (
 )
 from janim.logger import log
 from nirukta.models import Sloka
-from nirukta.timelines import (
-    build_utterance_cached,
-)
+from nirukta.timelines import build_utterance_cached, UtteranceTimeline
 from nirukta.timelines.thumbnail import ThumbnailTimeline
 
 # Memory-only cache: disk caching is handled at the utterance level.
@@ -57,7 +55,8 @@ class ExplainSloka(Timeline):
                     self.play(Wait(0.33))
 
                 self.play(Wait(0.33))
-                vt = build_utterance_cached(vAkya).to_item().show()
+                # vt = build_utterance_cached(vAkya).to_item().show()
+                vt = UtteranceTimeline(vAkya).build().to_item().show()
                 self.forward(vt.duration)
 
         self.forward_to(thumb.end)
