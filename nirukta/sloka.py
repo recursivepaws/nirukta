@@ -170,7 +170,7 @@ def sloka_group_chandas(
 
     # Actual ratio of text to use
     columns = len(padas[0])
-    ratio = Config.get.frame_width / columns
+    ratio = min(Config.get.frame_width / columns, 1.0)
 
     grid = TypstText(set_font(grid_code, font, f"{ratio}em"), scale=SCALE)
 
