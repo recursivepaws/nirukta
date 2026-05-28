@@ -15,11 +15,7 @@ def box_cell(
     if fill is None:
         fill = "rgb(0, 0, 0, 0)"
 
-    width=(
-        height * 2 + gutter
-        if wide
-        else height
-    )
+    width = height * 2 + gutter if wide else height
 
     return (
         f"[#box(fill: {fill}, width: {width}em, height: {height}em, radius: 0.4em)"
@@ -44,3 +40,7 @@ def arrange_vertical(cells: List[str], gutter: float = gutter) -> str:
     return (
         f"#grid(rows: (auto,) * {len(cells)}, gutter: {gutter}em, {', '.join(cells)})"
     )
+
+
+def add_linebreaks(lines: List[str]) -> str:
+    return f"{' #linebreak() '.join(lines)}"

@@ -21,7 +21,7 @@ from janim.imports import WHITE
 from nirukta.render import set_font, transform_text, typst_code
 from typing import List
 
-from nirukta.typst import arrange_vertical, box_cell, arrange_horizontal
+from nirukta.typst import add_linebreaks, arrange_vertical, box_cell, arrange_horizontal
 
 
 """ def sloka_group(sloka: Sloka) -> Group[TypstText]:
@@ -68,7 +68,8 @@ def sloka_group_english(sloka: Sloka) -> TypstText:
 
         rows.append(typst_code(english, Language.ENGLISH))
 
-    grid = arrange_vertical(rows, gutter=0.6)
+    # grid = arrange_vertical(rows, gutter=0.6)
+    grid = add_linebreaks(rows)
 
     return TypstText(
         set_font(grid, LATIN_FONT),
@@ -102,9 +103,11 @@ def sloka_group_reformed(sloka: Sloka, devanagari: bool) -> TypstText:
             )
             sanskritcode += utterance_code + " "
 
-        rows.append(f"[{sanskritcode}]")
+        # rows.append(f"[{sanskritcode}]")
+        rows.append(sanskritcode)
 
-    grid = arrange_vertical(rows, gutter=0.6)
+    # grid = arrange_vertical(rows, gutter=0.6)
+    grid = add_linebreaks(rows)
 
     return TypstText(
         set_font(grid, font),
@@ -130,7 +133,6 @@ def sloka_group_chandas(
     else:
         lang = Language.TRANSLIT
         font = LATIN_FONT
-
 
     all_cells = []
     cell_idx = 0
@@ -164,6 +166,7 @@ def sloka_group_chandas(
         row_labels.append(row_label)
 
     grid_code = arrange_vertical(rows)
+    # grid_code = add_linebreaks(rows)
     grid = TypstText(set_font(grid_code, font), scale=SCALE)
 
     if blank:

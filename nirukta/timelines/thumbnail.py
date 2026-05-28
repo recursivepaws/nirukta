@@ -88,6 +88,7 @@ class ThumbnailTimeline(Timeline):
                 selection = sloka_text.get_label(f"line_{li}_utterance_{vi}")
                 self.play(Awaken(selection))
 
+                # Build but do not show; so that we can match durations
                 vt = build_utterance_cached(vAkya).to_item()
                 self.forward(vt.duration)
 
