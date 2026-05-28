@@ -40,6 +40,15 @@ class ExplainSloka(Timeline):
         return YELLOW
 
     def construct(self):
+        # TODO: find a way to run the thumbnail timeline without building the utterances twice
+        # utterance_timelines = []
+        # timeline_durations = []
+        # for li, line in enumerate(self.sloka.lines):
+        #     for vi, vAkya in enumerate(line.vAkyAni):
+        #         utterance_timelines.append(UtteranceTimeline(vAkya).build())
+        # for timeline in utterance_timelines:
+        #     timeline_durations.append(timeline.duration)
+
         thumb = ThumbnailTimeline(sloka=self.sloka).build().to_item().show()
         TransformableFrameClip(
             thumb,

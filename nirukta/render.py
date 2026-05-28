@@ -138,7 +138,7 @@ class Diff:
         if self.anim == Animation.EXPAND:
             return rush_into
         else:
-            return linear
+            return double_smooth
 
     def duration(self):
         match self.anim:
@@ -195,10 +195,10 @@ def Junicode_translit(iast: str, color: str) -> str:
     return f"#box[{inner}]"
 
 
-def set_font(text: str, font: str):
+def set_font(text: str, font: str, size: str = "11pt"):
     return (
-        f'#set text(font: "{font}", size: 6pt, stroke: none)\n'
-        # f"#set page(width: {266 * SCALE}pt)\n"
+        f'#set text(font: "{font}", size: {size}, stroke: none)\n'
+        f"#set page(width: {266 * SCALE}pt)\n"
         f"{text}"
     )
 

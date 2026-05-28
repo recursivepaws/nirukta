@@ -218,6 +218,10 @@ class UtteranceTimeline(Timeline):
             states[0][i].points.next_to(states[1][i], UP * SCALE)
             states[2][i].points.next_to(states[1][i], DOWN * SCALE)
 
+            # TODO: find a way to align on edges without making the english text move every expansion change
+            # states[0][i].points.next_to( states[1][i], direction=UP * SCALE, aligned_edge=LEFT)
+            # states[2][i].points.next_to( states[1][i], direction=DOWN * SCALE, aligned_edge=LEFT)
+
             # Initial write on
             if i == 0:
                 for fa in [

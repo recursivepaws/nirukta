@@ -13,6 +13,7 @@ from janim.imports import (
     SurroundingRect,
     Text,
     TypstText,
+    Config,
 )
 from nirukta.constants import SANSKRIT_FONT, LATIN_FONT, SCALE
 from nirukta.models import Language, Sloka
@@ -166,23 +167,30 @@ def sloka_group_chandas(
         row_labels.append(row_label)
 
     grid_code = arrange_vertical(rows)
-    # grid_code = add_linebreaks(rows)
-    grid = TypstText(set_font(grid_code, font), scale=SCALE)
+
+    # Actual ratio of text to use
+    columns = len(padas[0])
+    ratio = Config.get.frame_width / columns
+
+    grid = TypstText(set_font(grid_code, font, f"{ratio}em"), scale=SCALE)
 
     if blank:
         return Keyed(text=grid, keys=Group())
 
-    t = title_and_pada_labels(meter_label, grid, row_labels)
+    t = title_and_pada_labels(meter_label, grid, row_labels, ratio)
+
     return Keyed(text=grid, keys=t)
 
 
 def title_and_pada_labels(
-    meter_label: str, texttttt: TypstText, labels: List[str]
+    meter_label: str, texttttt: TypstText, labels: List[str], ratio: float
 ) -> Group:
     # Position title and labels relative to the centered grid
     meter_deva = transform_text(meter_label, Language.SANSKRIT)
     title = TypstText(
-        set_font(f"#text(fill: white, size: 1.2em)[{meter_deva}]", SANSKRIT_FONT),
+        set_font(
+            f"#text(fill: white, size: {ratio * 1.2}em)[{meter_deva}]", SANSKRIT_FONT
+        ),
         scale=SCALE,
     )
     title.points.next_to(texttttt, UP)
@@ -191,33 +199,13 @@ def title_and_pada_labels(
     for pada_idx, c_label in enumerate(labels):
         label_text = pada_labels[pada_idx] if pada_idx < len(pada_labels) else ""
         label = TypstText(
-            set_font(f"#text(fill: white, size: 0.85em)[{label_text}]", SANSKRIT_FONT),
+            set_font(
+                f"#text(fill: white, size: {ratio}em)[{label_text}]",
+                SANSKRIT_FONT,
+            ),
             scale=SCALE,
         )
         label.points.next_to(texttttt.get_label(c_label), LEFT)
         labelz.append(label)
 
     return Group(title, *labelz)
-
-
-""" def sloka_thumbnail(sloka: Sloka) -> Group:
-    sloka_text = sloka_group_reformed(sloka, devanagari=True)
-    if sloka.number is not None:
-        number_label = Group(
-            Rect(0.4, 0.4, fill_alpha=0.3),
-            Text(f"{sloka.number}", font_size=22),
-        )
-        number_label.points.next_to(
-            sloka_text, UP, buff=MED_SMALL_BUFF, aligned_edge=LEFT
-        )
-        sloka_border = SurroundingRect(
-            Group(sloka_text, number_label), color=WHITE, buff=MED_SMALL_BUFF
-        )
-
-        group = Group(sloka_text, sloka_border, number_label)
-    else:
-        sloka_border = SurroundingRect(sloka_text, color=WHITE, buff=MED_SMALL_BUFF)
-        group = Group(sloka_text, sloka_border)
-
-    group.points.to_border(UL, buff=MED_SMALL_BUFF)
-    return group """

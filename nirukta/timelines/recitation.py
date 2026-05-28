@@ -30,7 +30,11 @@ class RecitationTimeline(Timeline):
         self.chandas = chandas
 
     def construct(self):
-        group = sloka_group_reformed(self.sloka, devanagari=self.devanagari)
+        if self.chandas:
+            c = sloka_group_chandas(self.sloka, blank=False, matras=False)
+            group = Group(c.text, c.keys)
+        else:
+            group = sloka_group_reformed(self.sloka, devanagari=self.devanagari)
 
         self.play(
             Succession(
@@ -38,8 +42,9 @@ class RecitationTimeline(Timeline):
                 Wait(1.0),
             )
         )
+        self.play(Succession(Wait(2.0), FadeOut(group, duration=0.5)))
 
-        if self.chandas:
+        """ if self.chandas:
             blank = sloka_group_chandas(self.sloka, blank=True, matras=False)
             chandas = sloka_group_chandas(self.sloka, blank=False, matras=False)
 
@@ -62,4 +67,4 @@ class RecitationTimeline(Timeline):
                 )
             )
         else:
-            self.play(Succession(Wait(2.0), FadeOut(group, duration=0.5)))
+            self.play(Succession(Wait(2.0), FadeOut(group, duration=0.5))) """
