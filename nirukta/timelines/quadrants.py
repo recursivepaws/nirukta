@@ -18,8 +18,12 @@ from janim.imports import (
 class QuadrantsTimeline(Timeline):
     timelines: List[Timeline]
     scale: float
+    first: bool
+    last: bool
 
-    def __init__(self, timelines: List[Timeline], scale: float = 0.5):
+    def __init__(
+        self, timelines: List[Timeline], first: bool, last: bool, scale: float = 0.5
+    ):
         # Exit early if args are invalid
         if len(timelines) > 4 or len(timelines) < 1:
             raise ValueError(f"Cannot display ${len(timelines)} in a quadrant layout.")
@@ -27,6 +31,8 @@ class QuadrantsTimeline(Timeline):
         super().__init__()
         self.timelines = timelines
         self.scale = scale
+        self.first = first
+        self.last = last
 
     @property
     def gui_name(self) -> str:
@@ -55,7 +61,12 @@ class QuadrantsTimeline(Timeline):
             border = Rect(quad_w, quad_h, color=WHITE, stroke_radius=0.03)
             border.points.move_to(center)
             borders.append(border)
-        self.play(FadeIn(Group(*borders)))
+
+        borders = Group(*borders)
+        if self.first:
+            self.play(FadeIn(borders))
+        else:
+            borders.show()
 
         # for sloka in self.timelines:
         offsets = [(-0.25, +0.25), (+0.25, +0.25), (-0.25, -0.25), (+0.25, -0.25)]
@@ -71,4 +82,5 @@ class QuadrantsTimeline(Timeline):
         # Wait
         self.forward(max(durations))
 
-        self.play(FadeOut(Group(*borders)))
+        if self.last:
+            self.play(FadeOut(borders))

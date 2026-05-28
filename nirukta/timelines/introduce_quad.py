@@ -13,10 +13,14 @@ from nirukta.timelines.recitation import RecitationTimeline
 @dataclass
 class IntroduceQuadTimeline(Timeline):
     slokas: Sloka
+    first: bool
+    last: bool
 
-    def __init__(self, sloka: Sloka):
+    def __init__(self, sloka: Sloka, first: bool, last: bool):
         super().__init__()
         self.sloka = sloka
+        self.first = first
+        self.last = last
 
     @property
     def gui_name(self) -> str:
@@ -35,7 +39,9 @@ class IntroduceQuadTimeline(Timeline):
                     RecitationTimeline(self.sloka, devanagari=True, chandas=True),
                     EnglishTimeline(self.sloka),
                 ],
-                scale=0.7,
+                first=self.first,
+                last=self.last,
+                scale=0.5,
             )
             .build()
             .to_item()

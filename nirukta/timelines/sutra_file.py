@@ -59,8 +59,15 @@ class SutraFileTimeline(Timeline):
                 )
             )
 
-        for sloka in self.slokas:
-            quadrants = IntroduceQuadTimeline(sloka).build().to_item().show()
+        for idx, sloka in enumerate(self.slokas):
+            quadrants = (
+                IntroduceQuadTimeline(
+                    sloka, first=(idx == 0), last=(idx == len(self.slokas) - 1)
+                )
+                .build()
+                .to_item()
+                .show()
+            )
             self.forward(quadrants.duration)
 
         for sloka in self.slokas:
