@@ -15,9 +15,10 @@ SLOKA_GRAMMAR_STR = r"""
 
     # Sandhi: one or more components joined by '+', then '=' surface form.
     # Components may themselves be parenthesised sandhi groups, enabling
-    # arbitrary nesting:  (a[x]+b[y]=ab)+c[z]=abc
-    compound_token  = comp_part plus_part* "=" slp1 etym_gloss?
+    # arbitrary nesting:  (a[x]+b[y]=ab)+c[z]=abc>>abcd
+    compound_token  = comp_part plus_part* "=" slp1 inflect_part*
     plus_part       = "+" comp_part
+    inflect_part    = ">>" slp1
     comp_part       = paren_compound / simple_token
     paren_compound  = "(" compound_token ")"
 
@@ -32,7 +33,7 @@ SLOKA_GRAMMAR_STR = r"""
     punct = ~r"\.+(?:\s*\d+\s*[.,;]*)?|[;,]"
 
     # SLP1: anything that isn't a format metacharacter or whitespace
-    slp1            = ~r"[^[\]{}.;=+()\"\s]+"
+    slp1            = ~r"[^[\]\>{}.;=+()\"\s]+"
 
     quoted_str      = '"' ~r'(?:[^"\\]|\\.)*' '"'
     ws              = ~r"\s*"

@@ -1,12 +1,17 @@
 import logging
 import os
 import traceback
+from nirukta.render import transform_text, untransform_text
+import sandhi as sandhi_module
+from aksharamukha import transliterate
 from typing import Optional
+from janim.imports import log
 from nirukta.inflection import Case, SanskritInflection
 from nirukta.models import (
     CompoundToken,
     EnglishGloss,
     EtymGloss,
+    Language,
     Line,
     SimpleToken,
     Sloka,
@@ -16,6 +21,7 @@ from nirukta.models import SlokaFile
 from nirukta.parsing.grammars import SLOKA_GRAMMAR
 from parsimonious.nodes import NodeVisitor
 
+S = sandhi_module.Sandhi()
 
 class SlokaVisitor(NodeVisitor):
     file: str
@@ -82,23 +88,57 @@ class SlokaVisitor(NodeVisitor):
     # -- compound (sandhi) tokens -------------------------------------------
 
     def visit_compound_token(self, _, visited_children):
-        first_part, plus_parts, _, surface, gloss = visited_children
-        etym_glosses = list(gloss)
-        etym_gloss: Optional[EtymGloss] = (
-            etym_glosses[0] if len(etym_glosses) > 0 else None
-        )
+        print(f"visited_children compound_token: {visited_children}")
+        first_part, plus_parts, _, surface, inflect_parts = visited_children
 
         parts = [first_part] + list(plus_parts)
 
-        return CompoundToken(
+        if len(parts) > 2:
+            log.warning(f"Cannot verify sandhi for more than 2 parts at once: {parts}")
+        elif len(parts) == 2:
+            A = transform_text(parts[0].slp1, Language.SANSKRIT)
+            B = transform_text(parts[1].slp1, Language.SANSKRIT)
+            C = transform_text(surface, Language.SANSKRIT)
+
+
+            results = S.sandhi(A, B)
+
+            valid_forms = {untransform_text(r[0]) for r in results}
+
+            A = untransform_text(A)
+            B = untransform_text(B)
+            C = untransform_text(C)
+
+            is_valid = C in valid_forms
+
+            if not is_valid:
+                log.warning(f"sandhi invalid: \t{A} + {B} != {C}\nvalid forms produces by this combination: {valid_forms}\n")
+            else:
+                log.info(f"sandhi verified:\t{A} + {B} = {C}")
+
+        # normalize inflect_parts
+        i_parts = inflect_parts if isinstance(inflect_parts, list) else []
+        i_parts = [p for p in i_parts if isinstance(p, str)]
+
+        # fold left: each >> wraps the previous result in a new CompoundToken
+        result = CompoundToken(
             parts=parts,
             slp1=surface,
-            etym_gloss=etym_gloss,
         )
+
+        for slp1 in i_parts:
+            result = CompoundToken(parts=[result], slp1=slp1)
+
+        return result
+
 
     def visit_plus_part(self, _, visited_children):
         _, part = visited_children
         return part
+
+    def visit_inflect_part(self, _, visited_children):
+        _, slp1 = visited_children
+        return slp1
 
     def visit_comp_part(self, _, visited_children):
         return visited_children[0]
@@ -106,6 +146,7 @@ class SlokaVisitor(NodeVisitor):
     def visit_paren_compound(self, _, visited_children):
         _, compound, _ = visited_children
         return compound
+
 
     # -- simple tokens & glosses --------------------------------------------
 

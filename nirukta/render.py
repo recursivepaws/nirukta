@@ -244,6 +244,12 @@ def transform_text(text: str, language: Language):
                 raise ValueError(f'Cannot represent "{text}" in devanagari')
             return deva
 
+def untransform_text(text: str):
+    iast = transliterate.process("DEVANAGARI", "IAST", text)
+    if not iast:
+        raise ValueError(f'Cannot represent "{text}" in IAST')
+    return iast
+
 
 def typst_code(
     text: str, language: Language, color: str = WHITE, stroke_mode: bool = False

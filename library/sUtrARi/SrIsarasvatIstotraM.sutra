@@ -270,8 +270,8 @@ namaH[reverence]=namo namaH[reverence] .. 14 ..
 === sloka ===
 
 --- line ---
-aRu[atomic]+rUpa[form]=aRurUpe
-mahA[large]+rUpa[form]=mahArUpe
+aRu[atomic]+rUpa[form]=aRurUpa>>aRurUpe
+mahA[large]+rUpa[form]=mahArUpa>>mahArUpe
 viSva[universal]+rUpa[form]=viSvarUpe
 namaH[reverence]=namo namaH[reverence] .
 "O you of atomic form, O you of large form, O you of universal form - reverence, reverence."
@@ -350,7 +350,7 @@ namaH[reverence]=namo namaH[reverence] .. 19 ..
 sAyam[in the evening]=sAyaM
 prAtaH[in the morning]
 (paWen[should][recite]+nityam[daily]=paWennityam)=paWennityaM
-(zAR[six]+mAsAt[months]=zARmAsAt)+(sidDih[attainment]+ucyate[It is said]=sidDirucyate)=zARmAsAtsidDirucyate .
+(zAR[six]+mAsAt[months]=zARmAsAt)+(sidDiH[attainment]+ucyate[It is said]=sidDirucyate)=zARmAsAtsidDirucyate .
 "It is said that one should recite this daily in the evening and in the morning for six months to reach attainment."
 
 --- line ---
