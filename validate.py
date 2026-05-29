@@ -13,4 +13,6 @@ while True:
         SutraVisitor(chosen).parse()
     else:
         SlokaVisitor(chosen).parse()
-    input("validate again?")
+    c = input("validate again? y/n")
+    if c == "n":
+        break

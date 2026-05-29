@@ -2,6 +2,7 @@ import logging
 import os
 import traceback
 from nirukta.render import transform_text, untransform_text
+from nirukta.strings import unswara
 import sandhi as sandhi_module
 from janim.imports import log
 from nirukta.inflection import Case, SanskritInflection
@@ -90,11 +91,47 @@ class SlokaVisitor(NodeVisitor):
         parts = [first_part] + list(plus_parts)
 
         if len(parts) > 2:
-            log.warning(f"Cannot verify sandhi for more than 2 parts at once: {parts}")
+            log.info("meow")
+            """ built = ""
+            for i in range(len(parts)):
+                # A = transform_text(parts[i].slp1, Language.SANSKRIT)
+                A = built
+                B = transform_text(unswara(parts[i].slp1), Language.SANSKRIT)
+                log.info(f"adding: {untransform_text(A)} + {untransform_text(B)}")
+
+                results = S.sandhi(A, B)
+                valid_forms = {untransform_text(r[0]) for r in results}
+                log.info(f"valid_forms: {valid_forms}")
+                compact_results = list(filter(lambda x: " " not in x, valid_forms))
+                compact_results = list(
+                    map(lambda x: x.replace("_", ""), compact_results)
+                )
+
+                if len(compact_results) > 1 or len(compact_results) == 0:
+                    log.warning(f"cannot verify: {compact_results}")
+                else:
+                    log.info(f"compact: {compact_results}")
+                    built = compact_results[0]
+
+            final_result = transform_text(unswara(surface), Language.SANSKRIT)
+            final_result = untransform_text(final_result)
+            built = untransform_text(built)
+            undone_parts = list(
+                map(lambda x: transform_text(x.slp1, Language.TRANSLIT), parts)
+            )
+
+            if built != final_result:
+                log.warning(
+                    f"unable for verify sandhi for these parts: {undone_parts}\n"
+                    f"expected {final_result} but got {built}"
+                )
+            else:
+                log.info(f"sandhi verified:\t{undone_parts} = {final_result}") """
+
         elif len(parts) == 2:
-            A = transform_text(parts[0].slp1, Language.SANSKRIT)
-            B = transform_text(parts[1].slp1, Language.SANSKRIT)
-            C = transform_text(surface, Language.SANSKRIT)
+            A = transform_text(unswara(parts[0].slp1), Language.SANSKRIT)
+            B = transform_text(unswara(parts[1].slp1), Language.SANSKRIT)
+            C = transform_text(unswara(surface), Language.SANSKRIT)
 
             results = S.sandhi(A, B)
 

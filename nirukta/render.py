@@ -244,7 +244,10 @@ def transform_text(text: str, language: Language):
                 raise ValueError(f'Cannot represent "{text}" in devanagari')
             return deva
 
+
 def untransform_text(text: str):
+    if text == "":
+        return ""
     iast = transliterate.process("DEVANAGARI", "IAST", text)
     if not iast:
         raise ValueError(f'Cannot represent "{text}" in IAST')
