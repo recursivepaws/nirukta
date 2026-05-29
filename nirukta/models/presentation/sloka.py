@@ -36,7 +36,10 @@ class Sloka:
                     if isinstance(token, str):
                         slp1 += token
                     else:
-                        slp1 += token.slp1 + " "
+                        if slp1 == "" and token.slp1 == "oM":
+                            continue
+                        else:
+                            slp1 += token.slp1 + " "
 
         slp1 += "\n"
         return slp1
