@@ -88,7 +88,6 @@ class SlokaVisitor(NodeVisitor):
     # -- compound (sandhi) tokens -------------------------------------------
 
     def visit_compound_token(self, _, visited_children):
-        print(f"visited_children compound_token: {visited_children}")
         first_part, plus_parts, _, surface, inflect_parts = visited_children
 
         parts = [first_part] + list(plus_parts)
@@ -165,7 +164,6 @@ class SlokaVisitor(NodeVisitor):
         _, content, _ = visited_children
         try:
             inflection = SanskritInflection.parse(content)
-            print(f"inflection: {inflection}")
             return inflection
         except Exception:
             try:
