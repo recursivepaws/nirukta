@@ -197,7 +197,7 @@ def set_font(text: str, font: str, ratio: float = 1.0, wrap: bool = False):
     ratio *= 1.3
     result = f'#set text(font: "{font}", size: {ratio}em, stroke: none)\n'
     if wrap:
-        result += f"#set page(width: {266 * 1.3 * ratio}pt)\n"
+        result += f"#set page(width: {266 * ratio}pt)\n"
 
     result += f"{text}"
     return result
