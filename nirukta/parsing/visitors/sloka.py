@@ -3,14 +3,11 @@ import os
 import traceback
 from nirukta.render import transform_text, untransform_text
 import sandhi as sandhi_module
-from aksharamukha import transliterate
-from typing import Optional
 from janim.imports import log
 from nirukta.inflection import Case, SanskritInflection
 from nirukta.models import (
     CompoundToken,
     EnglishGloss,
-    EtymGloss,
     Language,
     Line,
     SimpleToken,
@@ -22,6 +19,7 @@ from nirukta.parsing.grammars import SLOKA_GRAMMAR
 from parsimonious.nodes import NodeVisitor
 
 S = sandhi_module.Sandhi()
+
 
 class SlokaVisitor(NodeVisitor):
     file: str
@@ -42,7 +40,6 @@ class SlokaVisitor(NodeVisitor):
     def parse(self) -> SlokaFile:
         tree = SLOKA_GRAMMAR.parse(self.source)
         return self.visit(tree)
-
 
     # -- top level ----------------------------------------------------------
 
@@ -99,7 +96,6 @@ class SlokaVisitor(NodeVisitor):
             B = transform_text(parts[1].slp1, Language.SANSKRIT)
             C = transform_text(surface, Language.SANSKRIT)
 
-
             results = S.sandhi(A, B)
 
             valid_forms = {untransform_text(r[0]) for r in results}
@@ -111,7 +107,9 @@ class SlokaVisitor(NodeVisitor):
             is_valid = C in valid_forms
 
             if not is_valid:
-                log.warning(f"sandhi invalid: \t{A} + {B} != {C}\nvalid forms produces by this combination: {valid_forms}\n")
+                log.warning(
+                    f"sandhi invalid: \t{A} + {B} != {C}\nvalid forms produces by this combination: {valid_forms}\n"
+                )
             else:
                 log.info(f"sandhi verified:\t{A} + {B} = {C}")
 
@@ -130,7 +128,6 @@ class SlokaVisitor(NodeVisitor):
 
         return result
 
-
     def visit_plus_part(self, _, visited_children):
         _, part = visited_children
         return part
@@ -145,7 +142,6 @@ class SlokaVisitor(NodeVisitor):
     def visit_paren_compound(self, _, visited_children):
         _, compound, _ = visited_children
         return compound
-
 
     # -- simple tokens & glosses --------------------------------------------
 
