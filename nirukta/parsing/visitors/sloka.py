@@ -1,6 +1,7 @@
 import logging
 import os
 import traceback
+from aksharamukha import transliterate
 from nirukta.render import transform_text, untransform_text
 from nirukta.strings import unswara
 import sandhi as sandhi_module
@@ -90,18 +91,15 @@ class SlokaVisitor(NodeVisitor):
 
         parts = [first_part] + list(plus_parts)
 
+        log.info("===")
         if len(parts) > 2:
-            log.info("meow")
-            """ built = ""
+            built = ""
             for i in range(len(parts)):
-                # A = transform_text(parts[i].slp1, Language.SANSKRIT)
                 A = built
-                B = transform_text(unswara(parts[i].slp1), Language.SANSKRIT)
-                log.info(f"adding: {untransform_text(A)} + {untransform_text(B)}")
-
-                results = S.sandhi(A, B)
-                valid_forms = {untransform_text(r[0]) for r in results}
-                log.info(f"valid_forms: {valid_forms}")
+                B = transliterate.process("SLP1", "WX", unswara(parts[i].slp1))
+                log.debug(f"adding: \'{transliterate.process("WX","IAST", A)}\' + \'{transliterate.process("WX","IAST", B)}\'")
+                results = S.sandhi(A, B, input_scheme="wx")
+                valid_forms = {r[0] for r in results}
                 compact_results = list(filter(lambda x: " " not in x, valid_forms))
                 compact_results = list(
                     map(lambda x: x.replace("_", ""), compact_results)
@@ -110,14 +108,13 @@ class SlokaVisitor(NodeVisitor):
                 if len(compact_results) > 1 or len(compact_results) == 0:
                     log.warning(f"cannot verify: {compact_results}")
                 else:
-                    log.info(f"compact: {compact_results}")
                     built = compact_results[0]
 
-            final_result = transform_text(unswara(surface), Language.SANSKRIT)
-            final_result = untransform_text(final_result)
-            built = untransform_text(built)
+
+            built = transliterate.process("WX", "IAST", built)
+            final_result = transliterate.process("SLP1", "IAST", unswara(surface))
             undone_parts = list(
-                map(lambda x: transform_text(x.slp1, Language.TRANSLIT), parts)
+                map(lambda x: transliterate.process("SLP1", "IAST", x.slp1), parts)
             )
 
             if built != final_result:
@@ -126,7 +123,7 @@ class SlokaVisitor(NodeVisitor):
                     f"expected {final_result} but got {built}"
                 )
             else:
-                log.info(f"sandhi verified:\t{undone_parts} = {final_result}") """
+                log.info(f"sandhi verified:\t{undone_parts} = {final_result}")
 
         elif len(parts) == 2:
             A = transform_text(unswara(parts[0].slp1), Language.SANSKRIT)
@@ -145,10 +142,10 @@ class SlokaVisitor(NodeVisitor):
 
             if not is_valid:
                 log.warning(
-                    f"sandhi invalid: \t{A} + {B} != {C}\nvalid forms produces by this combination: {valid_forms}\n"
+                    f"sandhi invalid: \t\'{A}\' + \'{B}\' != \'{C}\'\nvalid forms produces by this combination: {valid_forms}\n"
                 )
             else:
-                log.info(f"sandhi verified:\t{A} + {B} = {C}")
+                log.info(f"sandhi verified:\t\'{A}\' + \'{B}\' = \'{C}\'")
 
         # normalize inflect_parts
         i_parts = inflect_parts if isinstance(inflect_parts, list) else []
