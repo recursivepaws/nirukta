@@ -91,7 +91,6 @@ class SlokaVisitor(NodeVisitor):
 
         parts = [first_part] + list(plus_parts)
 
-        log.info("===")
         if len(parts) > 1:
             built = ""
             for i in range(len(parts)):
@@ -123,7 +122,7 @@ class SlokaVisitor(NodeVisitor):
             if built != final_result:
                 log.warning(
                     f"unable for verify sandhi for these parts: {undone_parts}\n"
-                    f"expected {final_result} but got {built}"
+                    f"expected \'{final_result}\' but got \'{built}\'"
                 )
             else:
                 log.info(f"sandhi verified:\t{undone_parts} = {final_result}")
