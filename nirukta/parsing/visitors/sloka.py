@@ -92,7 +92,7 @@ class SlokaVisitor(NodeVisitor):
         parts = [first_part] + list(plus_parts)
 
         log.info("===")
-        if len(parts) > 2:
+        if len(parts) > 1:
             built = ""
             for i in range(len(parts)):
                 A = built
@@ -113,6 +113,9 @@ class SlokaVisitor(NodeVisitor):
 
             built = transliterate.process("WX", "IAST", built)
             final_result = transliterate.process("SLP1", "IAST", unswara(surface))
+            assert final_result is not None
+            final_result = final_result.replace("\'","")
+
             undone_parts = list(
                 map(lambda x: transliterate.process("SLP1", "IAST", x.slp1), parts)
             )
@@ -124,28 +127,6 @@ class SlokaVisitor(NodeVisitor):
                 )
             else:
                 log.info(f"sandhi verified:\t{undone_parts} = {final_result}")
-
-        elif len(parts) == 2:
-            A = transform_text(unswara(parts[0].slp1), Language.SANSKRIT)
-            B = transform_text(unswara(parts[1].slp1), Language.SANSKRIT)
-            C = transform_text(unswara(surface), Language.SANSKRIT)
-
-            results = S.sandhi(A, B)
-
-            valid_forms = {untransform_text(r[0]) for r in results}
-
-            A = untransform_text(A)
-            B = untransform_text(B)
-            C = untransform_text(C)
-
-            is_valid = C in valid_forms
-
-            if not is_valid:
-                log.warning(
-                    f"sandhi invalid: \t\'{A}\' + \'{B}\' != \'{C}\'\nvalid forms produces by this combination: {valid_forms}\n"
-                )
-            else:
-                log.info(f"sandhi verified:\t\'{A}\' + \'{B}\' = \'{C}\'")
 
         # normalize inflect_parts
         i_parts = inflect_parts if isinstance(inflect_parts, list) else []
