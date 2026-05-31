@@ -1,8 +1,8 @@
 import logging
 import os
 import traceback
-from aksharamukha import transliterate
-from nirukta.render import transform_text, untransform_text
+from typing import List, Union
+from nirukta.render import transliterate
 from nirukta.strings import unswara
 import sandhi as sandhi_module
 from janim.imports import log
@@ -11,6 +11,7 @@ from nirukta.models import (
     CompoundToken,
     EnglishGloss,
     Language,
+    System,
     Line,
     SimpleToken,
     Sloka,
@@ -18,10 +19,52 @@ from nirukta.models import (
 )
 from nirukta.models import SlokaFile
 from nirukta.parsing.grammars import SLOKA_GRAMMAR
+from parsimonious.exceptions import ParseError
 from parsimonious.nodes import NodeVisitor
 
 S = sandhi_module.Sandhi()
 
+
+
+def validate_equation(parts: List[Union[CompoundToken, SimpleToken]], result: str):
+    if len(parts) > 1:
+        built = ""
+        for i in range(len(parts)):
+            A = built
+            B = transliterate(System.SLP1, System.WX, unswara(parts[i].slp1))
+            log.debug(f"adding: \'{transliterate(System.WX,System.IAST, A)}\' + \'{transliterate(System.WX,System.IAST, B)}\'")
+
+            results = S.sandhi(A, B, input_scheme="wx")
+            valid_forms = {r[0] for r in results}
+            compact_results = list(filter(lambda x: " " not in x, valid_forms))
+            compact_results = list(
+                map(lambda x: x.replace("_", ""), compact_results)
+            )
+
+            if len(compact_results) > 1 or len(compact_results) == 0:
+                log.warning(f"cannot verify: {compact_results}")
+            else:
+                built = compact_results[0]
+
+
+        built = transliterate(System.WX, System.IAST, built)
+        final_result = transliterate(System.SLP1, System.IAST, unswara(result))
+        assert final_result is not None
+        final_result = final_result.replace("\'","")
+
+        undone_parts = list(
+            map(lambda x: transliterate(System.SLP1, System.IAST, x.slp1), parts)
+        )
+
+        if built != final_result:
+            log.warning(
+                f"unable for verify sandhi for these parts: {undone_parts}\n"
+                f"expected \'{final_result}\' but got \'{built}\'"
+            )
+        else:
+            log.info(f"sandhi verified:\t{undone_parts} = {final_result}")
+    else:
+        log.warning(f"no need to validate parts of n<2 {parts}")
 
 class SlokaVisitor(NodeVisitor):
     file: str
@@ -40,7 +83,24 @@ class SlokaVisitor(NodeVisitor):
         self.directory = os.path.dirname(self.file)
 
     def parse(self) -> SlokaFile:
-        tree = SLOKA_GRAMMAR.parse(self.source)
+        try:
+            tree = SLOKA_GRAMMAR.parse(self.source)
+        except ParseError as e:
+            lines = self.source.splitlines()
+            # compute line/col from byte offset
+            before = self.source[:e.pos]
+            lineno = before.count("\n")
+            col = e.pos - before.rfind("\n") - 1
+            # print context window around the error
+            ctx_start = max(0, lineno - 2)
+            ctx_end = min(len(lines), lineno + 3)
+            print(f"\nParse error at line {lineno + 1}, col {col + 1}: {e}\n")
+            for i, line in enumerate(lines[ctx_start:ctx_end], start=ctx_start + 1):
+                print(f"  {i:4d} | {line}")
+                if i == lineno + 1:
+                    print(f"       | {' ' * col}^")
+            print()
+            raise
         return self.visit(tree)
 
     # -- top level ----------------------------------------------------------
@@ -86,69 +146,43 @@ class SlokaVisitor(NodeVisitor):
 
     # -- compound (sandhi) tokens -------------------------------------------
 
-    def visit_compound_token(self, _, visited_children):
-        first_part, plus_parts, _, surface, inflect_parts = visited_children
+    def visit_text_token(self, _, visited_children):
+        initial, inflect_parts, external_parts = visited_children
 
-        parts = [first_part] + list(plus_parts)
-
-        if len(parts) > 1:
-            built = ""
-            for i in range(len(parts)):
-                A = built
-                B = transliterate.process("SLP1", "WX", unswara(parts[i].slp1))
-                log.debug(f"adding: \'{transliterate.process("WX","IAST", A)}\' + \'{transliterate.process("WX","IAST", B)}\'")
-                results = S.sandhi(A, B, input_scheme="wx")
-                valid_forms = {r[0] for r in results}
-                compact_results = list(filter(lambda x: " " not in x, valid_forms))
-                compact_results = list(
-                    map(lambda x: x.replace("_", ""), compact_results)
-                )
-
-                if len(compact_results) > 1 or len(compact_results) == 0:
-                    log.warning(f"cannot verify: {compact_results}")
-                else:
-                    built = compact_results[0]
-
-
-            built = transliterate.process("WX", "IAST", built)
-            final_result = transliterate.process("SLP1", "IAST", unswara(surface))
-            assert final_result is not None
-            final_result = final_result.replace("\'","")
-
-            undone_parts = list(
-                map(lambda x: transliterate.process("SLP1", "IAST", x.slp1), parts)
-            )
-
-            if built != final_result:
-                log.warning(
-                    f"unable for verify sandhi for these parts: {undone_parts}\n"
-                    f"expected \'{final_result}\' but got \'{built}\'"
-                )
-            else:
-                log.info(f"sandhi verified:\t{undone_parts} = {final_result}")
+        # Stat construction
+        result = initial
 
         # normalize inflect_parts
         i_parts = inflect_parts if isinstance(inflect_parts, list) else []
         i_parts = [p for p in i_parts if isinstance(p, str)]
 
-        # fold left: each >> wraps the previous result in a new CompoundToken
-        result = CompoundToken(
-            parts=parts,
-            slp1=surface,
-        )
-
         for slp1 in i_parts:
+            result = CompoundToken(parts=[result], slp1=slp1)
+
+        e_parts = external_parts if isinstance(external_parts, list) else []
+        e_parts = [p for p in e_parts if isinstance(p, str)]
+        for slp1 in e_parts:
             result = CompoundToken(parts=[result], slp1=slp1)
 
         return result
 
-    def visit_plus_part(self, _, visited_children):
-        _, part = visited_children
-        return part
+    def visit_equation_part(self, _, visited_children):
+        first_part, plus_parts, _, slp1 = visited_children
+        parts = [first_part] + list(plus_parts)
+        validate_equation(parts, slp1)
+        return CompoundToken(parts, slp1)
 
     def visit_inflect_part(self, _, visited_children):
         _, slp1 = visited_children
         return slp1
+
+    def visit_external_part(self, _, visited_children):
+        _, slp1 = visited_children
+        return slp1
+
+    def visit_plus_part(self, _, visited_children):
+        _, part = visited_children
+        return part
 
     def visit_comp_part(self, _, visited_children):
         return visited_children[0]

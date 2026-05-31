@@ -21,9 +21,9 @@ from janim.imports import (
     smooth,
 )
 from nirukta.constants import INACTIVE, TYPST_CMD_RE
-from nirukta.models import Language
+from nirukta.models import Language, System
 from janim.imports import WHITE, C_LABEL_ANIM_ABSTRACT
-from aksharamukha import transliterate
+from aksharamukha.transliterate import process
 
 from dataclasses import dataclass, field
 from nirukta.models import Animation
@@ -228,27 +228,35 @@ def typst_code_safe(text: str, language: Language, color: str = WHITE) -> str:
             result += typst_code(part, language, color)
     return result
 
+def transliterate(src: System, dst: System, text: str):
+    if text == "":
+        return text
+
+    result = process(src.value, dst.value, text)
+    if not result:
+        raise ValueError(f'Cannot transform "{text}" from {src} to {dst}')
+
+    return result
 
 def transform_text(text: str, language: Language):
     match language:
         case Language.ENGLISH:
             return text
         case Language.TRANSLIT:
-            iast = transliterate.process("SLP1", "IAST", text)
+            iast = process("SLP1", "IAST", text)
             if not iast:
                 raise ValueError(f'Cannot represent "{text}" in IAST')
             return iast
         case Language.SANSKRIT:
-            deva = transliterate.process("SLP1", "DEVANAGARI", text)
+            deva = process("SLP1", "DEVANAGARI", text)
             if not deva:
                 raise ValueError(f'Cannot represent "{text}" in devanagari')
             return deva
 
-
 def untransform_text(text: str):
     if text == "":
         return ""
-    iast = transliterate.process("DEVANAGARI", "IAST", text)
+    iast = process("DEVANAGARI", "IAST", text)
     if not iast:
         raise ValueError(f'Cannot represent "{text}" in IAST')
     return iast

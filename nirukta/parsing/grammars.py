@@ -11,16 +11,21 @@ SLOKA_GRAMMAR_STR = r"""
 
     token_seq       = token (ws token)*
 
-    token           = compound_token / simple_token / punct
+    token           = text_token / punct
 
-    # Sandhi: one or more components joined by '+', then '=' surface form.
-    # Components may themselves be parenthesised sandhi groups, enabling
-    # arbitrary nesting:  (a[x]+b[y]=ab)+c[z]=abc>>abcd
-    compound_token  = comp_part plus_part* "=" slp1 inflect_part*
+    text_token      = (equation_part / simple_token) inflect_part* external_part*
+
+    equation_part   = comp_part plus_part+ "=" slp1
+
+    # Inflection transforms
+    inflect_part    = "->" slp1
+
+    # External sandhi transforms
+    external_part   = "=>" slp1
+
     plus_part       = "+" comp_part
-    inflect_part    = ">>" slp1
     comp_part       = paren_compound / simple_token
-    paren_compound  = "(" compound_token ")"
+    paren_compound  = "(" text_token ")"
 
     simple_token    = slp1 gloss*
     gloss           = trans_gloss / etym_gloss
@@ -33,7 +38,7 @@ SLOKA_GRAMMAR_STR = r"""
     punct = ~r"\.+(?:\s*\d+\s*[.,;]*)?|[;,]"
 
     # SLP1: anything that isn't a format metacharacter or whitespace
-    slp1            = ~r"[^[\]\>{}.;=+()\"\s]+"
+    slp1            = ~r"[^[\]\>{}.;=+()\"\s-]+"
 
     quoted_str      = '"' ~r'(?:[^"\\]|\\.)*' '"'
     ws              = ~r"\s*"
