@@ -11,12 +11,24 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+from nirukta.models import System
+from nirukta.render import transliterate
 
 LIBRARY_ROOT = os.path.join(os.path.dirname(__file__), "..", "..", "library")
 
 
 def _is_nirukta_file(name: str) -> bool:
     return name.endswith(".sloka") or name.endswith(".sutra")
+
+
+def _display_name(path: str) -> str:
+    name = os.path.basename(path.rstrip("/"))
+    for ext in (".sloka", ".sutra"):
+        if name.endswith(ext):
+            stem = name[: -len(ext)]
+            iast = transliterate(System.SLP1, System.IAST, stem)
+            return iast + ext
+    return transliterate(System.SLP1, System.IAST, name)
 
 
 class NiruktaFilePicker(QWidget):
@@ -30,7 +42,13 @@ class NiruktaFilePicker(QWidget):
         self.setWindowTitle("Nirukta File Picker")
         self.setWindowFlags(Qt.WindowType.Tool)
         self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose)
-        self.resize(420, 360)
+        self.setStyleSheet("""
+            * { font-size: 15pt; }
+            QListWidget { padding: 4px; }
+            QListWidget::item { padding: 6px 4px; }
+            QPushButton { padding: 8px 20px; }
+        """)
+        self.resize(520, 480)
 
         self._path_label = QLabel()
         self._path_label.setWordWrap(True)
@@ -63,25 +81,23 @@ class NiruktaFilePicker(QWidget):
         self._list.clear()
 
         dirs = sorted(
-            p for p in glob.glob(os.path.join(self._current, "*/"))
-            if os.path.isdir(p)
+            p for p in glob.glob(os.path.join(self._current, "*/")) if os.path.isdir(p)
         )
         files = sorted(
-            p for p in (
+            p
+            for p in (
                 glob.glob(os.path.join(self._current, "*.sloka"))
                 + glob.glob(os.path.join(self._current, "*.sutra"))
             )
         )
 
         for d in dirs:
-            name = os.path.basename(d.rstrip("/"))
-            item = QListWidgetItem(f"📁  {name}")
+            item = QListWidgetItem(f"📁  {_display_name(d)}")
             item.setData(Qt.ItemDataRole.UserRole, d)
             self._list.addItem(item)
 
         for f in files:
-            name = os.path.basename(f)
-            item = QListWidgetItem(f"  {name}")
+            item = QListWidgetItem(f"  {_display_name(f)}")
             item.setData(Qt.ItemDataRole.UserRole, f)
             self._list.addItem(item)
 
