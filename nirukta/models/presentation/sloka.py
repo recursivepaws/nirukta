@@ -1,11 +1,15 @@
 from dataclasses import dataclass
-from aksharamukha import transliterate
+
+import json
 from typing import List, Optional
 
 from nirukta.constants import DIGITS_RE
+from nirukta.render import transliterate
+from janim.logger import log
 
 from nirukta.models.presentation.akshara import Akshara, identify
 from nirukta.models.presentation.line import Line
+from nirukta.models.enums import System
 
 
 @dataclass
@@ -63,11 +67,9 @@ class Sloka:
                 )
             padas.append(aksharas)
 
-        # print(verse.meter_label)
-        # print(verse.morae_per_line)
-        # print(padas)
+        # log.info(f"verse meter: {json.dumps(verse)}")
 
-        label = transliterate.process("IAST", "SLP1", verse.meter_label)
+        label = transliterate(System.IAST, System.SLP1, verse.meter_label)
         assert label is not None
 
         # if "(" in label:

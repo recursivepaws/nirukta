@@ -10,7 +10,6 @@ from nirukta.inflection import Case, SanskritInflection
 from nirukta.models import (
     CompoundToken,
     EnglishGloss,
-    Language,
     System,
     Line,
     SimpleToken,
@@ -25,7 +24,6 @@ from parsimonious.nodes import NodeVisitor
 S = sandhi_module.Sandhi()
 
 
-
 def validate_equation(parts: List[Union[CompoundToken, SimpleToken]], result: str):
     if len(parts) > 1:
         built = ""
@@ -34,25 +32,24 @@ def validate_equation(parts: List[Union[CompoundToken, SimpleToken]], result: st
             # log.info(f"part: {parts[i]}")
             A = built
             B = transliterate(System.SLP1, System.WX, unswara(parts[i].slp1))
-            log.debug(f"adding: \'{transliterate(System.WX,System.IAST, A)}\' + \'{transliterate(System.WX,System.IAST, B)}\'")
+            log.debug(
+                f"adding: '{transliterate(System.WX, System.IAST, A)}' + '{transliterate(System.WX, System.IAST, B)}'"
+            )
 
             results = S.sandhi(A, B, input_scheme="wx")
             valid_forms = {r[0] for r in results}
             compact_results = list(filter(lambda x: " " not in x, valid_forms))
-            compact_results = list(
-                map(lambda x: x.replace("_", ""), compact_results)
-            )
+            compact_results = list(map(lambda x: x.replace("_", ""), compact_results))
 
             if len(compact_results) > 1 or len(compact_results) == 0:
                 log.warning(f"cannot verify: {compact_results}")
             else:
                 built = compact_results[0]
 
-
         built = transliterate(System.WX, System.IAST, built)
         final_result = transliterate(System.SLP1, System.IAST, unswara(result))
-        built = final_result.replace("\'","")
-        final_result = final_result.replace("\'","")
+        built = final_result.replace("'", "")
+        final_result = final_result.replace("'", "")
 
         undone_parts = list(
             map(lambda x: transliterate(System.SLP1, System.IAST, x.slp1), parts)
@@ -61,12 +58,13 @@ def validate_equation(parts: List[Union[CompoundToken, SimpleToken]], result: st
         if built != final_result:
             log.warning(
                 f"unable for verify sandhi for these parts: {undone_parts}\n"
-                f"expected \'{final_result}\' but got \'{built}\'"
+                f"expected '{final_result}' but got '{built}'"
             )
         else:
-            log.info(f"sandhi verified:\t{undone_parts} = \'{final_result}\'")
+            log.info(f"sandhi verified:\t{undone_parts} = '{final_result}'")
     else:
         log.warning(f"no need to validate parts of n<2 {parts}")
+
 
 class SlokaVisitor(NodeVisitor):
     file: str
@@ -86,7 +84,7 @@ class SlokaVisitor(NodeVisitor):
 
     def _print_parse_error(self, e: ParseError) -> None:
         lines = self.source.splitlines()
-        before = self.source[:e.pos]
+        before = self.source[: e.pos]
         lineno = before.count("\n")
         col = e.pos - before.rfind("\n") - 1
         ctx_start = max(0, lineno - 2)

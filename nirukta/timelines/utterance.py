@@ -221,7 +221,7 @@ class UtteranceTimeline(Timeline):
                 final_translit, direction=ORIGIN, aligned_edge=LEFT
             )
             states[2][i].points.next_to(
-                final_translit, direction=DOWN, aligned_edge=LEFT
+                final_translit, direction=DOWN * 2, aligned_edge=LEFT
             )
 
             # Initial write on
