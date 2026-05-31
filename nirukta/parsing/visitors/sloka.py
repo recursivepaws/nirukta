@@ -151,8 +151,12 @@ class SlokaVisitor(NodeVisitor):
     def visit_text_token(self, _, visited_children):
         initial, inflect_parts, external_parts = visited_children
 
-        # Stat construction
-        result = initial
+        # Start construction
+        if isinstance(initial, list):
+            assert len(initial) == 1
+            result = initial[0]
+        else:
+            result = initial
 
         # normalize inflect_parts
         i_parts = inflect_parts if isinstance(inflect_parts, list) else []
@@ -192,12 +196,7 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_paren_compound(self, _, visited_children):
         _, compound, _ = visited_children
-
-        if isinstance(compound, list):
-            assert len(compound) == 1
-            return compound[0]
-        else:
-            return compound
+        return compound
 
     # -- simple tokens & glosses --------------------------------------------
 
