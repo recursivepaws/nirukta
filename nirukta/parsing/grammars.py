@@ -51,8 +51,8 @@ SUTRA_GRAMMAR_STR = (
     inline_sloka    = ws "=== sloka ===" ws line+ ws
     external_sloka  = ws "=== sloka ===" ws file ws
     file            = "file:" file_content
-    file_part    = ~r"[a-zA-Z0-9._]+"
-    file_content = file_part ("/" file_part)+
+    file_part       = ~r"[a-zA-Z0-9._]+"
+    file_content    = file_part ("/" file_part)+
 """
     + "\n"
     + SLOKA_GRAMMAR_STR

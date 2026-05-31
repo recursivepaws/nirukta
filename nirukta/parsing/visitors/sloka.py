@@ -29,7 +29,9 @@ S = sandhi_module.Sandhi()
 def validate_equation(parts: List[Union[CompoundToken, SimpleToken]], result: str):
     if len(parts) > 1:
         built = ""
+        # log.info(f"parts: {parts}")
         for i in range(len(parts)):
+            # log.info(f"part: {parts[i]}")
             A = built
             B = transliterate(System.SLP1, System.WX, unswara(parts[i].slp1))
             log.debug(f"adding: \'{transliterate(System.WX,System.IAST, A)}\' + \'{transliterate(System.WX,System.IAST, B)}\'")
@@ -49,7 +51,6 @@ def validate_equation(parts: List[Union[CompoundToken, SimpleToken]], result: st
 
         built = transliterate(System.WX, System.IAST, built)
         final_result = transliterate(System.SLP1, System.IAST, unswara(result))
-        assert final_result is not None
         final_result = final_result.replace("\'","")
 
         undone_parts = list(
@@ -82,24 +83,25 @@ class SlokaVisitor(NodeVisitor):
         self.file = file
         self.directory = os.path.dirname(self.file)
 
+    def _print_parse_error(self, e: ParseError) -> None:
+        lines = self.source.splitlines()
+        before = self.source[:e.pos]
+        lineno = before.count("\n")
+        col = e.pos - before.rfind("\n") - 1
+        ctx_start = max(0, lineno - 2)
+        ctx_end = min(len(lines), lineno + 3)
+        print(f"\nParse error at line {lineno + 1}, col {col + 1}: {e}\n")
+        for i, line in enumerate(lines[ctx_start:ctx_end], start=ctx_start + 1):
+            print(f"  {i:4d} | {line}")
+            if i == lineno + 1:
+                print(f"       | {' ' * col}^")
+        print()
+
     def parse(self) -> SlokaFile:
         try:
             tree = SLOKA_GRAMMAR.parse(self.source)
         except ParseError as e:
-            lines = self.source.splitlines()
-            # compute line/col from byte offset
-            before = self.source[:e.pos]
-            lineno = before.count("\n")
-            col = e.pos - before.rfind("\n") - 1
-            # print context window around the error
-            ctx_start = max(0, lineno - 2)
-            ctx_end = min(len(lines), lineno + 3)
-            print(f"\nParse error at line {lineno + 1}, col {col + 1}: {e}\n")
-            for i, line in enumerate(lines[ctx_start:ctx_end], start=ctx_start + 1):
-                print(f"  {i:4d} | {line}")
-                if i == lineno + 1:
-                    print(f"       | {' ' * col}^")
-            print()
+            self._print_parse_error(e)
             raise
         return self.visit(tree)
 
@@ -168,7 +170,8 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_equation_part(self, _, visited_children):
         first_part, plus_parts, _, slp1 = visited_children
-        parts = [first_part] + list(plus_parts)
+
+        parts = list([first_part]) + list(plus_parts)
         validate_equation(parts, slp1)
         return CompoundToken(parts, slp1)
 
@@ -189,7 +192,12 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_paren_compound(self, _, visited_children):
         _, compound, _ = visited_children
-        return compound
+
+        if isinstance(compound, list):
+            assert len(compound) == 1
+            return compound[0]
+        else:
+            return compound
 
     # -- simple tokens & glosses --------------------------------------------
 
