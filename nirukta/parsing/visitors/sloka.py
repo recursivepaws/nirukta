@@ -51,6 +51,7 @@ def validate_equation(parts: List[Union[CompoundToken, SimpleToken]], result: st
 
         built = transliterate(System.WX, System.IAST, built)
         final_result = transliterate(System.SLP1, System.IAST, unswara(result))
+        built = final_result.replace("\'","")
         final_result = final_result.replace("\'","")
 
         undone_parts = list(
@@ -63,7 +64,7 @@ def validate_equation(parts: List[Union[CompoundToken, SimpleToken]], result: st
                 f"expected \'{final_result}\' but got \'{built}\'"
             )
         else:
-            log.info(f"sandhi verified:\t{undone_parts} = {final_result}")
+            log.info(f"sandhi verified:\t{undone_parts} = \'{final_result}\'")
     else:
         log.warning(f"no need to validate parts of n<2 {parts}")
 
