@@ -13,8 +13,6 @@ if os.environ.get("REBUILD"):
 
 from nirukta.util import choose_nirukta_file, is_nirukta_file, file_to_timeline  # noqa: E402
 
-chosen = choose_nirukta_file()
-
 
 # Keep previews performant with HD exports
 preview_mode = "run" in sys.argv
@@ -39,6 +37,7 @@ class Nirukta(Timeline):
         return RED
 
     def construct(self):
+        chosen = choose_nirukta_file()
         assert is_nirukta_file(chosen), "Invalid file"
         timeline = file_to_timeline(chosen).build().to_item().show()
         self.forward(timeline.duration)
