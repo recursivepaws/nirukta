@@ -2,6 +2,8 @@ import logging
 import os
 import traceback
 from typing import List, Union
+from nirukta.models.enums import SoundChange
+from nirukta.models.tokens import SoundChangeToken
 from nirukta.render import transliterate
 from nirukta.strings import unswara
 import sandhi as sandhi_module
@@ -14,6 +16,7 @@ from nirukta.models import (
     Line,
     SimpleToken,
     Sloka,
+    TokenType,
     Utterance,
 )
 from nirukta.models import SlokaFile
@@ -23,8 +26,11 @@ from parsimonious.nodes import NodeVisitor
 
 S = sandhi_module.Sandhi()
 
+# def sandhi():
 
-def validate_equation(parts: List[Union[CompoundToken, SimpleToken]], result: str):
+
+# Result should be provided in slp1
+def validate_equation(parts: List[TokenType], result: str):
     if len(parts) > 1:
         built = ""
         # log.info(f"parts: {parts}")
@@ -136,10 +142,17 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_token_seq(self, _, visited_children):
         first, rest = visited_children
-        tokens = [first]
+        tokens: List[TokenType] = [first]
         for pair in rest:
-            # pair = [ws_node, token_result] from the anonymous (ws token) sequence
             tokens.append(pair[1])
+
+        # for i in range(len(tokens) - 1):
+        #     A = tokens[i]
+        #     B = tokens[i + 1]
+        #
+        #     if isinstance(A, CompoundToken) and A.external:
+        #         validate_equation([A.parts[0], B], A.slp1)
+
         return tokens
 
     def visit_token(self, _, visited_children):
@@ -157,17 +170,25 @@ class SlokaVisitor(NodeVisitor):
         else:
             result = initial
 
+        # if isinstance(result, CompoundToken) and result.external:
+        #     A = transliterate(System.SLP1, System.WX, result.parts[-1].slp1)
+        #     C = transliterate(System.SLP1, System.WX, result.slp1)
+
         # normalize inflect_parts
         i_parts = inflect_parts if isinstance(inflect_parts, list) else []
         i_parts = [p for p in i_parts if isinstance(p, str)]
 
         for slp1 in i_parts:
-            result = CompoundToken(parts=[result], slp1=slp1)
+            result = SoundChangeToken(
+                part=result, slp1=slp1, kind=SoundChange.INFLECTION
+            )
 
         e_parts = external_parts if isinstance(external_parts, list) else []
         e_parts = [p for p in e_parts if isinstance(p, str)]
         for slp1 in e_parts:
-            result = CompoundToken(parts=[result], slp1=slp1)
+            result = SoundChangeToken(
+                part=result, slp1=slp1, kind=SoundChange.EXTERNAL_SANDHI
+            )
 
         return result
 

@@ -1,8 +1,11 @@
 from dataclasses import dataclass, field
-from typing import List, Optional, Union
+from typing import List, Union
 
+from nirukta.models.enums import SoundChange
 from nirukta.models.tokens.simple import SimpleToken
-from nirukta.models.gloss import EtymGloss
+
+
+type SimpleOrCompound = Union[SimpleToken, CompoundToken]
 
 
 @dataclass
@@ -13,6 +16,15 @@ class CompoundToken:
     slp1 -- the phonetically-merged SLP1 surface form (after '=')
     """
 
-    parts: List[Union[SimpleToken, "CompoundToken"]]
+    parts: List[SimpleOrCompound]
     slp1: str
-    etym_gloss: Optional[EtymGloss] = field(default=None)
+
+
+@dataclass
+class SoundChangeToken:
+    part: SimpleOrCompound
+    slp1: str
+    kind: SoundChange
+
+    def as_compound(self) -> CompoundToken:
+        return CompoundToken([self.part], self.slp1)
