@@ -156,6 +156,11 @@ wheels = [
 ]
 
 [[package]]
+name = "csl-inflect"
+version = "0.1.0"
+source = { git = "https://github.com/recursivepaws/csl-inflect#47b43067768d2b08d5338426032ff8f5aa55f97b" }
+
+[[package]]
 name = "deprecated"
 version = "1.3.1"
 source = { registry = "https://pypi.org/simple" }
@@ -481,6 +486,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "aksharamukha" },
+    { name = "csl-inflect" },
     { name = "dill" },
     { name = "janim", extra = ["gui"] },
     { name = "parsimonious" },
@@ -491,6 +497,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "aksharamukha", specifier = ">=2.3" },
+    { name = "csl-inflect", git = "https://github.com/recursivepaws/csl-inflect" },
     { name = "dill", specifier = ">=0.4.1" },
     { name = "janim", extras = ["gui"], specifier = ">=4.2.0" },
     { name = "parsimonious", specifier = ">=0.11.0" },

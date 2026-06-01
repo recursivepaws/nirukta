@@ -23,8 +23,101 @@ from nirukta.models import SlokaFile
 from nirukta.parsing.grammars import SLOKA_GRAMMAR
 from parsimonious.exceptions import ParseError
 from parsimonious.nodes import NodeVisitor
+from pysanskritv2.tables.decline_file import DeclRec
 
 S = sandhi_module.Sandhi()
+
+
+def models_for_stem(stem: str) -> list[str]:
+    # check multi-char endings first (longest match wins)
+    if stem.endswith("aYc"):
+        return ["m_aYc", "n_aYc"]
+    if stem.endswith("Iyas"):
+        return ["m_Iyas", "n_Iyas"]
+    if stem.endswith("vas"):
+        return ["m_vas", "n_vas"]
+    if stem.endswith("han"):
+        return ["m_han", "n_han"]
+
+    # mat also uses the vat paradigm
+    if stem.endswith("vat") or stem.endswith("mat"):
+        return ["m_vat", "n_vat"]
+    if stem.endswith("an"):
+        return ["m_an", "f_an", "n_an"]
+    if stem.endswith("as"):
+        return ["m_as", "f_as", "n_as"]
+    if stem.endswith("is"):
+        return ["m_is", "f_is", "n_is"]
+    if stem.endswith("us"):
+        return ["m_us", "f_us", "n_us"]
+    if stem.endswith("in"):
+        return ["m_in", "n_in"]
+
+    # single-char endings
+    endings = {
+        "a": ["m_a", "n_a"],
+        "A": ["f_A"],
+        "i": ["m_i", "f_i", "n_i"],
+        "I": ["f_I"],
+        "u": ["m_u", "f_u", "n_u"],
+        "U": ["f_U"],
+        "f": ["m_f", "f_f", "n_f"],
+        "F": ["m_F", "f_F"],
+        "o": ["m_o", "f_o"],
+        "O": ["m_O", "f_O"],
+        "e": ["m_e"],
+        "E": ["m_E", "f_E", "n_E"],
+        "x": ["m_x", "f_x"],
+    }
+    return endings.get(stem[-1], [])
+
+
+# def declension_candidates(stem: str):
+#     canditates = []
+#     for model in models_for_stem(stem):
+#         rec = DeclRec(f"{model}\t{stem}\t")
+#         for option in rec.inflection.split(":"):
+#             if "/" in option:
+#                 canditates + option.split("/")
+#             else:
+#                 canditates.append(option)
+#     return canditates
+def declension_candidates(model: str, stem: str):
+    candidates = []
+    rec = DeclRec(f"{model}\t{stem}\t")
+    for option in rec.inflection.split(":"):
+        if "/" in option:
+            candidates += option.split("/")
+        else:
+            candidates.append(option)
+    return candidates
+
+
+def validate_declension(stem: str, declined: str):
+    validated = False
+
+    print_stem = transliterate(System.SLP1, System.IAST, stem)
+    print_declined = transliterate(System.SLP1, System.IAST, declined)
+
+    for model in models_for_stem(stem):
+        if declined in declension_candidates(model, stem):
+            log.info(
+                f"inflection validated [declension]:\t'{print_stem}' -> '{print_declined}' is a valid '{model}' declension."
+            )
+            validated = True
+
+    if not validated:
+        log.warning(
+            f"inflection invalid   [declension]:\t'{print_stem}' -> '{print_declined}' is not a known declension."
+        )
+        for model in models_for_stem(stem):
+            options = list(
+                map(
+                    lambda x: transliterate(System.SLP1, System.IAST, x),
+                    declension_candidates(model, stem),
+                )
+            )
+            log.info(f"{model}: {options}")
 
 
 # Result should be provided in slp1
@@ -64,7 +157,7 @@ def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
                         compact_results,
                     )
                 )
-                log.warning(f"cannot verify: {unverified}")
+                log.warning(f"cannot validate: {unverified}")
             else:
                 built = compact_results[0]
 
@@ -85,14 +178,14 @@ def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
         else:
             if kind == SoundChange.EXTERNAL_SANDHI:
                 log.info(
-                    f"sandhi verified [external]:\t'{undone_parts[0]}' => '{final_result}' when preceding '{undone_parts[1]}'"
+                    f"sandhi validated [external]:\t\t'{undone_parts[0]}' => '{final_result}' when preceding '{undone_parts[1]}'"
                 )
             else:
                 equation_string = " + ".join(
                     list(map(lambda x: f"'{x}'", undone_parts))
                 )
                 log.info(
-                    f"sandhi verified [internal]:\t{equation_string} = '{final_result}'"
+                    f"sandhi validated [internal]:\t\t{equation_string} = '{final_result}'"
                 )
 
     else:
@@ -122,8 +215,8 @@ def validate_sandhi(sequence: List[TokenType]):
                         validate_equation(
                             [A.part, B], A.slp1, SoundChange.EXTERNAL_SANDHI
                         )
-                    # case _:
-                    #     log.warning(f"Unable to validate '{A.kind}' sound changes.")
+                    case _:
+                        validate_declension(A.part.slp1, A.slp1)
 
             case CompoundToken():
                 validate_compound(A)

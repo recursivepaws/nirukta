@@ -10,13 +10,13 @@ SrI[radiant]+gaReSAya[to][Ganesha]=SrIgaReSAya namaH[Reverence] .
 
 --- line ---
 yA[She who]
-kunda[Jasmine flower]+indu[Moon]+tuzAra[frosty]+hAra[garland of pearls]+Davala[dazzling]=kundendutuzArahAraDavala->kundendutuzArahAraDavalA
+kunda[Jasmine flower]+indu[Moon]+tuzAra[frosty]+hAra[garland of pearls]+DavalA[dazzling]=kundendutuzArahAraDavalA
 "She who is white like Jasmine flower,"
 "frosty like the Moon,"
 "and dazzling like a garland of pearls."
 
 yA[She who]
-SuBra[shining]+vastra[clothing]+Avfta[covered]=SuBravastrAvfta->SuBravastrAvftA
+SuBra[shining]+vastra[clothing]+AvftA[covered]=SuBravastrAvftA
 "She who is covered by shining clothing."
 
 --- line ---
@@ -159,7 +159,7 @@ nitya[constant]+Ananda[in][bliss]=nityAnanda->nityAnande
 nir[un]+ADAra[supported]=nirADAra->nirADAre
 "O you in constant bliss, O unsupported one -"
 
-nizkala[undivided]->nizkalAyE namaH[reverence]=>namo namaH[reverence] .
+nizkalA[undivided]->nizkalAyE namaH[reverence]=>namo namaH[reverence] .
 "reverence, reverence to her who is undivided."
 
 --- line ---
@@ -174,31 +174,31 @@ namaH[reverence]=>namo namaH[reverence] .. 7 ..
 === sloka ===
 
 --- line ---
-SudDa[pure]+sPawika[crystal]+rUpa[form]=SudDasPawikarUpa->SudDasPawikarUpAyE
+SudDa[pure]+sPawika[crystal]+rUpA[form]=SudDasPawikarUpA->SudDasPawikarUpAyE
 sUkzma[subtle]+rUpa[form]=sUkzmarUpa->sUkzmarUpe
 namaH[reverence]=>namo namaH[reverence] .
 "O you of subtle form - reverence, reverence to her of pure crystal form."
 
 --- line ---
-Sabda[Sabda]+brahma[Brahman]=Sabdabrahma->Sabdabrahmi
+Sabda[Sabda]+brahman[Brahman]=Sabdabrahman->Sabdabrahmi
 catur[four]+hasta[handed]=caturhasta->caturhaste
 "O you who are Sabda Brahman, O four-handed one -"
 
-sarva[all]+sidDa[accomplishment]=sarvasidDa->sarvasidDyE
+sarva[all]+sidDA[accomplishment]=sarvasidDA->sarvasidDyE
 namaH[reverence]=>namo namaH[reverence] .. 8 ..
 "reverence, reverence to her who is all accomplishment."
 
 === sloka ===
 
 --- line ---
-mukta[pearls]+AlaNkfta[adorned]+sarva[every]+aNga[limb]=muktAlaNkftasarvANga->muktAlaNkftasarvANgyE
+mukta[pearls]+AlaNkfta[adorned]+sarva[every]+aNgA[limb]=muktAlaNkftasarvANgA->muktAlaNkftasarvANgyE
 mUlADAra[root chakra]->mUlADAre
 namaH[reverence]=>namo namaH[reverence] .
 "O you who are the root chakra - reverence, reverence to her whose every limb is adorned by pearls."
 
 --- line ---
 mUla[basis]+mantra[mantra]+svarUpa[self-form]=mUlamantrasvarUpa->mUlamantrasvarUpAyE
-mUla[origin]+Sakta[ability]=mUlaSakta->mUlaSaktyE
+mUla[origin]+Sakti[ability]=mUlaSakti->mUlaSaktyE
 namaH[Reverence]=>namo namaH[reverence] .. 9 ..
 "Reverence, reverence to her whose self-form is the basis of mantra itself, to her who is the origin of ability."
 
@@ -215,7 +215,7 @@ namaH[reverence]=>namo namaH[reverence] .
 
 --- line ---
 vARa[music]->vARyE
-vara[boon]+da[giving]+hasta[hand]=varadahasta->varadahastAyE
+vara[boon]+da[giving]+hastA[hand]=varadahastA->varadahastAyE
 vara[boon]+dA[giver]=varadA->varadAyE
 namaH[Reverence]=>namo namaH[reverence] .. 10 ..
 "Reverence, reverence to the embodiment of music, to her who extends a boon-giving hand, to the giver of boons."
@@ -223,22 +223,22 @@ namaH[Reverence]=>namo namaH[reverence] .. 10 ..
 === sloka ===
 
 --- line ---
-veda[knowledge]->vedyAyE
+veda[knowledge]->vedA->vedyAyE
 veda[knowledge]+rUpa[form]=vedarUpa->vedarUpAyE
-veda[Vedas]+anta[culmination]=vedAnta->vedAntAyE
+veda[Vedas]+anta[culmination]=vedAnta->vedAntA->vedAntAyE
 namaH[Reverence]=>namo namaH[reverence] .
 "Reverence, reverence to her who is knowledge itself, to her in the form of knowledge, to her who is the culmination of all the Vedas."
 
 --- line ---
 guRa[virtues]+doza[faults]+vivarjita[free from]=guRadozavivarjita->guRadozavivarjinyE
-guRa[qualities]+dIpta[shining]=guRadIpta->guRadIptyE
+guRa[qualities]+dIpti[shining]=guRadIpti->guRadIptyE
 namaH[Reverence]=>namo namaH[reverence] .. 11 ..
 "Reverence, reverence to her who is free from virtues and faults, to her of shining qualities."
 
 === sloka ===
 
 --- line ---
-sarva[all]+jYAna[knowledge]=sarvajYAna->sarvajYAne
+sarva[all]+jYAnA[knowledge]=sarvajYAnA->sarvajYAne
 sadA[always]+Ananda[bliss]=sadAnanda->sadAnande
 "O you who are all knowledge, O you who are always in bliss,"
 
@@ -247,9 +247,9 @@ namaH[reverence]=>namo namaH[reverence] .
 "O you who are all form - reverence, reverence."
 
 --- line ---
-sampanna[perfect]->sampannAyE
-kumAra[youth]->kumAryE ca[and]
-sarvajYa[omniscient]->sarvajYAyE
+sampannA[perfect]->sampannAyE
+kumArI[youth]->kumAryE ca[and]
+sarvajYA[omniscient]->sarvajYAyE
 namaH[reverence]=>namo namaH[reverence] .. 12 ..
 "O omniscient one - reverence, reverence to her who is perfect and to her who is youth."
 
@@ -264,7 +264,7 @@ namaH[reverence]=>namo namaH[reverence] .
 
 --- line ---
 divya[divine]+jYA[knower]=divyajYA->divyajYAyE
-tri[three]+netra[eyed]=trinetra->trinetrAyE
+tri[three]+netrA[eyed]=trinetrA->trinetrAyE
 divya[divine]+mUrtI[embodiment]=divyamUrtI->divyamUrtyE
 namaH[Reverence]=>namo namaH[reverence] .. 13 ..
 "Reverence, reverence to the knower of the divine, to the three-eyed one, to she who has divine embodiment."
@@ -299,21 +299,21 @@ namaH[reverence]=>namo namaH[reverence] .
 "O you of universal form - reverence, reverence."
 
 --- line ---
-aRima[Aṇimā]+Adi[beginning]+azwa[eight-fold]+sidDi[powers]=aRimAdyazwasidDi->aRimAdyazwasidDAyE
-Ananda[bliss]->AnandAyE
+aRima[Aṇimā]+Adi[beginning]+azwa[eight-fold]+sidDA[powers]=aRimAdyazwasidDA->aRimAdyazwasidDAyE
+Ananda[bliss]->AnandA->AnandAyE
 namaH[Reverence]=>namo namaH[reverence] .. 15 ..
 "Reverence, reverence to the embodiment of bliss, to the eight-fold powers beginning with Aṇimā."
 
 === sloka ===
 
 --- line ---
-jYAna[knowledge]+vijYAna[wisdom]+rUpa[form]=jYAnavijYAnarUpa->jYAnavijYAnarUpAyE
-jYAna[knowledge]+mUrtI[embodiment]=jYAnamUrtI->jYAnamUrte
+jYAna[knowledge]+vijYAna[wisdom]+rUpA[form]=jYAnavijYAnarUpA->jYAnavijYAnarUpAyE
+jYAna[knowledge]+mUrti[embodiment]=jYAnamUrti->jYAnamUrte
 namaH[reverence]=>namo namaH[reverence] .
 "O embodiment of knowledge - reverence, reverence to you who are the form of knowledge and wisdom."
 
 --- line ---
-nAnA[various]+SAstra[scriptures]+svarUpa[nature]=nAnASAstrasvarUpa->nAnASAstrasvarUpAyE
+nAnA[various]+SAstra[scriptures]+svarUpA[nature]=nAnASAstrasvarUpA->nAnASAstrasvarUpAyE
 nAnA[many]+rUpa[forms]=nAnArUpa->nAnArUpe
 namaH[reverence]=>namo namaH[reverence] .. 16 ..
 "O you of many forms - reverence, reverence to her who is the true nature of various scriptures."
@@ -340,14 +340,14 @@ pApa[sins]+nASinI[destroyer]=pApanASinI .. 17 ..
 === sloka ===
 
 --- line ---
-maha[great]+devi[goddess]=mahadevi->mahadevye
-maha[great]+kali[kālī]=mahakali->mahakalye
-maha[great]+lakzmi[lakṣmī]=mahalakzmi->mahalakzmye
+maha[great]+devI[goddess]=mahadevI->mahadevyE
+maha[great]+kalI[kālī]=mahakalI->mahakalyE
+maha[great]+lakzmI[lakṣmī]=mahalakzmI->mahalakzmyE
 namah[reverence]=>namo namah[reverence] .
 "reverence, reverence to the great goddess, to the great kālī, to the great lakṣmī"
 
 --- line ---
-brahma[brahma]+vizRu[viṣṇu]+siva[śiva]+akya[known as]=brahmavizRusivAkya->brahmavizRusivAkyAye
+brahma[brahma]+vizRu[viṣṇu]+siva[śiva]+akyA[known as]=brahmavizRusivAkyA->brahmavizRusivAkyAyE
 brahma[divine]+nari[woman]=brahmanari=>brahmanarye
 namah[reverence]=>namo namah[reverence] .. 18 ..
 "reverence, reverence to she who is known as brahman, viṣṇu, śiva, to the divine woman."
@@ -363,7 +363,7 @@ namaH[reverence]=>namo namaH[reverence] .
 
 --- line ---
 kapAli[skull-bearer]
-karma[actions]+dIpta[shine]=karmadIpta->karmadIptAyE
+karma[actions]+dIptA[shine]=karmadIptA->karmadIptAyE
 karma[action]+dA[giver]=karmadA->karmadAyE
 namaH[reverence]=>namo namaH[reverence] .. 19 ..
 "O skull-bearer - reverence, reverence to the giver of action, to she whose actions shine."
