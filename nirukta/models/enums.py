@@ -5,6 +5,7 @@ from enum import Enum
 class SoundChange(Enum):
     INFLECTION = "inflection"
     EXTERNAL_SANDHI = "external_sandhi"
+    INTERNAL_SANDHI = "internal_sandhi"
 
 
 class System(Enum):

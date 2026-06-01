@@ -30,25 +30,43 @@ S = sandhi_module.Sandhi()
 
 
 # Result should be provided in slp1
-def validate_equation(parts: List[TokenType], result: str):
+def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
     if len(parts) > 1:
         built = ""
-        # log.info(f"parts: {parts}")
+
+        partinfo = []
+        for part in parts:
+            partinfo.append(f"'{part if isinstance(part, str) else part.slp1}'")
+        log.debug(f"parts: {partinfo}")
+
         for i in range(len(parts)):
-            # log.info(f"part: {parts[i]}")
             A = built
-            B = transliterate(System.SLP1, System.WX, unswara(parts[i].slp1))
+            B = transliterate(
+                System.SLP1,
+                System.WX,
+                parts[i] if isinstance(parts[i], str) else unswara(parts[i].slp1),
+            )
             log.debug(
                 f"adding: '{transliterate(System.WX, System.IAST, A)}' + '{transliterate(System.WX, System.IAST, B)}'"
             )
 
             results = S.sandhi(A, B, input_scheme="wx")
             valid_forms = {r[0] for r in results}
-            compact_results = list(filter(lambda x: " " not in x, valid_forms))
+            # compact_results = list(filter(lambda x: " " not in x, valid_forms))
+            compact_results = list(
+                map(lambda x: x.split(" ")[0] if " " in x else x, valid_forms)
+            )
             compact_results = list(map(lambda x: x.replace("_", ""), compact_results))
+            # log.info(f"compact_results: {compact_results}")
 
-            if len(compact_results) > 1 or len(compact_results) == 0:
-                log.warning(f"cannot verify: {compact_results}")
+            if len(compact_results) == 0:
+                unverified = list(
+                    map(
+                        lambda x: transliterate(System.WX, System.IAST, x),
+                        compact_results,
+                    )
+                )
+                log.warning(f"cannot verify: {unverified}")
             else:
                 built = compact_results[0]
 
@@ -67,7 +85,18 @@ def validate_equation(parts: List[TokenType], result: str):
                 f"expected '{final_result}' but got '{built}'"
             )
         else:
-            log.info(f"sandhi verified:\t{undone_parts} = '{final_result}'")
+            if kind == SoundChange.EXTERNAL_SANDHI:
+                log.info(
+                    f"sandhi verified [external]:\t'{undone_parts[0]}' => '{final_result}' when preceding '{undone_parts[1]}'"
+                )
+            else:
+                equation_string = " + ".join(
+                    list(map(lambda x: f"'{x}'", undone_parts))
+                )
+                log.info(
+                    f"sandhi verified [internal]:\t{equation_string} = '{final_result}'"
+                )
+
     else:
         log.warning(f"no need to validate parts of n<2 {parts}")
 
@@ -146,12 +175,19 @@ class SlokaVisitor(NodeVisitor):
         for pair in rest:
             tokens.append(pair[1])
 
-        # for i in range(len(tokens) - 1):
-        #     A = tokens[i]
-        #     B = tokens[i + 1]
-        #
-        #     if isinstance(A, CompoundToken) and A.external:
-        #         validate_equation([A.parts[0], B], A.slp1)
+        for i in range(len(tokens) - 1):
+            A = tokens[i]
+            B = tokens[i + 1]
+
+            # Naive only doing surface level for now
+            if (
+                isinstance(A, SoundChangeToken)
+                and A.kind == SoundChange.EXTERNAL_SANDHI
+            ):
+                # log.info(
+                #     f"validating that writing '{A.part.slp1}' before '{B.slp1}' results in '{A.slp1}'"
+                # )
+                validate_equation([A.part, B], A.slp1, SoundChange.EXTERNAL_SANDHI)
 
         return tokens
 
@@ -196,7 +232,7 @@ class SlokaVisitor(NodeVisitor):
         first_part, plus_parts, _, slp1 = visited_children
 
         parts = list([first_part]) + list(plus_parts)
-        validate_equation(parts, slp1)
+        validate_equation(parts, slp1, SoundChange.INTERNAL_SANDHI)
         return CompoundToken(parts, slp1)
 
     def visit_inflect_part(self, _, visited_children):
