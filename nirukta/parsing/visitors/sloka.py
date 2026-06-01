@@ -26,8 +26,6 @@ from parsimonious.nodes import NodeVisitor
 
 S = sandhi_module.Sandhi()
 
-# def sandhi():
-
 
 # Result should be provided in slp1
 def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
@@ -101,12 +99,22 @@ def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
         log.warning(f"no need to validate parts of n<2 {parts}")
 
 
-def validate_external_sandhi(sequence: List[TokenType]):
+def validate_sandhi(sequence: List[TokenType]):
+
+    def validate_compound(compound: CompoundToken):
+        # External
+        validate_sandhi(compound.parts)
+        # Internal
+        validate_equation(
+            compound.parts,
+            compound.slp1,
+            SoundChange.INTERNAL_SANDHI,
+        )
+
     for i in range(len(sequence) - 1):
         A = sequence[i]
         B = sequence[i + 1]
 
-        # Naive only doing surface level for now
         match A:
             case SoundChangeToken():
                 match A.kind:
@@ -118,11 +126,11 @@ def validate_external_sandhi(sequence: List[TokenType]):
                     #     log.warning(f"Unable to validate '{A.kind}' sound changes.")
 
             case CompoundToken():
-                validate_external_sandhi(A.parts)
+                validate_compound(A)
 
     # If the final token in the sequence needed a recursion but was never evaluated in the previous loop
     if len(sequence) > 1 and isinstance(sequence[-1], CompoundToken):
-        validate_external_sandhi(sequence[-1].parts)
+        validate_compound(sequence[-1])
 
 
 class SlokaVisitor(NodeVisitor):
@@ -199,7 +207,7 @@ class SlokaVisitor(NodeVisitor):
         for pair in rest:
             tokens.append(pair[1])
 
-        validate_external_sandhi(tokens)
+        validate_sandhi(tokens)
 
         return tokens
 
@@ -217,10 +225,6 @@ class SlokaVisitor(NodeVisitor):
             result = initial[0]
         else:
             result = initial
-
-        # if isinstance(result, CompoundToken) and result.external:
-        #     A = transliterate(System.SLP1, System.WX, result.parts[-1].slp1)
-        #     C = transliterate(System.SLP1, System.WX, result.slp1)
 
         # normalize inflect_parts
         i_parts = inflect_parts if isinstance(inflect_parts, list) else []
@@ -242,9 +246,7 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_equation_part(self, _, visited_children):
         first_part, plus_parts, _, slp1 = visited_children
-
         parts = list([first_part]) + list(plus_parts)
-        validate_equation(parts, slp1, SoundChange.INTERNAL_SANDHI)
         return CompoundToken(parts, slp1)
 
     def visit_inflect_part(self, _, visited_children):
