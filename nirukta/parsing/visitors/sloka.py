@@ -101,6 +101,30 @@ def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
         log.warning(f"no need to validate parts of n<2 {parts}")
 
 
+def validate_external_sandhi(sequence: List[TokenType]):
+    for i in range(len(sequence) - 1):
+        A = sequence[i]
+        B = sequence[i + 1]
+
+        # Naive only doing surface level for now
+        match A:
+            case SoundChangeToken():
+                match A.kind:
+                    case SoundChange.EXTERNAL_SANDHI:
+                        validate_equation(
+                            [A.part, B], A.slp1, SoundChange.EXTERNAL_SANDHI
+                        )
+                    # case _:
+                    #     log.warning(f"Unable to validate '{A.kind}' sound changes.")
+
+            case CompoundToken():
+                validate_external_sandhi(A.parts)
+
+    # If the final token in the sequence needed a recursion but was never evaluated in the previous loop
+    if len(sequence) > 1 and isinstance(sequence[-1], CompoundToken):
+        validate_external_sandhi(sequence[-1].parts)
+
+
 class SlokaVisitor(NodeVisitor):
     file: str
     dir: str
@@ -175,19 +199,7 @@ class SlokaVisitor(NodeVisitor):
         for pair in rest:
             tokens.append(pair[1])
 
-        for i in range(len(tokens) - 1):
-            A = tokens[i]
-            B = tokens[i + 1]
-
-            # Naive only doing surface level for now
-            if (
-                isinstance(A, SoundChangeToken)
-                and A.kind == SoundChange.EXTERNAL_SANDHI
-            ):
-                # log.info(
-                #     f"validating that writing '{A.part.slp1}' before '{B.slp1}' results in '{A.slp1}'"
-                # )
-                validate_equation([A.part, B], A.slp1, SoundChange.EXTERNAL_SANDHI)
+        validate_external_sandhi(tokens)
 
         return tokens
 
