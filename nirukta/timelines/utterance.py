@@ -103,9 +103,7 @@ class UtteranceTimeline(Timeline):
             for token in self.tokens
         ]
 
-        log.info(f"before: {display_tokens}")
         display_tokens = fix_display_token_akshara_splitting(display_tokens)
-        log.info(f"after: {display_tokens}")
 
         for i in range(len(display_tokens)):
             if _ := ALPHA_RE.search(display_tokens[i].slp1):
