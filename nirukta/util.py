@@ -1,5 +1,6 @@
 import os
 import glob
+import sys
 from janim.imports import WHITE
 from aksharamukha import transliterate
 
@@ -20,6 +21,7 @@ def choose_nirukta_file() -> str:
         return cached
 
     from PySide6.QtWidgets import QApplication
+
     if QApplication.instance() is not None:
         return _choose_nirukta_file_gui()
 
@@ -27,6 +29,14 @@ def choose_nirukta_file() -> str:
 
 
 _picker = None  # kept alive across rebuilds so the panel stays open
+
+
+def _delete_existing_modules():
+    # Rebuild everything in the framework
+    if os.environ.get("REBUILD") == "1":
+        for key in list(sys.modules):
+            if key.startswith("nirukta"):
+                del sys.modules[key]
 
 
 def _choose_nirukta_file_gui() -> str:

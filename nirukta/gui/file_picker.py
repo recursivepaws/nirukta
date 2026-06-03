@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
     QListWidget,
     QListWidgetItem,
     QPushButton,
+    QCheckBox,
     QVBoxLayout,
     QWidget,
 )
@@ -32,6 +33,12 @@ def _display_name(path: str) -> str:
 
 
 class NiruktaFilePicker(QWidget):
+    _path_label: QLabel
+    _list: QListWidget
+    _up_btn: QPushButton
+    _select_btn: QPushButton
+    _rebuild: QCheckBox
+
     file_chosen = Signal(str)  # emits absolute path when a file is confirmed
 
     def __init__(self, parent: QWidget | None = None):
@@ -64,8 +71,12 @@ class NiruktaFilePicker(QWidget):
         self._select_btn.setEnabled(False)
         self._select_btn.clicked.connect(self._confirm_selection)
 
+        self._rebuild = QCheckBox("Rebuild")
+        self._rebuild.toggled.connect(self._toggle_rebuild)
+
         btn_row = QHBoxLayout()
         btn_row.addWidget(self._up_btn)
+        btn_row.addWidget(self._rebuild)
         btn_row.addStretch()
         btn_row.addWidget(self._select_btn)
 
@@ -136,3 +147,9 @@ class NiruktaFilePicker(QWidget):
             return
         os.environ["NIRUKTA_FILE"] = path
         self.file_chosen.emit(path)
+
+    def _toggle_rebuild(self) -> None:
+        if self._rebuild.isChecked():
+            os.environ["REBUILD"] = "1"
+        else:
+            os.environ.pop("REBUILD", None)
