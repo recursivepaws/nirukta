@@ -206,26 +206,30 @@ def validate_sandhi(sequence: List[TokenType]):
             SoundChange.INTERNAL_SANDHI,
         )
 
-    for i in range(len(sequence) - 1):
-        A = sequence[i]
-        B = sequence[i + 1]
-
-        match A:
+    for i in range(len(sequence)):
+        match sequence[i]:
             case SoundChangeToken():
-                match A.kind:
+                match sequence[i].kind:
+                    case SoundChange.INFLECTION:
+                        validate_declension(sequence[i].part.slp1, sequence[i].slp1)
                     case SoundChange.EXTERNAL_SANDHI:
-                        validate_equation(
-                            [A.part, B], A.slp1, SoundChange.EXTERNAL_SANDHI
-                        )
-                    case _:
-                        validate_declension(A.part.slp1, A.slp1)
+                        inner = sequence[i].part
+                        if (
+                            isinstance(inner, SoundChangeToken)
+                            and inner.kind == SoundChange.INFLECTION
+                        ):
+                            validate_declension(inner.part.slp1, inner.slp1)
+                        elif isinstance(inner, CompoundToken):
+                            validate_compound(inner)
+                        if i < len(sequence) - 2:
+                            validate_equation(
+                                [sequence[i].part, sequence[i + 1]],
+                                sequence[i].slp1,
+                                SoundChange.EXTERNAL_SANDHI,
+                            )
 
             case CompoundToken():
-                validate_compound(A)
-
-    # If the final token in the sequence needed a recursion but was never evaluated in the previous loop
-    if len(sequence) > 1 and isinstance(sequence[-1], CompoundToken):
-        validate_compound(sequence[-1])
+                validate_compound(sequence[i])
 
 
 class SlokaVisitor(NodeVisitor):

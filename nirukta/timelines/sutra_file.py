@@ -66,9 +66,9 @@ class SutraFileTimeline(Timeline):
             )
             self.forward(quadrants.duration)
 
-        for sloka in self.slokas:
-            introduce = IntroduceSloka(sloka=sloka).build().to_item().show()
-            self.forward(introduce.duration)
+        # for sloka in self.slokas:
+        #     introduce = IntroduceSloka(sloka=sloka).build().to_item().show()
+        #     self.forward(introduce.duration)
 
         for sloka in self.slokas:
             explain = ExplainSloka(sloka=sloka).build().to_item().show()
