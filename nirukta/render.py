@@ -197,7 +197,7 @@ def set_font(text: str, font: str, ratio: float = 1.0, wrap: bool = False):
     ratio *= 1.3
     result = f'#set text(font: "{font}", size: {ratio}em, stroke: none)\n'
     if wrap:
-        result += f"#set page(width: {266 * ratio}pt)\n"
+        result += f"#set page(width: {244 * ratio}pt)\n"
 
     result += f"{text}"
     return result
@@ -228,6 +228,7 @@ def typst_code_safe(text: str, language: Language, color: str = WHITE) -> str:
             result += typst_code(part, language, color)
     return result
 
+
 def transliterate(src: System, dst: System, text: str):
     if text == "":
         return text
@@ -237,6 +238,7 @@ def transliterate(src: System, dst: System, text: str):
         raise ValueError(f'Cannot transform "{text}" from {src} to {dst}')
 
     return result
+
 
 def transform_text(text: str, language: Language):
     match language:
@@ -252,6 +254,7 @@ def transform_text(text: str, language: Language):
             if not deva:
                 raise ValueError(f'Cannot represent "{text}" in devanagari')
             return deva
+
 
 def untransform_text(text: str):
     if text == "":

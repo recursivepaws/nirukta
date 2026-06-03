@@ -17,7 +17,7 @@ from nirukta.render import (
     set_font,
     typst_code,
 )
-from nirukta.timelines import ExplainSloka
+from nirukta.timelines import ExplainSloka, IntroduceSloka
 from nirukta.timelines.introduce_quad import IntroduceQuadTimeline
 
 
@@ -65,6 +65,10 @@ class SutraFileTimeline(Timeline):
                 .show()
             )
             self.forward(quadrants.duration)
+
+        for sloka in self.slokas:
+            introduce = IntroduceSloka(sloka=sloka).build().to_item().show()
+            self.forward(introduce.duration)
 
         for sloka in self.slokas:
             explain = ExplainSloka(sloka=sloka).build().to_item().show()
