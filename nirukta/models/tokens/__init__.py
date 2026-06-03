@@ -12,6 +12,29 @@ from typing import Union, List, Set, Dict
 
 type TokenType = Union[SimpleToken, SoundChangeToken, CompoundToken, str]
 
+_SLP1_VOWELS = frozenset("aAiIuUfFxXeEoO")
+
+# vowels + anusvara + visarga
+_SLP1_ENDS_CLEANLY = frozenset("aAiIuUfFxXeEoOMH")
+
+
+def skip_spaces_str(last_line: str, next_line: str) -> bool:
+    last = last_line[-1]
+    nxt = next_line[0]
+    return (
+        last is not None
+        and nxt is not None
+        and last not in _SLP1_ENDS_CLEANLY
+        and nxt in _SLP1_VOWELS
+    )
+
+
+def skip_spaces_token(last_line: TokenType, next_line: TokenType) -> bool:
+    if isinstance(last_line, str) or isinstance(next_line, str):
+        return False
+    else:
+        return skip_spaces_str(last_line.slp1[-1], next_line.slp1[0])
+
 
 def frames_for_vakya(tokens: List[DisplayToken]) -> List[List[DisplayToken]]:
     """
@@ -163,3 +186,33 @@ def build_display_token(
                 children=[],
                 english_spans=[],
             )
+
+
+def fix_display_token_akshara_splitting(tokens: List[DisplayToken]):
+    i = 0
+
+    while i < len(tokens) - 1:
+        last = tokens[i]
+        next = tokens[i + 1]
+
+        if skip_spaces_token(last, next):
+            tokens[i] = CompoundToken(
+                parts=[last, next], slp1=f"{last.slp1}{next.slp1}"
+            )
+            tokens[i] = DisplayToken(
+                slp1=f"{last.slp1}{next.slp1}",
+                color=WHITE,
+                children=[last, next],
+                english_spans=[],
+            )
+
+            i += 1
+
+            if i == len(tokens) - 1:
+                tokens = tokens[:i]
+            else:
+                tokens = tokens[:i] + tokens[i + 1 :]
+        else:
+            i += 1
+
+    return tokens

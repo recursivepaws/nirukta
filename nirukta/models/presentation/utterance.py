@@ -1,11 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from nirukta.models.tokens import TokenType
-from nirukta.models.presentation.akshara import (
-    _SLP1_VOWELS,
-    _SLP1_ENDS_CLEANLY,
-)
+from nirukta.models.tokens import TokenType, skip_spaces_token
 
 
 # TODO: rewrite the whole TokenType thing to do away
@@ -33,15 +29,9 @@ class Utterance:
         result = ""
         for i, token in enumerate(self.tokens):
             result += token if isinstance(token, str) else token.slp1
+
             if i + 1 < len(self.tokens):
-                last = _last_char(token)
-                nxt = _first_char(self.tokens[i + 1])
-                if (
-                    last is not None
-                    and nxt is not None
-                    and last not in _SLP1_ENDS_CLEANLY
-                    and nxt in _SLP1_VOWELS
-                ):
+                if skip_spaces_token(token, self.tokens[i + 1]):
                     # Do not break aksharas
                     pass
                 else:

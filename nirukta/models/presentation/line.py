@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List
 
 from nirukta.models.presentation.utterance import Utterance
-from nirukta.models.presentation.akshara import _SLP1_VOWELS, _SLP1_ENDS_CLEANLY
+from nirukta.models.tokens import skip_spaces_str
 
 
 @dataclass
@@ -17,15 +17,7 @@ class Line:
             result += utterance.slp1()
 
             if i + 1 < len(self.vAkyAni):
-                last = utterance.slp1()[-1]
-                nxt = self.vAkyAni[i + 1].slp1()[0]
-
-                if (
-                    last is not None
-                    and nxt is not None
-                    and last not in _SLP1_ENDS_CLEANLY
-                    and nxt in _SLP1_VOWELS
-                ):
+                if skip_spaces_str(utterance.slp1(), self.vAkyAni[i + 1].slp1()):
                     # Do not break aksharas
                     pass
                 else:

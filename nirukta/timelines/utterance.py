@@ -23,6 +23,7 @@ from janim.imports import (
     Write,
     log,
 )
+from nirukta.models.tokens import fix_display_token_akshara_splitting
 from nirukta.timelines.transform import LenientTransformMatchingDiff
 from nirukta.constants import (
     COLORS,
@@ -101,6 +102,10 @@ class UtteranceTimeline(Timeline):
             build_display_token(self.english, token, visited, colorings)
             for token in self.tokens
         ]
+
+        log.info(f"before: {display_tokens}")
+        display_tokens = fix_display_token_akshara_splitting(display_tokens)
+        log.info(f"after: {display_tokens}")
 
         for i in range(len(display_tokens)):
             if _ := ALPHA_RE.search(display_tokens[i].slp1):

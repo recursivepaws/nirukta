@@ -23,7 +23,7 @@ SLOKA_GRAMMAR_STR = r"""
     # External sandhi transforms
     external_part   = "=>" slp1
 
-    plus_part       = "+" newline* comp_part
+    plus_part       = "+" ws* comp_part
     comp_part       = paren_compound / simple_token
     paren_compound  = "(" text_token ")"
 
