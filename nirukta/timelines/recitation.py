@@ -13,7 +13,11 @@ from janim.imports import (
     Wait,
 )
 from nirukta.models import Sloka
-from nirukta.sloka import sloka_group_chandas, sloka_group_reformed
+from nirukta.sloka import (
+    sloka_group_chandas,
+    sloka_group_overview,
+    sloka_group_reformed,
+)
 from nirukta.timelines import LenientTransformMatchingDiff
 
 
@@ -34,7 +38,7 @@ class RecitationTimeline(Timeline):
             c = sloka_group_chandas(self.sloka, blank=False, matras=False)
             group = Group(c.text, c.keys)
         else:
-            group = sloka_group_reformed(self.sloka, devanagari=self.devanagari)
+            group = sloka_group_overview(self.sloka, devanagari=self.devanagari)
 
         self.play(
             Succession(

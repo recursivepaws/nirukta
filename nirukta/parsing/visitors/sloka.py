@@ -1,7 +1,7 @@
 import logging
 import os
 import traceback
-from typing import List, Union
+from typing import List
 from nirukta.models.enums import SoundChange
 from nirukta.models.tokens import SoundChangeToken
 from nirukta.render import transliterate
@@ -166,6 +166,8 @@ def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
         built = final_result.replace("'", "")
         final_result = final_result.replace("'", "")
 
+        # log.info(f"parts: {parts}")
+
         undone_parts = list(
             map(lambda x: transliterate(System.SLP1, System.IAST, x.slp1), parts)
         )
@@ -300,7 +302,10 @@ class SlokaVisitor(NodeVisitor):
         for pair in rest:
             tokens.append(pair[1])
 
-        validate_sandhi(tokens)
+        try:
+            validate_sandhi(tokens)
+        except Exception as e:
+            log.error(f"Failed to validate sandhi: {e}")
 
         return tokens
 
@@ -351,7 +356,7 @@ class SlokaVisitor(NodeVisitor):
         return slp1
 
     def visit_plus_part(self, _, visited_children):
-        _, part = visited_children
+        _plus, _newline, part = visited_children
         return part
 
     def visit_comp_part(self, _, visited_children):

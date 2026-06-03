@@ -46,19 +46,34 @@ def sloka_group_reformed(sloka: Sloka, devanagari: bool) -> TypstText:
     for li, line in enumerate(sloka.lines):
         sanskritcode = ""
         for vi, vAkya in enumerate(line.vAkyAni):
-            utterancetext = ""
-            for token in vAkya.tokens:
-                if isinstance(token, str):
-                    utterancetext += token
-                else:
-                    utterancetext += token.slp1
-
-                utterancetext += " "
             utterance_code = (
-                f"{typst_code(utterancetext, lang)}<line_{li}_utterance_{vi}>"
+                f"{typst_code(vAkya.slp1(), lang)}<line_{li}_utterance_{vi}>"
             )
             sanskritcode += utterance_code + " "
 
+        # rows.append(f"[{sanskritcode}]")
+        rows.append(sanskritcode)
+
+    # grid = arrange_vertical(rows, gutter=0.6)
+    grid = add_linebreaks(rows)
+
+    return TypstText(
+        set_font(grid, font),
+    )
+
+
+def sloka_group_overview(sloka: Sloka, devanagari: bool) -> TypstText:
+    rows = []
+
+    if devanagari:
+        lang = Language.SANSKRIT
+        font = SANSKRIT_FONT
+    else:
+        lang = Language.TRANSLIT
+        font = LATIN_FONT
+
+    for line in sloka.lines:
+        sanskritcode = typst_code(line.slp1(), lang)
         # rows.append(f"[{sanskritcode}]")
         rows.append(sanskritcode)
 

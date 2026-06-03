@@ -23,6 +23,7 @@ from nirukta.render import (
 from nirukta.sloka import (
     sloka_group_chandas,
     sloka_group_reformed,
+    sloka_group_overview,
 )
 from nirukta.timelines.transform import LenientTransformMatchingDiff
 
@@ -41,7 +42,7 @@ class IntroduceSloka(Timeline):
         return YELLOW
 
     def construct(self):
-        sloka_g = sloka_group_reformed(self.sloka, devanagari=True)
+        sloka_g = sloka_group_overview(self.sloka, devanagari=True)
 
         # for line in sloka_g:
         self.play(Write(sloka_g, duration=4.0))

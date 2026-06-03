@@ -32,7 +32,7 @@ class Sloka:
 
         pass
 
-    def slp1(self):
+    def meter_slp1(self):
         slp1 = ""
         for line in self.lines:
             for vAkya in line.vAkyAni:
@@ -40,6 +40,8 @@ class Sloka:
                     if isinstance(token, str):
                         slp1 += token
                     else:
+                        # TODO: Ignore other key starter phrases
+                        # like 'SrI BagavAn uvAca'
                         if slp1 == "" and token.slp1 == "oM":
                             continue
                         else:
@@ -49,17 +51,13 @@ class Sloka:
         return slp1
 
     def meter(self) -> tuple[str, List[List[Akshara]]]:
-        verse = identify(self.slp1(), from_scheme="SLP")
-        # print(list(map(lambda x: x.split(''), )))
+        verse = identify(self.meter_slp1(), from_scheme="SLP")
         weight_lines = verse.syllable_weights.split("\n")
         text_lines = verse.text_syllabified.split("\n")
 
         padas: List[List[Akshara]] = []
         for li in range(len(text_lines)):
             line_sounds = list(filter(lambda x: len(x) > 0, text_lines[li].split(" ")))
-            # print(line_sounds)
-            # print(weight_lines[li])
-
             aksharas: List[Akshara] = []
             for si in range(len(line_sounds)):
                 aksharas.append(
@@ -67,12 +65,11 @@ class Sloka:
                 )
             padas.append(aksharas)
 
-        # log.info(f"verse meter: {json.dumps(verse)}")
+        # Display custom label for unknown meters
+        if verse.meter_label == "na":
+            verse.meter_label = "ajYAtavftta"
 
         label = transliterate(System.IAST, System.SLP1, verse.meter_label)
-        assert label is not None
-
-        # if "(" in label:
         label = label.split(" ")[0].strip()
 
         return (label, padas)

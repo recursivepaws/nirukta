@@ -128,7 +128,6 @@ def build_display_token(
                         for gloss in part.glosses
                         if not isinstance(gloss, EnglishGloss)
                     )
-                    log.info(f"glosses: {etym_glosses}")
                     etymological_token_part = len(etym_glosses) > 0
 
                 child_parts = (
