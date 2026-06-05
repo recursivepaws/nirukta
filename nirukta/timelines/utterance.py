@@ -214,18 +214,14 @@ class UtteranceTimeline(Timeline):
             states[2].append(TypstText(set_font(english, LATIN_FONT, wrap=True)))
 
         # Position everything relative to the final state to minimize movement
-        final_translit = states[1][len(states[1]) - 1]
-        final_translit.points.move_to(ORIGIN)
+        final = states[2][len(states[2]) - 1]
+        final.points.move_to(ORIGIN + (DOWN * 0.5))
 
         for i in range(len(states[0])):
             # Start the transliteration in the center
-            states[0][i].points.next_to(final_translit, direction=UP, aligned_edge=LEFT)
-            states[1][i].points.next_to(
-                final_translit, direction=ORIGIN, aligned_edge=LEFT
-            )
-            states[2][i].points.next_to(
-                final_translit, direction=DOWN * 2, aligned_edge=LEFT
-            )
+            states[0][i].points.next_to(final, direction=UP * 4.5, aligned_edge=LEFT)
+            states[1][i].points.next_to(final, direction=UP * 2, aligned_edge=LEFT)
+            states[2][i].points.next_to(final, direction=ORIGIN, aligned_edge=LEFT)
 
             # Initial write on
             if i == 0:

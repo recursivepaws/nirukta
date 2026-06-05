@@ -50,35 +50,33 @@ class IntroduceSloka(Timeline):
         self.play(Wait(1.0))
 
         # Move glyphs into grid boxes
-        # sloka_chandas_blank = sloka_group_chandas(self.sloka, blank=True)
-        # sloka_chandas = sloka_group_chandas(self.sloka)
+        sloka_chandas_blank = sloka_group_chandas(self.sloka, blank=True)
+        sloka_chandas = sloka_group_chandas(self.sloka)
         #
-        # self.play(
-        #     LenientTransformMatchingDiff(
-        #         sloka_g, sloka_chandas_blank.text, duration=0.5
-        #     )
-        # )
+        self.play(
+            LenientTransformMatchingDiff(
+                sloka_g, sloka_chandas_blank.text, duration=0.5
+            )
+        )
+        self.play(Wait(1.0))
         #
-        # self.play(Wait(1.0))
-        #
-        # # Reveal the prosodic colors
-        # self.play(Transform(sloka_chandas_blank.text, sloka_chandas.text, duration=0.6))
-        # self.play(Wait(1.0))
-        # # Reveal keys
-        # self.play(FadeIn(sloka_chandas.keys))
-        #
-        # self.play(Wait(2.0))
-        #
-        # # Expand boxes by vowel duration
-        # sloka_matras = sloka_group_chandas(self.sloka, matras=True)
-        #
-        # self.play(
-        #     Aligned(
-        #         Transform(sloka_chandas.text, sloka_matras.text),
-        #         Transform(sloka_chandas.keys, sloka_matras.keys),
-        #         duration=0.5,
-        #     )
-        # )
+        # Reveal the prosodic colors
+        self.play(Transform(sloka_chandas_blank.text, sloka_chandas.text, duration=0.6))
+        self.play(Wait(1.0))
+        # Reveal keys
+        self.play(FadeIn(sloka_chandas.keys))
+
+        self.play(Wait(2.0))
+
+        self.play(FadeOut(sloka_chandas.keys))
+
+        self.play(Transform(sloka_chandas.text, sloka_chandas_blank.text, duration=0.6))
+
+        self.play(
+            LenientTransformMatchingDiff(
+                sloka_chandas_blank.text, sloka_g, duration=0.5
+            )
+        )
 
         self.play(Wait(2.0))
 

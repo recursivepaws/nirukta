@@ -6,6 +6,7 @@ from janim.imports import (
     LEFT,
     MED_SMALL_BUFF,
     UL,
+    UR,
     UP,
     WHITE,
     YELLOW,
@@ -37,10 +38,12 @@ _built_cache: dict[str, Any] = {}
 
 class ThumbnailTimeline(Timeline):
     sloka: Sloka
+    devanagari: bool
 
-    def __init__(self, sloka: Sloka):
+    def __init__(self, sloka: Sloka, devanagari: bool):
         super().__init__()
         self.sloka = sloka
+        self.devanagari = devanagari
 
     @property
     def gui_color(self) -> str:
@@ -49,7 +52,7 @@ class ThumbnailTimeline(Timeline):
     def construct(self):
         # thumbnail = sloka_thumbnail(self.sloka)
 
-        sloka_text = sloka_group_reformed(self.sloka, devanagari=True)
+        sloka_text = sloka_group_reformed(self.sloka, devanagari=self.devanagari)
         if self.sloka.number is not None:
             number_label = Group(
                 Rect(0.4, 0.4, fill_alpha=0.3),
@@ -67,7 +70,7 @@ class ThumbnailTimeline(Timeline):
             sloka_border = SurroundingRect(sloka_text, color=WHITE, buff=MED_SMALL_BUFF)
             group = Group(sloka_text, sloka_border)
 
-        group.points.to_border(UL, buff=MED_SMALL_BUFF)
+        group.points.to_border(UL if self.devanagari else UR, buff=MED_SMALL_BUFF)
         # return group
         # initial = sloka_group(self.sloka)
         # self.play(Write(initial), duration=0.33)

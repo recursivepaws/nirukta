@@ -28,13 +28,13 @@ class SlokaFileTimeline(Timeline):
         )
         self.forward(introduction.duration)
 
-        quadrants = (
-            IntroduceQuadTimeline(self.sloka, first=True, last=True)
-            .build()
-            .to_item()
-            .show()
-        )
-        self.forward(quadrants.duration)
+        # quadrants = (
+        #     IntroduceQuadTimeline(self.sloka, first=True, last=True)
+        #     .build()
+        #     .to_item()
+        #     .show()
+        # )
+        # self.forward(quadrants.duration)
 
         explanation = ExplainSloka(self.sloka).build().to_item().show()
         self.forward(explanation.duration)
