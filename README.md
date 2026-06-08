@@ -11,8 +11,10 @@ readers might not otherwise notice for themselves in standard translations.
 Each video is made with whatever version this software was on at the time of the video's production. For the most up to date functionality,
 view the most recent video or the demo below.
 
+
+https://github.com/user-attachments/assets/87a35900-abc8-4738-b6fd-220ca1c3b815
+
 ![Demo Source Code](./demo.png)
-![Video Demo](./demo.gif)
 
 ## videos:
 
