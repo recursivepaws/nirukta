@@ -13,7 +13,6 @@ from janim.imports import (
 )
 
 SCALE = 1.3
-INTRO_FONT = "Tiro Devanagari Sanskrit"
 SANSKRIT_FONT = "Tiro Devanagari Sanskrit"
 LATIN_FONT = "Junicode"
 

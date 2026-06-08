@@ -6,9 +6,10 @@ para[others]+upakArAya[to benefit]=paropakArAya Palanti[bear fruit] vfkzAH[Trees
 
 para[others]+upakArAya[to benefit]=paropakArAya vahanti[flow] nadyaH[Rivers] .
 "Rivers flow to benefit others."
+
 --- line ---
 para[others]+upakArAya[to benefit]=paropakArAya duhanti[give milk] gAvaH[Cows]
 "Cows give milk to benefit others."
 
-((para[others]+upakAraH[benefit]+ArTam[purpose]=paropakArArTam)+idam[this]=paropakArArTamidam)=paropakArArTamidaM SarIram[body] ..
+(para[others]+upakAraH[benefit]+ArTam[purpose]=paropakArArTam)+idam[this]=paropakArArTamidam=>paropakArArTamidaM SarIram[body] ..
 "The purpose of this body is to benefit others"

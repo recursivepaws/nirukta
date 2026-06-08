@@ -1,5 +1,5 @@
 {
-  description = "Dev shell for JAnim + PySide6 on Wayland";
+  description = "Dev shell for JAnim PySide6 on Wayland";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -16,42 +16,60 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
-        # Packages that need to be included in the runtime path
-        runtimeLibs = with pkgs; [
-          python313
 
-          zstd
-          zlib
+        # Function to create script
+        mkScript =
+          name: text:
+          let
+            script = pkgs.writeShellScriptBin name text;
+          in
+          script;
 
-          # OpenGL
-          mesa
-          libGL
-          libGLU
-          glib
-          fontconfig
-
-          # Keymap handling
-          libxkbcommon
-
-          # X11 (still needed even on Wayland for XWayland fallback)
-          libx11
-          libxext
-          libxcb
-
-          # Wayland
-          wayland
-          wayland-protocols
-
-          # Audio
-          alsa-lib
-
-          # Fonts / display
-          freetype
-
-          # System
-          dbus
-          stdenv.cc.cc.lib
+        # Define your scripts/aliases
+        scripts = [
+          (mkScript "janim" ''uv run janim "$@"'')
+          (mkScript "nirukta" ''janim run main.py "$@"'')
+          (mkScript "nvim" ''uv run ${pkgs.neovim}/bin/nvim "$@"'')
         ];
+        # Packages that need to be included in the runtime path
+        runtimeLibs =
+          with pkgs;
+          [
+            python313
+
+            zstd
+            zlib
+
+            # OpenGL
+            mesa
+            libGL
+            libGLU
+            glib
+            fontconfig
+
+            # Keymap handling
+            libxkbcommon
+
+            # X11 (still needed even on Wayland for XWayland fallback)
+            libx11
+            libxext
+            libxcb
+
+            # Wayland
+            wayland
+            wayland-protocols
+
+            # Audio
+            alsa-lib
+
+            # Fonts / display
+            freetype
+
+            # System
+            dbus
+            stdenv.cc.cc.lib
+          ]
+          ++ scripts;
       in
       {
         devShells.default = pkgs.mkShell {

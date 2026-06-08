@@ -1,41 +1,24 @@
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 from janim.imports import (
-    LEFT,
-    MED_SMALL_BUFF,
     ORANGE,
     ORIGIN,
-    UL,
-    UP,
-    WHITE,
-    Aligned,
-    FadeIn,
     FadeOut,
-    Group,
-    Rect,
-    SurroundingRect,
-    Text,
+    Succession,
     Timeline,
-    Transform,
     TypstText,
     Wait,
     Write,
 )
-from nirukta.constants import INACTIVE, INTRO_FONT, SCALE
+from nirukta.constants import SANSKRIT_FONT
 from nirukta.models import Language, Sloka, SutraFile
-from nirukta.timelines import LenientTransformMatchingDiff, UtteranceTimeline
 from nirukta.render import (
-    Awaken,
-    Sleep,
-    scale_with_stroke,
     set_font,
-    sloka_group_english,
-    sloka_thumbnail,
     typst_code,
-    sloka_group,
 )
-from nirukta.timelines.explain_sloka import ExplainSloka, build_explain_sloka_cached
+from nirukta.timelines import ExplainSloka
+from nirukta.timelines.introduce_quad import IntroduceQuadTimeline
 
 
 @dataclass
@@ -57,42 +40,36 @@ class SutraFileTimeline(Timeline):
         return ORANGE
 
     def construct(self):
-        citation = TypstText(
-            set_font(typst_code(self.citation, Language.SANSKRIT), INTRO_FONT),
-            scale=SCALE,
-        )
-        citation.points.move_to(ORIGIN)
+        if self.citation != "unknown":
+            citation = TypstText(
+                set_font(typst_code(self.citation, Language.SANSKRIT), SANSKRIT_FONT),
+            )
+            citation.points.move_to(ORIGIN)
 
-        # Introduce the text by its title
-        for animation in [
-            Write(citation),
-            Wait(1.5),
-            FadeOut(citation),
-        ]:
-            self.play(animation)
+            # Introduce the text by its title
+            self.play(
+                Succession(
+                    Write(citation),
+                    Wait(1.5),
+                    FadeOut(citation),
+                )
+            )
+
+        for idx, sloka in enumerate(self.slokas):
+            quadrants = (
+                IntroduceQuadTimeline(
+                    sloka, first=(idx == 0), last=(idx == len(self.slokas) - 1)
+                )
+                .build()
+                .to_item()
+                .show()
+            )
+            self.forward(quadrants.duration)
+
+        # for sloka in self.slokas:
+        #     introduce = IntroduceSloka(sloka=sloka).build().to_item().show()
+        #     self.forward(introduce.duration)
 
         for sloka in self.slokas:
-            # explain = build_explain_sloka_cached(sloka).to_item().show()
-            explain = ExplainSloka(sloka).build().to_item().show()
-            self.forward_to(explain.end)
-
-            # thumbnail = sloka_thumbnail(sloka)
-            # initial = sloka_group(sloka)
-            # self.play(Write(initial), duration=0.33)
-            # self.play(LenientTransformMatchingDiff(initial, thumbnail[0]), duration=0.33)
-            # self.play(Aligned(FadeIn(thumbnail[1:]), Sleep(thumbnail[0])))
-            #
-            # for li, line in enumerate(sloka.lines):
-            #     for vi, vAkya in enumerate(line.vAkyAni):
-            #         if li != 0 or vi != 0:
-            #             self.play(Sleep(thumbnail[0]))
-            #
-            #         selection = thumbnail[0][li].get_label(
-            #             f"line_{li}_utterance_{vi}"
-            #         )
-            #         self.play(Awaken(selection))
-            #
-            #         vt = UtteranceTimeline(vAkya).build().to_item().show()
-            #         self.forward_to(vt.end)
-            #
-            # self.play(FadeOut(thumbnail))
+            explain = ExplainSloka(sloka=sloka).build().to_item().show()
+            self.forward(explain.duration)

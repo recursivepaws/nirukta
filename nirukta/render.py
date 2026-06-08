@@ -1,42 +1,29 @@
 from janim.imports import (
     C_LABEL_ANIM_DEFAULT,
     C_LABEL_ANIM_OUT,
-    GREEN,
-    LEFT,
-    MED_SMALL_BUFF,
-    RED,
-    UL,
     Aligned,
     Cmpt_Rgbas,
     DataUpdater,
-    ItemUpdater,
     RateFunc,
-    Rect,
     SupportsAnim,
     AnimGroup,
     Succession,
-    Indicate,
     DOWN,
     UP,
     FadeOut,
     Group,
     GrowFromEdge,
     ShrinkToEdge,
-    SurroundingRect,
-    Text,
-    TypstText,
-    VItem,
     ValueTracker,
     double_smooth,
     linear,
     rush_into,
     smooth,
-    there_and_back,
 )
-from nirukta.constants import INACTIVE, INTRO_FONT, LATIN_FONT, SCALE, TYPST_CMD_RE
-from nirukta.models import Language, Sloka
+from nirukta.constants import INACTIVE, TYPST_CMD_RE
+from nirukta.models import Language, System
 from janim.imports import WHITE, C_LABEL_ANIM_ABSTRACT
-from aksharamukha import transliterate
+from aksharamukha.transliterate import process
 
 from dataclasses import dataclass, field
 from nirukta.models import Animation
@@ -149,7 +136,7 @@ class Diff:
         if self.anim == Animation.EXPAND:
             return rush_into
         else:
-            return linear
+            return double_smooth
 
     def duration(self):
         match self.anim:
@@ -183,83 +170,6 @@ class Diff:
             )
 
 
-def sloka_group(sloka: Sloka) -> Group[TypstText]:
-    group = []
-
-    for li, line in enumerate(sloka.lines):
-        sanskrit = ""
-        sanskritcode = ""
-        for vi, vAkya in enumerate(line.vAkyAni):
-            utterancetext = ""
-            for token in vAkya.tokens:
-                if isinstance(token, str):
-                    sanskrit += token
-                    utterancetext += token
-                else:
-                    sanskrit += token.slp1
-                    utterancetext += token.slp1
-
-                sanskrit += " "
-                utterancetext += " "
-            utterance_code = f"{typst_code(utterancetext, Language.SANSKRIT)}<line_{li}_utterance_{vi}>"
-            sanskritcode += utterance_code + " "
-
-        group.append(
-            TypstText(
-                # set_font(typst_code(sanskrit, Language.SANSKRIT), INTRO_FONT),
-                set_font(sanskritcode, INTRO_FONT),
-                scale=SCALE,
-            )
-        )
-
-    group = Group(*group)
-    group.points.arrange(DOWN)
-    return group
-
-
-def sloka_group_english(sloka: Sloka) -> Group[TypstText]:
-    group = []
-
-    for li, line in enumerate(sloka.lines):
-        english = ""
-        for vi, vAkya in enumerate(line.vAkyAni):
-            english += vAkya.english + "#linebreak()"
-
-        group.append(
-            TypstText(
-                set_font(typst_code(english, Language.ENGLISH), LATIN_FONT),
-                scale=SCALE,
-            )
-        )
-
-    group = Group(*group)
-    group.points.arrange(DOWN)
-    return group
-
-
-def sloka_thumbnail(sloka: Sloka) -> Group:
-    sloka_text = sloka_group(sloka)
-    if sloka.number is not None:
-        number_label = Group(
-            Rect(0.4, 0.4, fill_alpha=0.3),
-            Text(f"{sloka.number}", font_size=22),
-        )
-        number_label.points.next_to(
-            sloka_text, UP, buff=MED_SMALL_BUFF, aligned_edge=LEFT
-        )
-        sloka_border = SurroundingRect(
-            Group(sloka_text, number_label), color=WHITE, buff=MED_SMALL_BUFF
-        )
-
-        group = scale_with_stroke(Group(sloka_text, sloka_border, number_label), 0.5)
-    else:
-        sloka_border = SurroundingRect(sloka_text, color=WHITE, buff=MED_SMALL_BUFF)
-        group = scale_with_stroke(Group(sloka_text, sloka_border), 0.5)
-
-    group.points.to_border(UL, buff=MED_SMALL_BUFF)
-    return group
-
-
 def Junicode_translit(iast: str, color: str) -> str:
     """Like Junicode() but splits ṃ into m + combining dot for clean animation."""
     if "ṃ" not in iast:
@@ -283,8 +193,14 @@ def Junicode_translit(iast: str, color: str) -> str:
     return f"#box[{inner}]"
 
 
-def set_font(text: str, font: str):
-    return f'#set text(font: "{font}", stroke: none)\n#set page(width: {266 * SCALE}pt)\n{text}'
+def set_font(text: str, font: str, ratio: float = 1.0, wrap: bool = False):
+    ratio *= 1.3
+    result = f'#set text(font: "{font}", size: {ratio}em, stroke: none)\n'
+    if wrap:
+        result += f"#set page(width: {266 * ratio}pt)\n"
+
+    result += f"{text}"
+    return result
 
 
 def text_box(text: str, color: str, stroke_mode: bool = False):
@@ -313,20 +229,40 @@ def typst_code_safe(text: str, language: Language, color: str = WHITE) -> str:
     return result
 
 
+def transliterate(src: System, dst: System, text: str):
+    if text == "":
+        return text
+
+    result = process(src.value, dst.value, text)
+    if not result:
+        raise ValueError(f'Cannot transform "{text}" from {src} to {dst}')
+
+    return result
+
+
 def transform_text(text: str, language: Language):
     match language:
         case Language.ENGLISH:
             return text
         case Language.TRANSLIT:
-            iast = transliterate.process("SLP1", "IAST", text)
+            iast = process("SLP1", "IAST", text)
             if not iast:
                 raise ValueError(f'Cannot represent "{text}" in IAST')
             return iast
         case Language.SANSKRIT:
-            deva = transliterate.process("SLP1", "DEVANAGARI", text)
+            deva = process("SLP1", "DEVANAGARI", text)
             if not deva:
                 raise ValueError(f'Cannot represent "{text}" in devanagari')
             return deva
+
+
+def untransform_text(text: str):
+    if text == "":
+        return ""
+    iast = process("DEVANAGARI", "IAST", text)
+    if not iast:
+        raise ValueError(f'Cannot represent "{text}" in IAST')
+    return iast
 
 
 def typst_code(
@@ -336,8 +272,8 @@ def typst_code(
     return text_box(transformed, color, stroke_mode)
 
 
-def scale_with_stroke(group: Group, factor: float) -> Group:
-    group.points.scale(factor)
-    for item in group.walk_descendants(VItem):
-        item.radius.set(item.radius.get() * factor)
-    return group
+# def scale_with_stroke(group: Group, factor: float) -> Group:
+#     group.points.scale(factor)
+#     for item in group.walk_descendants(VItem):
+#         item.radius.set(item.radius.get() * factor)
+#     return group

@@ -3,17 +3,22 @@ from typing import List
 from nirukta.models import Sloka, SutraFile
 from nirukta.parsing.grammars import SUTRA_GRAMMAR
 from nirukta.parsing.visitors.sloka import SlokaVisitor
+from parsimonious.exceptions import ParseError
 
 
 class SutraVisitor(SlokaVisitor):
     def parse(self) -> SutraFile:
-        tree = SUTRA_GRAMMAR.parse(self.source)
+        try:
+            tree = SUTRA_GRAMMAR.parse(self.source)
+        except ParseError as e:
+            self._print_parse_error(e)
+            raise
         return self.visit(tree)
 
     def visit_sutra(self, _, visited_children):
         citation, _, raw_slokas, _ = visited_children
 
-        processed_slokas: List[Sloka]= []
+        processed_slokas: List[Sloka] = []
         for sloka in raw_slokas:
             if isinstance(sloka, list):
                 sloka = sloka[0]
