@@ -1,6 +1,4 @@
-import hashlib
-import dill as pickle
-from typing import Any, List
+from typing import Any
 
 from janim.imports import (
     LEFT,
@@ -15,22 +13,16 @@ from janim.imports import (
     FadeOut,
     Group,
     Rect,
-    Succession,
     SurroundingRect,
     Text,
     Timeline,
-    Write,
 )
-from janim.logger import log
-from nirukta.models import Line, Sloka
+from nirukta.models import Sloka
 from nirukta.render import Awaken, Sleep
 from nirukta.sloka import sloka_group_reformed
 from nirukta.timelines import (
-    LenientTransformMatchingDiff,
     UtteranceTimeline,
-    build_utterance_cached,
 )
-from nirukta.timelines.line import LineTimeline
 
 # Memory-only cache: disk caching is handled at the utterance level.
 _built_cache: dict[str, Any] = {}

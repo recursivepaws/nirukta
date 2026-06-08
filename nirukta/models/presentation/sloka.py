@@ -1,12 +1,10 @@
 from dataclasses import dataclass
 
-import json
 from typing import List, Optional
 
 from nirukta.constants import DIGITS_RE
 from nirukta.models.tokens.punctuation import PunctuationToken
 from nirukta.render import transliterate
-from janim.logger import log
 
 from nirukta.models.presentation.akshara import Akshara, identify
 from nirukta.models.presentation.line import Line

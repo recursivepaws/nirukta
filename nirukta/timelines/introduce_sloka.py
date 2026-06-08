@@ -11,10 +11,9 @@ from janim.imports import (
     TypstText,
     Wait,
     Write,
-    Aligned,
 )
 
-from nirukta.constants import SANSKRIT_FONT, SCALE
+from nirukta.constants import SANSKRIT_FONT
 from nirukta.models import Language, Sloka
 from nirukta.render import (
     set_font,
@@ -22,7 +21,6 @@ from nirukta.render import (
 )
 from nirukta.sloka import (
     sloka_group_chandas,
-    sloka_group_reformed,
     sloka_group_overview,
 )
 from nirukta.timelines.transform import LenientTransformMatchingDiff

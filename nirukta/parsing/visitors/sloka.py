@@ -1,7 +1,7 @@
 import logging
 import os
 import traceback
-from typing import List, Sequence
+from typing import Sequence
 from nirukta.models.enums import SoundChange
 from nirukta.models.tokens import PunctuationToken, SoundChangeToken
 from nirukta.render import transliterate

@@ -1,11 +1,7 @@
 import os
 import glob
 import sys
-from janim.imports import WHITE
-from aksharamukha import transliterate
 
-from nirukta.models.enums import Language
-from nirukta.constants import SCALE, TYPST_CMD_RE
 from nirukta.parsing.visitors.sloka import SlokaVisitor
 from nirukta.parsing.visitors.sutra import SutraVisitor
 from nirukta.timelines import SlokaFileTimeline, SutraFileTimeline
@@ -28,15 +24,8 @@ def choose_nirukta_file() -> str:
     return _choose_nirukta_file_terminal()
 
 
-_picker = None  # kept alive across rebuilds so the panel stays open
-
-
-def _delete_existing_modules():
-    # Rebuild everything in the framework
-    if os.environ.get("REBUILD") == "1":
-        for key in list(sys.modules):
-            if key.startswith("nirukta"):
-                del sys.modules[key]
+# kept alive across rebuilds so the panel stays open
+_picker = None
 
 
 def _choose_nirukta_file_gui() -> str:

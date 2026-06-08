@@ -1,24 +1,18 @@
 from dataclasses import dataclass
-import sys
 
 from janim.imports import (
-    Aligned,
-    Config,
     FadeIn,
     FadeOut,
     Group,
     Succession,
     Timeline,
-    Transform,
     Wait,
 )
 from nirukta.models import Sloka
 from nirukta.sloka import (
     sloka_group_chandas,
     sloka_group_overview,
-    sloka_group_reformed,
 )
-from nirukta.timelines import LenientTransformMatchingDiff
 
 
 @dataclass

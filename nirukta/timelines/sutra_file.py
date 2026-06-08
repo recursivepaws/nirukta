@@ -17,7 +17,7 @@ from nirukta.render import (
     set_font,
     typst_code,
 )
-from nirukta.timelines import ExplainSloka, IntroduceSloka
+from nirukta.timelines import ExplainSloka
 from nirukta.timelines.introduce_quad import IntroduceQuadTimeline
 
 

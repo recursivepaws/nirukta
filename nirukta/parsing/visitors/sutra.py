@@ -18,7 +18,7 @@ class SutraVisitor(SlokaVisitor):
     def visit_sutra(self, _, visited_children):
         citation, _, raw_slokas, _ = visited_children
 
-        processed_slokas: List[Sloka]= []
+        processed_slokas: List[Sloka] = []
         for sloka in raw_slokas:
             if isinstance(sloka, list):
                 sloka = sloka[0]

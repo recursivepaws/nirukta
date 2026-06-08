@@ -2,7 +2,6 @@ from janim.imports import ORANGE, Timeline
 from nirukta.models import Sloka, SlokaFile
 from nirukta.timelines.explain_sloka import ExplainSloka
 from nirukta.timelines.introduce_sloka import IntroduceSloka
-from nirukta.timelines.introduce_quad import IntroduceQuadTimeline
 
 
 class SlokaFileTimeline(Timeline):
