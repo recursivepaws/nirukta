@@ -1,16 +1,14 @@
 from nirukta.models.tokens.simple import SimpleToken
 from nirukta.models.tokens.compound import CompoundToken, SoundChangeToken
+from nirukta.models.tokens.token import TokenType
 from nirukta.models.tokens.display import DisplayToken
+from nirukta.models.tokens.punctuation import PunctuationToken
 
 from janim.imports import WHITE, log
 from nirukta.strings import unswara
-from nirukta.inflection import SanskritInflection
 from nirukta.models.gloss import EnglishGloss
 
-from typing import Union, List, Set, Dict
-
-
-type TokenType = Union[SimpleToken, SoundChangeToken, CompoundToken, str]
+from typing import List, Set, Dict, Sequence
 
 _SLP1_VOWELS = frozenset("aAiIuUfFxXeEoO")
 
@@ -30,7 +28,7 @@ def skip_spaces_str(last_line: str, next_line: str) -> bool:
 
 
 def skip_spaces_token(last_line: TokenType, next_line: TokenType) -> bool:
-    if isinstance(last_line, str) or isinstance(next_line, str):
+    if type(last_line) is PunctuationToken or type(next_line) is PunctuationToken:
         return False
     else:
         return skip_spaces_str(last_line.slp1[-1], next_line.slp1[0])
@@ -63,6 +61,8 @@ def process_token(
     refs: List[tuple[str, List[tuple[int, int]]]] = []
 
     match token:
+        case PunctuationToken():
+            refs.append((token, []))
         case SimpleToken():
             refs.append((token.slp1, token.gloss_refs(english, visited)))
         case SoundChangeToken():
@@ -70,8 +70,6 @@ def process_token(
         case CompoundToken():
             for part in token.parts:
                 refs += process_token(english, part, visited)
-        case str():
-            refs.append((token, []))
 
     return refs
 
@@ -86,11 +84,11 @@ def collect_leaf_slp1s(token: TokenType):
         case CompoundToken():
             for part in token.parts:
                 yield from collect_leaf_slp1s(part)
-        # case str():
+        # case PunctuationToken():
         # Do nothing
 
 
-def build_colorings(tokens: List[TokenType], colors: List[str]) -> Dict[str, str]:
+def build_colorings(tokens: Sequence[TokenType], colors: List[str]) -> Dict[str, str]:
     colorings: Dict[str, str] = {}
     idx = 0
     for token in tokens:
@@ -179,16 +177,16 @@ def build_display_token(
                 )
             else:
                 return leaf
-        case str():
+        case PunctuationToken():
             return DisplayToken(
-                slp1=token,
+                slp1=token.slp1,
                 color=WHITE,
                 children=[],
                 english_spans=[],
             )
 
 
-def fix_display_token_akshara_splitting(tokens: List[DisplayToken]):
+def fix_display_token_akshara_splitting(tokens: Sequence[TokenType]):
     i = 0
 
     while i < len(tokens) - 1:

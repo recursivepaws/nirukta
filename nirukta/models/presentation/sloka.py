@@ -4,6 +4,7 @@ import json
 from typing import List, Optional
 
 from nirukta.constants import DIGITS_RE
+from nirukta.models.tokens.punctuation import PunctuationToken
 from nirukta.render import transliterate
 from janim.logger import log
 
@@ -24,8 +25,8 @@ class Sloka:
         for line in list(lines):
             for vAyka in line.vAkyAni:
                 for token in vAyka.tokens:
-                    if isinstance(token, str):
-                        if match := DIGITS_RE.search(token):
+                    if isinstance(token, PunctuationToken):
+                        if match := DIGITS_RE.search(token.slp1):
                             number = int(match.group())
         self.lines = lines
         self.number = number
@@ -37,15 +38,12 @@ class Sloka:
         for line in self.lines:
             for vAkya in line.vAkyAni:
                 for token in vAkya.tokens:
-                    if isinstance(token, str):
-                        slp1 += token
+                    # TODO: Ignore other key starter phrases
+                    # like 'SrI BagavAn uvAca'
+                    if slp1 == "" and token.slp1 == "oM":
+                        continue
                     else:
-                        # TODO: Ignore other key starter phrases
-                        # like 'SrI BagavAn uvAca'
-                        if slp1 == "" and token.slp1 == "oM":
-                            continue
-                        else:
-                            slp1 += token.slp1 + " "
+                        slp1 += token.slp1 + " "
 
         slp1 += "\n"
         return slp1

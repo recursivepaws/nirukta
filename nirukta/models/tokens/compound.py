@@ -1,11 +1,12 @@
-from dataclasses import dataclass, field
-from typing import List, Union
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Sequence
 
 from nirukta.models.enums import SoundChange
-from nirukta.models.tokens.simple import SimpleToken
 
-
-type SimpleOrCompound = Union[SimpleToken, CompoundToken]
+if TYPE_CHECKING:
+    from nirukta.models.tokens.token import TokenType
 
 
 @dataclass
@@ -16,13 +17,13 @@ class CompoundToken:
     slp1 -- the phonetically-merged SLP1 surface form (after '=')
     """
 
-    parts: List[SimpleOrCompound]
+    parts: Sequence[TokenType]
     slp1: str
 
 
 @dataclass
 class SoundChangeToken:
-    part: SimpleOrCompound
+    part: TokenType
     slp1: str
     kind: SoundChange
 

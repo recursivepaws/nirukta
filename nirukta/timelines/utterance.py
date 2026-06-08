@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 import hashlib
 import dill as pickle
-from typing import Any, List
+from typing import Any, List, Sequence
 
 from nirukta.cache import build_cached
 
@@ -73,7 +73,7 @@ def build_utterance_cached(vAkya: Utterance):
 
 @dataclass
 class UtteranceTimeline(Timeline):
-    tokens: List[TokenType]
+    tokens: Sequence[TokenType]
     english: str
 
     def __init__(self, utterance: Utterance):

@@ -1,9 +1,9 @@
 import logging
 import os
 import traceback
-from typing import List
+from typing import List, Sequence
 from nirukta.models.enums import SoundChange
-from nirukta.models.tokens import SoundChangeToken
+from nirukta.models.tokens import PunctuationToken, SoundChangeToken
 from nirukta.render import transliterate
 from nirukta.strings import unswara
 import sandhi as sandhi_module
@@ -85,11 +85,14 @@ def models_for_stem(stem: str) -> list[str]:
 def declension_candidates(model: str, stem: str):
     candidates = []
     rec = DeclRec(f"{model}\t{stem}\t")
-    for option in rec.inflection.split(":"):
-        if "/" in option:
-            candidates += option.split("/")
-        else:
-            candidates.append(option)
+
+    if rec.inflection is not None:
+        for option in rec.inflection.split(":"):
+            if "/" in option:
+                candidates += option.split("/")
+            else:
+                candidates.append(option)
+
     return candidates
 
 
@@ -121,13 +124,13 @@ def validate_declension(stem: str, declined: str):
 
 
 # Result should be provided in slp1
-def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
+def validate_equation(parts: Sequence[TokenType], result: str, kind: SoundChange):
     if len(parts) > 1:
         built = ""
 
         partinfo = []
         for part in parts:
-            partinfo.append(f"'{part if isinstance(part, str) else part.slp1}'")
+            partinfo.append(f"'{part.slp1}'")
         log.debug(f"parts: {partinfo}")
 
         for i in range(len(parts)):
@@ -135,7 +138,7 @@ def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
             B = transliterate(
                 System.SLP1,
                 System.WX,
-                parts[i] if isinstance(parts[i], str) else unswara(parts[i].slp1),
+                unswara(parts[i].slp1),
             )
             log.debug(
                 f"adding: '{transliterate(System.WX, System.IAST, A)}' + '{transliterate(System.WX, System.IAST, B)}'"
@@ -194,7 +197,7 @@ def validate_equation(parts: List[TokenType], result: str, kind: SoundChange):
         log.warning(f"no need to validate parts of n<2 {parts}")
 
 
-def validate_sandhi(sequence: List[TokenType]):
+def validate_sandhi(sequence: Sequence[TokenType]):
 
     def validate_compound(compound: CompoundToken):
         # External
@@ -207,13 +210,19 @@ def validate_sandhi(sequence: List[TokenType]):
         )
 
     for i in range(len(sequence)):
-        match sequence[i]:
+        current = sequence[i]
+
+        match current:
+            case SimpleToken():
+                continue
+            case PunctuationToken():
+                continue
             case SoundChangeToken():
-                match sequence[i].kind:
+                match current.kind:
                     case SoundChange.INFLECTION:
-                        validate_declension(sequence[i].part.slp1, sequence[i].slp1)
+                        validate_declension(current.part.slp1, current.slp1)
                     case SoundChange.EXTERNAL_SANDHI:
-                        inner = sequence[i].part
+                        inner = current.part
                         if (
                             isinstance(inner, SoundChangeToken)
                             and inner.kind == SoundChange.INFLECTION
@@ -222,14 +231,14 @@ def validate_sandhi(sequence: List[TokenType]):
                         elif isinstance(inner, CompoundToken):
                             validate_compound(inner)
                         if i < len(sequence) - 2:
+                            next = sequence[i + 1]
                             validate_equation(
-                                [sequence[i].part, sequence[i + 1]],
-                                sequence[i].slp1,
+                                [current.part, next],
+                                current.slp1,
                                 SoundChange.EXTERNAL_SANDHI,
                             )
-
             case CompoundToken():
-                validate_compound(sequence[i])
+                validate_compound(current)
 
 
 class SlokaVisitor(NodeVisitor):
@@ -302,7 +311,7 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_token_seq(self, _, visited_children):
         first, rest = visited_children
-        tokens: List[TokenType] = [first]
+        tokens: Sequence[TokenType] = [first]
         for pair in rest:
             tokens.append(pair[1])
 
@@ -407,7 +416,7 @@ class SlokaVisitor(NodeVisitor):
     # -- terminals ----------------------------------------------------------
 
     def visit_punct(self, node, _):
-        return node.text
+        return PunctuationToken(slp1=node.text)
 
     def visit_slp1(self, node, _):
         return node.text
