@@ -215,12 +215,12 @@ class UtteranceTimeline(Timeline):
 
         # Position everything relative to the final state to minimize movement
         final = states[2][len(states[2]) - 1]
-        final.points.move_to(ORIGIN + (DOWN * 0.5))
+        final.points.move_to(ORIGIN + (DOWN))
 
         for i in range(len(states[0])):
             # Start the transliteration in the center
-            states[0][i].points.next_to(final, direction=UP * 4.5, aligned_edge=LEFT)
-            states[1][i].points.next_to(final, direction=UP * 2, aligned_edge=LEFT)
+            states[0][i].points.next_to(final, direction=UP * 5.5, aligned_edge=LEFT)
+            states[1][i].points.next_to(final, direction=UP * 3, aligned_edge=LEFT)
             states[2][i].points.next_to(final, direction=ORIGIN, aligned_edge=LEFT)
 
             # Initial write on
@@ -256,7 +256,22 @@ class UtteranceTimeline(Timeline):
                         ),
                         duration=0.4,
                     )
-
+                # elif diff.anim == Animation.COLORS:
+                #     self.play(
+                #         FlatAligned(
+                #             *(
+                #                 Awaken(dt)
+                #                 for dt in [
+                #                     states[0][i - 1].get_label(diff.token_id),
+                #                     states[1][i].get_label(diff.token_id),
+                #                 ]
+                #             ),
+                #             name="Colorize",
+                #             label_color=C_LABEL_ANIM_INDICATION,
+                #         ),
+                #         duration=0.4,
+                #     )
+                # else:
                 self.play(
                     FlatAligned(
                         *(

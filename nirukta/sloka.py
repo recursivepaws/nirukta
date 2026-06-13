@@ -58,7 +58,7 @@ def sloka_group_reformed(sloka: Sloka, devanagari: bool) -> TypstText:
     grid = add_linebreaks(rows)
 
     return TypstText(
-        set_font(grid, font),
+        set_font(grid, font, 0.7),
     )
 
 

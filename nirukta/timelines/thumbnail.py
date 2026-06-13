@@ -2,10 +2,12 @@ from typing import Any
 
 from janim.imports import (
     LEFT,
+    MED_LARGE_BUFF,
     MED_SMALL_BUFF,
     UL,
     UR,
     UP,
+    DOWN,
     WHITE,
     YELLOW,
     Aligned,
@@ -45,6 +47,7 @@ class ThumbnailTimeline(Timeline):
         # thumbnail = sloka_thumbnail(self.sloka)
 
         sloka_text = sloka_group_reformed(self.sloka, devanagari=self.devanagari)
+
         if self.sloka.number is not None:
             number_label = Group(
                 Rect(0.4, 0.4, fill_alpha=0.3),
@@ -62,7 +65,8 @@ class ThumbnailTimeline(Timeline):
             sloka_border = SurroundingRect(sloka_text, color=WHITE, buff=MED_SMALL_BUFF)
             group = Group(sloka_text, sloka_border)
 
-        group.points.to_border(UL if self.devanagari else UR, buff=MED_SMALL_BUFF)
+        # group.points.to_border(UL if self.devanagari else UR, buff=MED_SMALL_BUFF)
+        group.points.to_border(UP if self.devanagari else DOWN, buff=MED_LARGE_BUFF)
         # return group
         # initial = sloka_group(self.sloka)
         # self.play(Write(initial), duration=0.33)

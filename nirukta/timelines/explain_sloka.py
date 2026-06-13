@@ -49,7 +49,7 @@ class ExplainSloka(Timeline):
         # for timeline in utterance_timelines:
         #     timeline_durations.append(timeline.duration)
 
-        scale = 0.7
+        scale = 1.0
         thumb = (
             ThumbnailTimeline(sloka=self.sloka, devanagari=True)
             .build()
@@ -58,7 +58,8 @@ class ExplainSloka(Timeline):
         )
         TransformableFrameClip(
             thumb,
-            offset=(-((1 - scale) / 2), (1 - scale) / 2),
+            # offset=(-((1 - scale) / 2), (1 - scale) / 2),
+            offset=(0, (1 - scale) / 2),
             scale=scale,
         ).show()
 
@@ -70,7 +71,8 @@ class ExplainSloka(Timeline):
         )
         TransformableFrameClip(
             thumb2,
-            offset=(+((1 - scale) / 2), (1 - scale) / 2),
+            # offset=(+((1 - scale) / 2), (1 - scale) / 2),
+            offset=(0, -(1 - scale) / 2),
             scale=scale,
         ).show()
 

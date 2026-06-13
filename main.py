@@ -24,12 +24,43 @@ if preview_mode:
         pixel_height=540,
         anti_alias_width=0.001,
     )
+    config_vertical = Config(
+        fps=60,
+        preview_fps=30,
+        pixel_width=540,
+        pixel_height=960,
+        frame_width=8.0,
+        frame_height=16.0 / 9.0 * 8.0,
+        anti_alias_width=0.001,
+    )
 else:
     config = Config(fps=60)
+    config_vertical = Config(
+        fps=60,
+        pixel_width=1080,
+        pixel_height=1920,
+        frame_width=8.0,
+        frame_height=16.0 / 9.0 * 8.0,
+    )
 
 
 class Nirukta(Timeline):
     CONFIG = config
+    nirukta: Timeline
+
+    @property
+    def gui_color(self) -> str:
+        return RED
+
+    def construct(self):
+        chosen = choose_nirukta_file()
+        assert is_nirukta_file(chosen), "Invalid file"
+        timeline = file_to_timeline(chosen).build().to_item().show()
+        self.forward(timeline.duration)
+
+
+class NiruktaVertical(Timeline):
+    CONFIG = config_vertical
     nirukta: Timeline
 
     @property
