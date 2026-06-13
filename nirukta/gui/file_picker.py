@@ -38,6 +38,7 @@ class NiruktaFilePicker(QWidget):
     _up_btn: QPushButton
     _select_btn: QPushButton
     _rebuild: QCheckBox
+    _vertical: QCheckBox
 
     file_chosen = Signal(str)  # emits absolute path when a file is confirmed
 
@@ -74,9 +75,13 @@ class NiruktaFilePicker(QWidget):
         self._rebuild = QCheckBox("Rebuild")
         self._rebuild.toggled.connect(self._toggle_rebuild)
 
+        self._vertical = QCheckBox("Vertical")
+        self._vertical.toggled.connect(self._toggle_vertical)
+
         btn_row = QHBoxLayout()
         btn_row.addWidget(self._up_btn)
         btn_row.addWidget(self._rebuild)
+        btn_row.addWidget(self._vertical)
         btn_row.addStretch()
         btn_row.addWidget(self._select_btn)
 
@@ -153,3 +158,20 @@ class NiruktaFilePicker(QWidget):
             os.environ["REBUILD"] = "1"
         else:
             os.environ.pop("REBUILD", None)
+
+    def _toggle_vertical(self) -> None:
+        if self._vertical.isChecked():
+            os.environ["NIRUKTA_VERTICAL"] = "1"
+        else:
+            os.environ.pop("NIRUKTA_VERTICAL", None)
+
+        from PySide6.QtWidgets import QApplication
+        from janim.gui.anim_viewer import AnimViewer
+
+        app = QApplication.instance()
+        if app is None:
+            return
+        for w in app.topLevelWidgets():
+            if isinstance(w, AnimViewer):
+                w.on_rebuild_triggered()
+                return

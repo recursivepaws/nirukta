@@ -2,6 +2,7 @@ import os
 import re
 import typst
 import janim.utils.typst_compile as tc
+from janim.gui.anim_viewer import AnimViewer
 from janim.gui.timeline_view import TimelineView, LABEL_OBJ_NAME
 from janim.gui.label import LazyLabelGroup, Label, LabelGroup
 from janim.anims.animation import FOREVER, TimeRange
@@ -160,3 +161,16 @@ if not getattr(TimelineView, "_make_subtimeline_name_patched", False):
 
     TimelineView.make_subtimeline_label_group = _patched_make_subtimeline_label_group
     TimelineView._make_subtimeline_name_patched = True  # type: ignore[attr-defined]
+
+
+if not getattr(AnimViewer, "_set_built_name_patched", False):
+    _orig_anim_viewer_set_built = AnimViewer.set_built
+
+    def _patched_anim_viewer_set_built(self, built):
+        _orig_anim_viewer_set_built(self, built)
+        rebuildable = getattr(type(built.timeline), "__rebuildable_name__", None)
+        if rebuildable is not None:
+            self.name_edit.setText(rebuildable)
+
+    AnimViewer.set_built = _patched_anim_viewer_set_built
+    AnimViewer._set_built_name_patched = True  # type: ignore[attr-defined]

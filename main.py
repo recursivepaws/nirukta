@@ -14,39 +14,32 @@ import nirukta.patches  # pyright: ignore[reportUnusedImport]  # noqa: F401, E40
 from nirukta.util import choose_nirukta_file, is_nirukta_file, file_to_timeline  # noqa: E402
 
 
-# Keep previews performant with HD exports
+vertical = os.environ.get("NIRUKTA_VERTICAL") == "1"
 preview_mode = "run" in sys.argv
+
 if preview_mode:
     config = Config(
         fps=60,
         preview_fps=30,
-        pixel_width=960,
-        pixel_height=540,
-        anti_alias_width=0.001,
-    )
-    config_vertical = Config(
-        fps=60,
-        preview_fps=30,
-        pixel_width=540,
-        pixel_height=960,
-        frame_width=8.0,
-        frame_height=16.0 / 9.0 * 8.0,
+        pixel_width=540 if vertical else 960,
+        pixel_height=960 if vertical else 540,
+        frame_width=8.0 if vertical else 16.0 / 9.0 * 8.0,
+        frame_height=16.0 / 9.0 * 8.0 if vertical else 8.0,
         anti_alias_width=0.001,
     )
 else:
-    config = Config(fps=60)
-    config_vertical = Config(
+    config = Config(
         fps=60,
-        pixel_width=1080,
-        pixel_height=1920,
-        frame_width=8.0,
-        frame_height=16.0 / 9.0 * 8.0,
+        pixel_width=1080 if vertical else 1920,
+        pixel_height=1920 if vertical else 1080,
+        frame_width=8.0 if vertical else 16.0 / 9.0 * 8.0,
+        frame_height=16.0 / 9.0 * 8.0 if vertical else 8.0,
     )
 
 
 class Nirukta(Timeline):
     CONFIG = config
-    nirukta: Timeline
+    __rebuildable_name__ = "Nirukta"
 
     @property
     def gui_color(self) -> str:
@@ -55,20 +48,8 @@ class Nirukta(Timeline):
     def construct(self):
         chosen = choose_nirukta_file()
         assert is_nirukta_file(chosen), "Invalid file"
-        timeline = file_to_timeline(chosen).build().to_item().show()
-        self.forward(timeline.duration)
-
-
-class NiruktaVertical(Timeline):
-    CONFIG = config_vertical
-    nirukta: Timeline
-
-    @property
-    def gui_color(self) -> str:
-        return RED
-
-    def construct(self):
-        chosen = choose_nirukta_file()
-        assert is_nirukta_file(chosen), "Invalid file"
+        stem = os.path.splitext(os.path.basename(chosen))[0]
+        suffix = "vertical" if vertical else "horizontal"
+        type(self).__name__ = f"{stem}-{suffix}"
         timeline = file_to_timeline(chosen).build().to_item().show()
         self.forward(timeline.duration)
