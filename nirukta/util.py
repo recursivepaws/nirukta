@@ -4,7 +4,7 @@ import sys
 
 from nirukta.parsing.visitors.sloka import SlokaVisitor
 from nirukta.parsing.visitors.sutra import SutraVisitor
-from nirukta.timelines import SlokaFileTimeline, SutraFileTimeline
+from nirukta.timelines import ExplainSloka, SlokaFileTimeline, SutraFileTimeline
 
 
 def is_nirukta_file(file: str):
@@ -121,11 +121,11 @@ def _choose_nirukta_file_terminal() -> str:
 
 def file_to_timeline(chosen: str):
     print(f"Loading {chosen}...")
-    #
-    # with open(chosen) as f:
-    #     source = f.read()
-
     if ".sutra" in chosen:
-        return SutraFileTimeline(SutraVisitor(chosen).parse())
+        sutra_file = SutraVisitor(chosen).parse()
+        sloka_index = os.environ.get("NIRUKTA_SLOKA_INDEX")
+        if sloka_index is not None:
+            return ExplainSloka(sloka=sutra_file.slokas[int(sloka_index)])
+        return SutraFileTimeline(sutra_file)
     else:
         return SlokaFileTimeline(SlokaVisitor(chosen).parse())

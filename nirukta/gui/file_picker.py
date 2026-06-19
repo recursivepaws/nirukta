@@ -46,6 +46,7 @@ class NiruktaFilePicker(QWidget):
         super().__init__(parent)
         self._root = os.path.realpath(LIBRARY_ROOT)
         self._current = self._root
+        self._sutra_path: str | None = None
 
         self.setWindowTitle("Nirukta File Picker")
         self.setWindowFlags(Qt.WindowType.Tool)
@@ -94,6 +95,12 @@ class NiruktaFilePicker(QWidget):
 
     # ------------------------------------------------------------------
     def _populate(self) -> None:
+        if self._sutra_path is not None:
+            self._populate_sutra()
+        else:
+            self._populate_files()
+
+    def _populate_files(self) -> None:
         self._list.clear()
 
         dirs = sorted(
@@ -123,14 +130,42 @@ class NiruktaFilePicker(QWidget):
         self._up_btn.setEnabled(self._current != self._root)
         self._select_btn.setEnabled(False)
 
+    def _populate_sutra(self) -> None:
+        from nirukta.parsing.visitors.sutra import SutraVisitor
+
+        self._list.clear()
+        sutra_file = SutraVisitor(self._sutra_path).parse()
+
+        whole = QListWidgetItem("  Whole Sutra")
+        whole.setData(Qt.ItemDataRole.UserRole, ("whole", self._sutra_path))
+        self._list.addItem(whole)
+
+        for i, sloka in enumerate(sutra_file.slokas):
+            preview = ""
+            if sloka.lines and sloka.lines[0].vAkyAni:
+                preview = sloka.lines[0].vAkyAni[0].english.strip()[:60]
+            num = f"#{sloka.number} — " if sloka.number is not None else f"{i + 1}. "
+            item = QListWidgetItem(f"  {num}{preview}")
+            item.setData(Qt.ItemDataRole.UserRole, (i, self._sutra_path))
+            self._list.addItem(item)
+
+        rel = os.path.relpath(self._sutra_path, self._root)
+        self._path_label.setText(f"library/{rel}")
+        self._up_btn.setEnabled(True)
+        self._select_btn.setEnabled(False)
+
     def _go_up(self) -> None:
-        self._current = os.path.dirname(self._current)
-        self._populate()
+        if self._sutra_path is not None:
+            self._sutra_path = None
+            self._populate()
+        else:
+            self._current = os.path.dirname(self._current)
+            self._populate()
 
     def _on_double_click(self, item: QListWidgetItem) -> None:
-        path: str = item.data(Qt.ItemDataRole.UserRole)
-        if os.path.isdir(path):
-            self._current = os.path.realpath(path)
+        data = item.data(Qt.ItemDataRole.UserRole)
+        if isinstance(data, str) and os.path.isdir(data):
+            self._current = os.path.realpath(data)
             self._populate()
         else:
             self._confirm_selection()
@@ -140,18 +175,36 @@ class NiruktaFilePicker(QWidget):
         if not items:
             self._select_btn.setEnabled(False)
             return
-        path: str = items[0].data(Qt.ItemDataRole.UserRole)
-        self._select_btn.setEnabled(_is_nirukta_file(path))
+        data = items[0].data(Qt.ItemDataRole.UserRole)
+        if isinstance(data, str):
+            self._select_btn.setEnabled(_is_nirukta_file(data))
+        else:
+            self._select_btn.setEnabled(True)
 
     def _confirm_selection(self) -> None:
         items = self._list.selectedItems()
         if not items:
             return
-        path: str = items[0].data(Qt.ItemDataRole.UserRole)
-        if not _is_nirukta_file(path):
-            return
-        os.environ["NIRUKTA_FILE"] = path
-        self.file_chosen.emit(path)
+        data = items[0].data(Qt.ItemDataRole.UserRole)
+
+        if isinstance(data, str):
+            if not _is_nirukta_file(data):
+                return
+            if data.endswith(".sutra"):
+                self._sutra_path = data
+                self._populate()
+                return
+            os.environ["NIRUKTA_FILE"] = data
+            os.environ.pop("NIRUKTA_SLOKA_INDEX", None)
+            self.file_chosen.emit(data)
+        else:
+            kind, sutra_path = data
+            os.environ["NIRUKTA_FILE"] = sutra_path
+            if kind == "whole":
+                os.environ.pop("NIRUKTA_SLOKA_INDEX", None)
+            else:
+                os.environ["NIRUKTA_SLOKA_INDEX"] = str(kind)
+            self.file_chosen.emit(sutra_path)
 
     def _toggle_rebuild(self) -> None:
         if self._rebuild.isChecked():

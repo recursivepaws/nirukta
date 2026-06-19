@@ -49,6 +49,9 @@ class Nirukta(Timeline):
         chosen = choose_nirukta_file()
         assert is_nirukta_file(chosen), "Invalid file"
         stem = os.path.splitext(os.path.basename(chosen))[0]
+        sloka_idx = os.environ.get("NIRUKTA_SLOKA_INDEX")
+        if sloka_idx is not None:
+            stem = f"{stem}-sloka-{int(sloka_idx) + 1}"
         suffix = "vertical" if vertical else "horizontal"
         type(self).__name__ = f"{stem}-{suffix}"
         timeline = file_to_timeline(chosen).build().to_item().show()
