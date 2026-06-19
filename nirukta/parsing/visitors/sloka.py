@@ -23,77 +23,14 @@ from nirukta.models import SlokaFile
 from nirukta.parsing.grammars import SLOKA_GRAMMAR
 from parsimonious.exceptions import ParseError
 from parsimonious.nodes import NodeVisitor
-from pysanskritv2.tables.decline_file import DeclRec
+from nirukta_inflect import Model, candidate_models, decline
 
 S = sandhi_module.Sandhi()
 
 
-def models_for_stem(stem: str) -> list[str]:
-    # check multi-char endings first (longest match wins)
-    if stem.endswith("aYc"):
-        return ["m_aYc", "n_aYc"]
-    if stem.endswith("Iyas"):
-        return ["m_Iyas", "n_Iyas"]
-    if stem.endswith("vas"):
-        return ["m_vas", "n_vas"]
-    if stem.endswith("han"):
-        return ["m_han", "n_han"]
-
-    # mat also uses the vat paradigm
-    if stem.endswith("vat") or stem.endswith("mat"):
-        return ["m_vat", "n_vat"]
-    if stem.endswith("an"):
-        return ["m_an", "f_an", "n_an"]
-    if stem.endswith("as"):
-        return ["m_as", "f_as", "n_as"]
-    if stem.endswith("is"):
-        return ["m_is", "f_is", "n_is"]
-    if stem.endswith("us"):
-        return ["m_us", "f_us", "n_us"]
-    if stem.endswith("in"):
-        return ["m_in", "n_in"]
-
-    # single-char endings
-    endings = {
-        "a": ["m_a", "n_a"],
-        "A": ["f_A"],
-        "i": ["m_i", "f_i", "n_i"],
-        "I": ["f_I"],
-        "u": ["m_u", "f_u", "n_u"],
-        "U": ["f_U"],
-        "f": ["m_f", "f_f", "n_f"],
-        "F": ["m_F", "f_F"],
-        "o": ["m_o", "f_o"],
-        "O": ["m_O", "f_O"],
-        "e": ["m_e"],
-        "E": ["m_E", "f_E", "n_E"],
-        "x": ["m_x", "f_x"],
-    }
-    return endings.get(stem[-1], [])
-
-
-# def declension_candidates(stem: str):
-#     canditates = []
-#     for model in models_for_stem(stem):
-#         rec = DeclRec(f"{model}\t{stem}\t")
-#         for option in rec.inflection.split(":"):
-#             if "/" in option:
-#                 canditates + option.split("/")
-#             else:
-#                 canditates.append(option)
-#     return canditates
-def declension_candidates(model: str, stem: str):
-    candidates = []
-    rec = DeclRec(f"{model}\t{stem}\t")
-
-    if rec.inflection is not None:
-        for option in rec.inflection.split(":"):
-            if "/" in option:
-                candidates += option.split("/")
-            else:
-                candidates.append(option)
-
-    return candidates
+def declension_candidates(model: Model, stem: str) -> list[str]:
+    table = decline(model, stem)
+    return table.forms() if table else []
 
 
 def validate_declension(stem: str, declined: str):
@@ -102,10 +39,10 @@ def validate_declension(stem: str, declined: str):
     print_stem = transliterate(System.SLP1, System.IAST, stem)
     print_declined = transliterate(System.SLP1, System.IAST, declined)
 
-    for model in models_for_stem(stem):
+    for model in candidate_models(stem):
         if declined in declension_candidates(model, stem):
             log.info(
-                f"inflection validated [declension]:\t'{print_stem}' -> '{print_declined}' is a valid '{model}' declension."
+                f"inflection validated [declension]:\t'{print_stem}' -> '{print_declined}' is a valid '{model.value}' declension."
             )
             validated = True
 
@@ -113,14 +50,14 @@ def validate_declension(stem: str, declined: str):
         log.warning(
             f"inflection invalid   [declension]:\t'{print_stem}' -> '{print_declined}' is not a known declension."
         )
-        for model in models_for_stem(stem):
+        for model in candidate_models(stem):
             options = list(
                 map(
                     lambda x: transliterate(System.SLP1, System.IAST, x),
                     declension_candidates(model, stem),
                 )
             )
-            log.info(f"{model}: {options}")
+            log.info(f"{model.value}: {options}")
 
 
 # Result should be provided in slp1

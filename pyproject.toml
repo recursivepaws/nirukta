@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
   "aksharamukha>=2.3",
-  "csl-inflect",
+  "nirukta-inflect",
   "dill>=0.4.1",
   "janim[gui]>=4.2.0",
   "parsimonious>=0.11.0",
@@ -19,4 +19,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.uv.sources]
-csl-inflect = { git = "https://github.com/recursivepaws/csl-inflect" }
+nirukta-inflect = { git = "https://github.com/recursivepaws/nirukta-inflect" }
