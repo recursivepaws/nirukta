@@ -30,35 +30,15 @@ _picker = None
 
 def _choose_nirukta_file_gui() -> str:
     global _picker
-    from PySide6.QtCore import QEventLoop
     from nirukta.gui.file_picker import NiruktaFilePicker
 
     if _picker is None:
         _picker = NiruktaFilePicker()
         _picker.destroyed.connect(_on_picker_destroyed)
-
-    loop = QEventLoop()
-    chosen: list[str] = []
-
-    def _on_first_chosen(path: str) -> None:
-        chosen.append(path)
-        loop.quit()
-
-    _picker.file_chosen.connect(_on_first_chosen)
-    _picker.destroyed.connect(loop.quit)
-    _picker.show()
-    loop.exec()
-    _picker.file_chosen.disconnect(_on_first_chosen)
-
-    if not chosen:
-        exit(0)
-
-    # Subsequent selections trigger a viewer rebuild instead of blocking again.
-    if not getattr(_picker, "_rebuild_connected", False):
         _picker.file_chosen.connect(_trigger_rebuild)
         _picker._rebuild_connected = True  # type: ignore[attr-defined]
 
-    return chosen[0]
+    return os.environ.get("NIRUKTA_FILE", "")
 
 
 def _on_picker_destroyed() -> None:

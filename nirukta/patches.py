@@ -8,6 +8,7 @@ from janim.gui.label import LazyLabelGroup, Label, LabelGroup
 from janim.anims.animation import FOREVER, TimeRange
 from janim.anims.composition import AnimGroup
 from janim.anims.transform import MethodTransform
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QPen
 from janim.utils.font.database import FontInfo, get_database
 from fontTools.ttLib import TTCollection, TTFont, TTLibError
@@ -181,6 +182,17 @@ if not getattr(AnimViewer, "_set_built_name_patched", False):
         is_vertical = built.cfg.pixel_width < built.cfg.pixel_height
         if want_vertical != is_vertical:
             QTimer.singleShot(0, self.on_rebuild_triggered)
+
+        # Dock the file picker into this window if not already done.
+        if not hasattr(self, '_nirukta_dock'):
+            from nirukta.util import _picker
+            if _picker is not None:
+                from PySide6.QtWidgets import QDockWidget
+                _picker.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
+                dock = QDockWidget("Files", self)
+                dock.setWidget(_picker)
+                self.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, dock)
+                self._nirukta_dock = dock  # type: ignore[attr-defined]
 
     AnimViewer.set_built = _patched_anim_viewer_set_built
     AnimViewer._set_built_name_patched = True  # type: ignore[attr-defined]

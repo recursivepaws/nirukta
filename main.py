@@ -47,7 +47,9 @@ class Nirukta(Timeline):
 
     def construct(self):
         chosen = choose_nirukta_file()
-        assert is_nirukta_file(chosen), "Invalid file"
+        if not chosen or not is_nirukta_file(chosen):
+            self.forward(1.0)
+            return
         stem = os.path.splitext(os.path.basename(chosen))[0]
         sloka_idx = os.environ.get("NIRUKTA_SLOKA_INDEX")
         if sloka_idx is not None:
