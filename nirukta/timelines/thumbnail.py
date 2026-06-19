@@ -66,7 +66,7 @@ class ThumbnailTimeline(Timeline):
             group = Group(sloka_text, sloka_border)
 
         # group.points.to_border(UL if self.devanagari else UR, buff=MED_SMALL_BUFF)
-        group.points.to_border(UP if self.devanagari else DOWN, buff=MED_LARGE_BUFF)
+        group.points.to_border(UP if self.devanagari else DOWN, buff=2)
         # return group
         # initial = sloka_group(self.sloka)
         # self.play(Write(initial), duration=0.33)
@@ -80,17 +80,18 @@ class ThumbnailTimeline(Timeline):
         print()
 
         for li, line in enumerate(self.sloka.lines):
-            for vi, vAkya in enumerate(line.vAkyAni):
-                if li != 0 or vi != 0:
-                    self.play(Sleep(group))
+            if not line.skip():
+                for vi, vAkya in enumerate(line.vAkyAni):
+                    if li != 0 or vi != 0:
+                        self.play(Sleep(group))
 
-                selection = sloka_text.get_label(f"line_{li}_utterance_{vi}")
-                self.play(Awaken(selection))
+                    selection = sloka_text.get_label(f"line_{li}_utterance_{vi}")
+                    self.play(Awaken(selection))
 
-                # Build but do not show; so that we can match durations
-                # vt = build_utterance_cached(vAkya).to_item()
-                vt = UtteranceTimeline(vAkya).build().to_item()
-                self.forward(vt.duration)
+                    # Build but do not show; so that we can match durations
+                    # vt = build_utterance_cached(vAkya).to_item()
+                    vt = UtteranceTimeline(vAkya).build().to_item()
+                    self.forward(vt.duration)
 
         self.play(Sleep(sloka_text))
         self.play(FadeOut(group))

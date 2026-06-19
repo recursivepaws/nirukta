@@ -44,15 +44,16 @@ def sloka_group_reformed(sloka: Sloka, devanagari: bool) -> TypstText:
         font = LATIN_FONT
 
     for li, line in enumerate(sloka.lines):
-        sanskritcode = ""
-        for vi, vAkya in enumerate(line.vAkyAni):
-            utterance_code = (
-                f"{typst_code(vAkya.slp1(), lang)}<line_{li}_utterance_{vi}>"
-            )
-            sanskritcode += utterance_code + " "
+        if not line.skip():
+            sanskritcode = ""
+            for vi, vAkya in enumerate(line.vAkyAni):
+                utterance_code = (
+                    f"{typst_code(vAkya.slp1(), lang)}<line_{li}_utterance_{vi}>"
+                )
+                sanskritcode += utterance_code + " "
 
-        # rows.append(f"[{sanskritcode}]")
-        rows.append(sanskritcode)
+            # rows.append(f"[{sanskritcode}]")
+            rows.append(sanskritcode)
 
     # grid = arrange_vertical(rows, gutter=0.6)
     grid = add_linebreaks(rows)

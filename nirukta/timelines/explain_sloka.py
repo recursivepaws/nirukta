@@ -79,13 +79,14 @@ class ExplainSloka(Timeline):
         self.play(Wait(1.0))
 
         for li, line in enumerate(self.sloka.lines):
-            for vi, vAkya in enumerate(line.vAkyAni):
-                if li != 0 or vi != 0:
-                    self.play(Wait(0.33))
+            if not line.skip():
+                for vi, vAkya in enumerate(line.vAkyAni):
+                    if li != 0 or vi != 0:
+                        self.play(Wait(0.33))
 
-                self.play(Wait(0.33))
-                # vt = build_utterance_cached(vAkya).to_item().show()
-                vt = UtteranceTimeline(vAkya).build().to_item().show()
-                self.forward(vt.duration)
+                    self.play(Wait(0.33))
+                    # vt = build_utterance_cached(vAkya).to_item().show()
+                    vt = UtteranceTimeline(vAkya).build().to_item().show()
+                    self.forward(vt.duration)
 
         self.forward_to(thumb.end)

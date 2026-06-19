@@ -23,3 +23,6 @@ class Line:
                 else:
                     result += " "
         return result
+
+    def skip(self) -> bool:
+        return len(self.vAkyAni) == 1 and self.vAkyAni[0].tokens[0].slp1 == "oM"

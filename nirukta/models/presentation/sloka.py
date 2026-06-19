@@ -34,13 +34,9 @@ class Sloka:
     def meter_slp1(self):
         slp1 = ""
         for line in self.lines:
-            for vAkya in line.vAkyAni:
-                for token in vAkya.tokens:
-                    # TODO: Ignore other key starter phrases
-                    # like 'SrI BagavAn uvAca'
-                    if slp1 == "" and token.slp1 == "oM":
-                        continue
-                    else:
+            if not line.skip():
+                for vAkya in line.vAkyAni:
+                    for token in vAkya.tokens:
                         slp1 += token.slp1 + " "
 
         slp1 += "\n"
