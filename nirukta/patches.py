@@ -167,10 +167,20 @@ if not getattr(AnimViewer, "_set_built_name_patched", False):
     _orig_anim_viewer_set_built = AnimViewer.set_built
 
     def _patched_anim_viewer_set_built(self, built):
+        from PySide6.QtCore import QTimer
+
         _orig_anim_viewer_set_built(self, built)
+
         rebuildable = getattr(type(built.timeline), "__rebuildable_name__", None)
         if rebuildable is not None:
             self.name_edit.setText(rebuildable)
+
+        # If the user toggled vertical before the first build, the module loaded
+        # with the wrong config. Detect the mismatch and re-trigger immediately.
+        want_vertical = os.environ.get("NIRUKTA_VERTICAL") == "1"
+        is_vertical = built.cfg.pixel_width < built.cfg.pixel_height
+        if want_vertical != is_vertical:
+            QTimer.singleShot(0, self.on_rebuild_triggered)
 
     AnimViewer.set_built = _patched_anim_viewer_set_built
     AnimViewer._set_built_name_patched = True  # type: ignore[attr-defined]
