@@ -23,7 +23,7 @@ from nirukta.models import SlokaFile
 from nirukta.parsing.grammars import SLOKA_GRAMMAR
 from parsimonious.exceptions import ParseError
 from parsimonious.nodes import NodeVisitor
-from nirukta_inflect import Model, candidate_models, decline
+from nirukta_inflect import Model, candidate_models, decline, resolve
 
 S = sandhi_module.Sandhi()
 
@@ -58,6 +58,66 @@ def validate_declension(stem: str, declined: str):
                 )
             )
             log.info(f"{model.value}: {options}")
+
+
+def _leaf_tokens(sequence: Sequence[TokenType]):
+    """Yield every SimpleToken leaf, recursing into compounds and sound changes."""
+    for token in sequence:
+        match token:
+            case SimpleToken():
+                yield token
+            case CompoundToken():
+                yield from _leaf_tokens(token.parts)
+            case SoundChangeToken():
+                yield from _leaf_tokens([token.part])
+            case _:
+                continue
+
+
+def validate_vocabulary(sequence: Sequence[TokenType]):
+    """Check that every leaf word resolves to a known stem or indeclinable.
+
+    Assumes leaves are nominals or indeclinables (verbs are not yet supported
+    and will simply be reported as unrecognized).
+    """
+    seen: set[str] = set()
+    for token in _leaf_tokens(sequence):
+        form = unswara(token.slp1)  # strip accent marks before lookup
+        if form in seen:
+            continue
+        seen.add(form)
+
+        print_form = transliterate(System.SLP1, System.IAST, form)
+        resolutions = resolve(form)
+
+        if not resolutions:
+            log.warning(
+                f"vocabulary unrecognized [noun]:\t'{print_form}' did not resolve "
+                f"to a known stem or indeclinable."
+            )
+            continue
+
+        headwords = [r for r in resolutions if r.is_headword]
+        if headwords:
+            kind = (
+                "indeclinable"
+                if any(r.indeclinable for r in headwords)
+                else "headword"
+            )
+            log.info(
+                f"vocabulary resolved   [{kind}]:\t'{print_form}' is a known word."
+            )
+        else:
+            stems = sorted(
+                {
+                    transliterate(System.SLP1, System.IAST, r.stem)
+                    for r in resolutions
+                }
+            )
+            log.info(
+                f"vocabulary resolved   [declension]:\t'{print_form}' resolves to "
+                f"stem(s) {stems}."
+            )
 
 
 # Result should be provided in slp1
@@ -256,6 +316,11 @@ class SlokaVisitor(NodeVisitor):
             validate_sandhi(tokens)
         except Exception as e:
             log.error(f"Failed to validate sandhi: {e}")
+
+        try:
+            validate_vocabulary(tokens)
+        except Exception as e:
+            log.error(f"Failed to validate vocabulary: {e}")
 
         return tokens
 
