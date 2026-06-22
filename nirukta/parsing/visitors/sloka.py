@@ -108,15 +108,19 @@ def validate_vocabulary(sequence: Sequence[TokenType]):
                 f"vocabulary resolved   [{kind}]:\t'{print_form}' is a known word."
             )
         else:
+            # A bare inflected form resolves only via declension.
+            # Suggest rewriting it as an explicit stem->form.
             stems = sorted(
                 {
                     transliterate(System.SLP1, System.IAST, r.stem)
                     for r in resolutions
                 }
             )
-            log.info(
-                f"vocabulary resolved   [declension]:\t'{print_form}' resolves to "
-                f"stem(s) {stems}."
+            rewrites = sorted({f"{r.stem}->{form}" for r in resolutions})
+            log.warning(
+                f"vocabulary suggestion [declension]:\t'{print_form}' is an "
+                f"inflected form of stem(s) {stems}; consider writing it "
+                f"explicitly as {rewrites} (keep the glosses on the stem)."
             )
 
 

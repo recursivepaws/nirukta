@@ -494,7 +494,7 @@ requires-dist = [
     { name = "aksharamukha", specifier = ">=2.3" },
     { name = "dill", specifier = ">=0.4.1" },
     { name = "janim", extras = ["gui"], specifier = ">=4.2.0" },
-    { name = "nirukta-inflect", git = "https://github.com/recursivepaws/nirukta-inflect" },
+    { name = "nirukta-inflect", git = "https://github.com/recursivepaws/nirukta-inflect?branch=main" },
     { name = "parsimonious", specifier = ">=0.11.0" },
     { name = "sandhi", specifier = ">=1.0.0" },
     { name = "skrutable", specifier = ">=2.6.3" },
@@ -503,7 +503,7 @@ requires-dist = [
 [[package]]
 name = "nirukta-inflect"
 version = "0.1.0"
-source = { git = "https://github.com/recursivepaws/nirukta-inflect#7815eefa8b44eeb4a431c0ed4c52b8aa2bab2cac" }
+source = { git = "https://github.com/recursivepaws/nirukta-inflect?branch=main#0a40abcd772c69ad3687b37fdbf856af0c61d5c2" }
 
 [[package]]
 name = "numpy"

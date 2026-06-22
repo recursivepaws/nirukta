@@ -6,13 +6,13 @@ mahA[large]+kAya[body]=mahAkAya
 "O you with the curved trunk, the large body,"
 
 sUrya[suns]+kowi[10,000,000]=sUryakowi
-sama[equal to]+praBa[brilliance]=samapraBa .
+sama[equal to]+praBA[brilliance]=samapraBA=>samapraBa .
 "and the brilliance equal to 10,000,000 suns..."
 
 --- line ---
-nir[free of]+viGnam[obstacles]=nirviGnam=>nirviGnaM
-kuru[make] me[for me] deva[god]
+(nis[free of]=>nir)+(viGna[obstacles]->viGnam)=nirviGnam=>nirviGnaM
+kuru[make] ma[for me]->me deva[god]
 "O god - make the way free of obstacles for me,"
 
-sarva[all] kAryezu[in][endeavors] sarva[all]+dA[times]=sarvadA ..
+sarva[all] kArya[in][endeavors]->kAryezu sarva[all]+dA[times]=sarvadA ..
 "in all endeavors and all times."
