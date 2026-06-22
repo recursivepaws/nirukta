@@ -503,7 +503,7 @@ requires-dist = [
 [[package]]
 name = "nirukta-inflect"
 version = "0.1.0"
-source = { git = "https://github.com/recursivepaws/nirukta-inflect?branch=main#0a40abcd772c69ad3687b37fdbf856af0c61d5c2" }
+source = { git = "https://github.com/recursivepaws/nirukta-inflect?branch=main#b9a81c5a66368e78f325b9faad210e1531548d99" }
 
 [[package]]
 name = "numpy"

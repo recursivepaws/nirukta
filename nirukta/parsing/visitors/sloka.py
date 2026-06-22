@@ -23,41 +23,57 @@ from nirukta.models import SlokaFile
 from nirukta.parsing.grammars import SLOKA_GRAMMAR
 from parsimonious.exceptions import ParseError
 from parsimonious.nodes import NodeVisitor
-from nirukta_inflect import Model, candidate_models, decline, resolve
+from nirukta_inflect import analyze_declension, declension_tables, lookup, resolve
 
 S = sandhi_module.Sandhi()
 
 
-def declension_candidates(model: Model, stem: str) -> list[str]:
-    table = decline(model, stem)
-    return table.forms() if table else []
+def _format_cells(cells):
+    by_number: dict = {}
+    for case, number in cells:
+        by_number.setdefault(number, []).append(case)
+    return ", ".join(
+        f"{'/'.join(case.value for case in cases)} {number.value}"
+        for number, cases in by_number.items()
+    )
 
 
 def validate_declension(stem: str, declined: str):
-    validated = False
+    stem = unswara(stem)
+    declined = unswara(declined)
 
     print_stem = transliterate(System.SLP1, System.IAST, stem)
     print_declined = transliterate(System.SLP1, System.IAST, declined)
 
-    for model in candidate_models(stem):
-        if declined in declension_candidates(model, stem):
+    parses = analyze_declension(stem, declined)
+    if parses:
+        # Collapse paradigms that fill the same cells into one line.
+        groups: dict = {}
+        for parse in parses:
+            groups.setdefault(parse.cells, []).append(parse.model_name)
+        for cells, models in groups.items():
             log.info(
-                f"inflection validated [declension]:\t'{print_stem}' -> '{print_declined}' is a valid '{model.value}' declension."
+                f"inflection validated [declension]:\t'{print_stem}' -> '{print_declined}' "
+                f"is a valid {_format_cells(cells)} declension ({', '.join(models)})."
             )
-            validated = True
+        return
 
-    if not validated:
-        log.warning(
-            f"inflection invalid   [declension]:\t'{print_stem}' -> '{print_declined}' is not a known declension."
+    entry = lookup(stem)
+    if entry and entry.indeclinable:
+        log.info(
+            f"inflection skipped   [declension]:\t'{print_stem}' is indeclinable; "
+            f"no declension to validate."
         )
-        for model in candidate_models(stem):
-            options = list(
-                map(
-                    lambda x: transliterate(System.SLP1, System.IAST, x),
-                    declension_candidates(model, stem),
-                )
-            )
-            log.info(f"{model.value}: {options}")
+        return
+
+    log.warning(
+        f"inflection invalid   [declension]:\t'{print_stem}' -> '{print_declined}' is not a known declension."
+    )
+    for table in declension_tables(stem):
+        options = [
+            transliterate(System.SLP1, System.IAST, form) for form in table.forms()
+        ]
+        log.info(f"{table.model_name}: {options}")
 
 
 def _leaf_tokens(sequence: Sequence[TokenType]):
