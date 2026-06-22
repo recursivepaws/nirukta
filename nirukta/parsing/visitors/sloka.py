@@ -116,9 +116,7 @@ def validate_vocabulary(sequence: Sequence[TokenType]):
         headwords = [r for r in resolutions if r.is_headword]
         if headwords:
             kind = (
-                "indeclinable"
-                if any(r.indeclinable for r in headwords)
-                else "headword"
+                "indeclinable" if any(r.indeclinable for r in headwords) else "headword"
             )
             log.info(
                 f"vocabulary resolved   [{kind}]:\t'{print_form}' is a known word."
@@ -127,15 +125,12 @@ def validate_vocabulary(sequence: Sequence[TokenType]):
             # A bare inflected form resolves only via declension.
             # Suggest rewriting it as an explicit stem->form.
             stems = sorted(
-                {
-                    transliterate(System.SLP1, System.IAST, r.stem)
-                    for r in resolutions
-                }
+                {transliterate(System.SLP1, System.IAST, r.stem) for r in resolutions}
             )
             rewrites = sorted({f"{r.stem}->{form}" for r in resolutions})
             log.warning(
                 f"vocabulary suggestion [declension]:\t'{print_form}' is an "
-                f"inflected form of stem(s) {stems}; consider writing it "
+                f"inflected form of these stems: {stems}; consider writing it "
                 f"explicitly as {rewrites} (keep the glosses on the stem)."
             )
 
