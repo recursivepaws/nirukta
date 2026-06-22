@@ -10,7 +10,7 @@ SrI[radiant]+(gaReSa[to][Ganesha]->gaReSAya)=SrIgaReSAya namas[Reverence]->namaH
 
 --- line ---
 yA[She who]
-kunda[Jasmine flower]+indu[Moon]+tuzAra[frosty]+hAra[garland of pearls]+(Davala[dazzling]->DavalAH=>DavalA)=kundendutuzArahAraDavalA
+kunda[Jasmine flower]+indu[Moon]+tuzAra[frosty]+hAra[garland of pearls]+DavalA[dazzling]=kundendutuzArahAraDavalA
 "She who is white like Jasmine flower,"
 "frosty like the Moon,"
 "and dazzling like a garland of pearls."
@@ -118,16 +118,16 @@ vara[boons]+prasAdinI[gracious]=varaprasAdinI .. 4 ..
 --- line ---
 sarasvati[O Sarasvatī]
 (namas[reverence]->namaH)+tuByam[to you]=namastuByam=>namastuByaM
-varade[boon-giver]
+varadA[boon-giver]->varade
 kAmarUpiRi[form of longing] .
 "O Sarasvatī, boon-giver, the very form of longing; reverence to you."
 
 --- line ---
-vidyA[learning]+AramBam[beginning]=vidyAramBam=>vidyAramBaM
+vidyA[learning]+(AramBa[beginning]->AramBam)=vidyAramBam=>vidyAramBaM
 karizyAmi[I will undertake]
 "I will undertake the beginning of learning;"
 
-sidDiH[accomplishment]+Bavatu[may][arise]=sidDirBavatu
+(sidDi[accomplishment]->sidDiH)+Bavatu[may][arise]=sidDirBavatu
 me[for me]
 sadA[always] .. 5 ..
 "may accomplishment arise for me, always."
@@ -145,7 +145,7 @@ namas[reverence]->namaH=>namo namas[reverence]->namaH .
 
 --- line ---
 SAnta[tranquil]+rUpa[form]=SAntarUpa->SAntarUpe
-SaSi[moon]+Dare[bearer]=SaSiDare
+SaSi[moon]+(DarA[bearer]->Dare)=SaSiDare
 "O you of tranquil form, O bearer of the moon,"
 
 sarva[all]+yoga[disciplines]=sarvayoga->sarvayoge
@@ -378,7 +378,7 @@ paWen[should][recite]+nityam[daily]=paWennityam=>paWennityaM
 "It is said that one should recite this daily in the evening and in the morning for six months to reach attainment."
 
 --- line ---
-(cora[thieves]+vyAGra[tigers]=coravyAGra)+Baya[fear]=coravyAGraBaya->coravyAGraBayam=>coravyAGraBayaM
+(cora[thieves]+vyAGra[tigers]=coravyAGra)+(Baya[fear]->Bayam)=coravyAGraBayam=>coravyAGraBayaM
 na[not]+asti[exist]=nAsti
 paWatAm[those who recite]=>paWatAM
 SfRvatAm[those who listen]+api[Also]=SfRvatAmapi .. 20 ..
@@ -388,7 +388,7 @@ SfRvatAm[those who listen]+api[Also]=SfRvatAmapi .. 20 ..
 
 --- line ---
 itTaM[Thus]
-sarasvatI[Sarasvatī]+(stotra[stotra]->stotram)+agastya[Agastya]+muni[sage]+vAcaka[the speaking of]=sarasvatIstotramagastyamunivAcaka->sarasvatIstotramagastyamunivAcakam .
+sarasvatI[Sarasvatī]+(stotra[stotra]->stotram)+agastya[Agastya]+muni[sage]+(vAcaka[the speaking of]->vAcakam)=sarasvatIstotramagastyamunivAcakam .
 "Thus, the speaking of sage Agastya's Sarasvatī stotram"
 
 --- line ---
@@ -402,5 +402,5 @@ sarva[all]+pApa[sins]+praRASana[destruction]=sarvapApapraRASana->sarvapApapraRAS
 
 --- line ---
 .. iti[Thus]+(agastya[Agastya]+muni[sage]=agastyamuni)+(prokta[spoken]->proktam)=ityagastyamuniproktam=>ityagastyamuniproktaM
-sarasvatI[Sarasvatī]+stotra[stotra]=sarasvatIstotra->sarasvatIstotram=>sarasvatIstotraM sampUrRam[complete] ..
+sarasvatI[Sarasvatī]+stotra[stotra]=sarasvatIstotra->sarasvatIstotram=>sarasvatIstotraM sampUrRa[complete]->sampUrRam ..
 "Thus, the Sarasvatī stotra spoken by sage Agastya is complete."
