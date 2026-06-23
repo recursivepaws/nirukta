@@ -70,6 +70,22 @@ def build_utterance_cached(vAkya: Utterance):
     )
 
 
+def _mark_dormant(dt: DisplayToken) -> None:
+    """Grey a freshly-surfaced unit. Padas (anything that isn't a multi-part
+    container) also get is_root, so they Awaken right before their first analysis;
+    compounds / akshara-merges just split (grey -> grey), no awaken.
+    """
+    if not ALPHA_RE.search(dt.slp1):
+        return
+    dt.color = INACTIVE
+    if len(dt.children) > 1:  # container: compound / akshara-merge
+        for child in dt.children:
+            if isinstance(child, DisplayToken):
+                _mark_dormant(child)
+    else:  # pada
+        dt.is_root = True
+
+
 @dataclass
 class UtteranceTimeline(Timeline):
     tokens: Sequence[TokenType]
@@ -98,11 +114,8 @@ class UtteranceTimeline(Timeline):
 
         display_tokens = fix_display_token_akshara_splitting(display_tokens)
 
-        for i in range(len(display_tokens)):
-            if _ := ALPHA_RE.search(display_tokens[i].slp1):
-                display_tokens[i].is_root = True
-                display_tokens[i].color = INACTIVE
-                log.debug(f"{display_tokens[i].slp1} is a `DisplayToken` root")
+        for dt in display_tokens:
+            _mark_dormant(dt)
 
         frames = frames_for_vakya(display_tokens)
 
