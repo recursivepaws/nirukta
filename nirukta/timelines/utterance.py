@@ -127,6 +127,23 @@ class UtteranceTimeline(Timeline):
         # rather than going grey like an ordinary inactive gloss.
         outline_span_set = set(root.all_outline_spans())
 
+        # Label each (fill) gloss span with its owning leaf's id, so the english
+        # gloss can be grabbed via get_label and Awakened together with its pada.
+        span_to_leaf: dict[tuple[int, int], str] = {}
+        outline_leaf_ids: set[str] = set()
+
+        def _collect_gloss_owners(dt: DisplayToken) -> None:
+            for span in dt.english_spans:
+                span_to_leaf[span] = dt.id
+            if dt.outline_spans:
+                outline_leaf_ids.add(dt.id)
+            for child in dt.children:
+                _collect_gloss_owners(child)
+
+        for dt in display_tokens:
+            _collect_gloss_owners(dt)
+        gloss_leaf_ids = set(span_to_leaf.values())
+
         log.debug(f"all english spans: {all_english_spans}")
 
         # sa, tr, en
@@ -148,21 +165,26 @@ class UtteranceTimeline(Timeline):
                 id = fa[j].id
                 initial = fa[j].is_root
 
+                # Colour the awakening token transitions into (its next form), and
+                # the id of the form it becomes (whose english gloss awakens too)
+                color = fb[j].color
+                gloss_id = fb[j].id
+
                 # Expansion
                 if len(fa) != len(fb) and fa[j].slp1 != fb[j].slp1:
-                    diffs.append(Diff(Animation.EXPAND, id, initial))
+                    diffs.append(Diff(Animation.EXPAND, id, initial, color, gloss_id))
                 # Swaras changed
                 elif (
                     unswara(fa[j].slp1) != fa[j].slp1
                     and unswara(fa[j].slp1) == fb[j].slp1
                 ):
-                    diffs.append(Diff(Animation.SWARAS, id, initial))
+                    diffs.append(Diff(Animation.SWARAS, id, initial, color, gloss_id))
                 # Spelling changed
                 elif fa[j].slp1 != fb[j].slp1:
-                    diffs.append(Diff(Animation.SPELLS, id, initial))
+                    diffs.append(Diff(Animation.SPELLS, id, initial, color, gloss_id))
                 # Color changed
                 elif fa[j].color != fb[j].color:
-                    diffs.append(Diff(Animation.COLORS, id, initial))
+                    diffs.append(Diff(Animation.COLORS, id, initial, color, gloss_id))
 
                 # Exit once we've added to the list
                 if len(diffs) > diff_count:
@@ -225,6 +247,9 @@ class UtteranceTimeline(Timeline):
                     color,
                     stroke_mode=stroke,
                 )
+                # Label fill glosses by owning-leaf id so they can Awaken with the pada
+                if a in span_to_leaf:
+                    english += f"<{span_to_leaf[a]}>"
 
                 cursor += a[1] - a[0]
 
@@ -261,15 +286,21 @@ class UtteranceTimeline(Timeline):
                 assert isinstance(diff, Diff), f"Invalid Change Type: {diff}"
 
                 if diff.initial:
+                    # A beat before a pada wakes up
+                    self.play(Wait(0.25))
+                    awaken_labels = [
+                        states[0][i - 1].get_label(diff.token_id),
+                        states[1][i - 1].get_label(diff.token_id),
+                    ]
+                    # A pada awakening straight into its colour brings its english
+                    # gloss along, in the same aligned animation (no separate recolour).
+                    if diff.anim == Animation.COLORS and diff.gloss_id in gloss_leaf_ids:
+                        awaken_labels.append(
+                            states[2][i - 1].get_label(diff.gloss_id)
+                        )
                     self.play(
                         FlatAligned(
-                            *(
-                                Awaken(dt)
-                                for dt in [
-                                    states[0][i - 1].get_label(diff.token_id),
-                                    states[1][i - 1].get_label(diff.token_id),
-                                ]
-                            ),
+                            *(Awaken(dt, color=diff.color) for dt in awaken_labels),
                             name="Awaken",
                             label_color=C_LABEL_ANIM_INDICATION,
                         ),
@@ -291,25 +322,37 @@ class UtteranceTimeline(Timeline):
                 #         duration=0.4,
                 #     )
                 # else:
-                self.play(
-                    FlatAligned(
-                        *(
-                            LenientTransformMatchingDiff(
-                                s[i - 1],
-                                s[i],
-                                duration=diff.duration(),
-                                mismatch=diff.mismatch(),  # type: ignore[arg-type]
-                            )
-                            for s in states
-                        ),
-                        name=diff.name(),
-                        label_color=C_LABEL_ANIM_ABSTRACT,
-                        rate_func=diff.rate_func(),
+                # The awaken already performs the colour transition for a
+                # COLORS-initial pada, so its transform would be a no-op — jump
+                # straight to state i instead of replaying it. Unless the pada also
+                # has a declension gloss, whose underline still needs the transform.
+                if (
+                    diff.initial
+                    and diff.anim == Animation.COLORS
+                    and diff.gloss_id not in outline_leaf_ids
+                ):
+                    self.hide(*(s[i - 1] for s in states))
+                    self.show(*(s[i] for s in states))
+                else:
+                    # A beat before a compound destructures
+                    if diff.anim == Animation.EXPAND:
+                        self.play(Wait(0.25))
+                    self.play(
+                        FlatAligned(
+                            *(
+                                LenientTransformMatchingDiff(
+                                    s[i - 1],
+                                    s[i],
+                                    duration=diff.duration(),
+                                    mismatch=diff.mismatch(),  # type: ignore[arg-type]
+                                )
+                                for s in states
+                            ),
+                            name=diff.name(),
+                            label_color=C_LABEL_ANIM_ABSTRACT,
+                            rate_func=diff.rate_func(),
+                        )
                     )
-                )
-
-                if diff == Animation.COLORS:
-                    self.play(Wait(0.25))
 
         self.play(Wait(1.0))
         self.play(

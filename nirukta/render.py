@@ -15,7 +15,6 @@ from janim.imports import (
     GrowFromEdge,
     ShrinkToEdge,
     ValueTracker,
-    double_smooth,
     linear,
     rush_into,
     smooth,
@@ -90,7 +89,13 @@ class Awaken(AnimGroup):
     flat_label = True
     label_color = C_LABEL_ANIM_ABSTRACT
 
-    def __init__(self, *anims: SupportsAnim, duration: float = 0.33, **kwargs) -> None:
+    def __init__(
+        self,
+        *anims: SupportsAnim,
+        color: str = WHITE,
+        duration: float = 0.33,
+        **kwargs,
+    ) -> None:
         group = Group(*anims)
         scale_tracker = ValueTracker(1.0)
         color_tracker = ValueTracker(0.0)
@@ -102,7 +107,7 @@ class Awaken(AnimGroup):
             for cmpt in data.components.values():
                 if not isinstance(cmpt, Cmpt_Rgbas):
                     continue
-                cmpt.mix(WHITE, factor=t)
+                cmpt.mix(color, factor=t)
 
         super().__init__(
             Aligned(
@@ -128,15 +133,14 @@ class Diff:
     anim: Animation
     token_id: str
     initial: bool = field(default=False)
+    color: str = field(default=WHITE)  # colour the (awakening) token transitions into
+    gloss_id: str = field(default="")  # id of the leaf whose english gloss awakens too
 
     def name(self):
         return str(self.anim.value)
 
     def rate_func(self):
-        if self.anim == Animation.EXPAND:
-            return rush_into
-        else:
-            return double_smooth
+        return rush_into
 
     def duration(self):
         match self.anim:
