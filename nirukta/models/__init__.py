@@ -6,7 +6,6 @@ from nirukta.models.tokens import (
     DisplayToken,
     TokenType,
     frames_for_vakya,
-    process_token,
     collect_leaf_slp1s,
     build_colorings,
     build_display_token,

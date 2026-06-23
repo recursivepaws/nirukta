@@ -8,7 +8,6 @@ from janim.imports import (
     SupportsAnim,
     AnimGroup,
     Succession,
-    GREY,
     DOWN,
     UP,
     FadeOut,
@@ -280,7 +279,7 @@ def typst_code(
         rgb = f'rgb("{color.lstrip("#")}")'
         transformed = (
             f'#underline(stroke: (paint: {rgb}, thickness: 1pt, dash: "dotted"), '
-            f"offset: 0.12em, evade: false)[{transformed}]"
+            f"offset: 0.2em, evade: false)[{transformed}]"
         )
     return text_box(transformed, color, stroke_mode=stroke_mode)
 

@@ -44,7 +44,6 @@ from nirukta.models import (
     build_colorings,
     build_display_token,
     frames_for_vakya,
-    process_token,
 )
 from nirukta.strings import unswara
 from nirukta.render import (
@@ -90,12 +89,6 @@ class UtteranceTimeline(Timeline):
         return BLUE
 
     def construct(self):
-        refs: List[tuple[str, List[tuple[int, int]]]] = []
-
-        visited = set()
-        for token in self.tokens:
-            refs += process_token(self.english, token, visited)
-
         visited = set()
         colorings = build_colorings(self.tokens, COLORS)
         display_tokens = [

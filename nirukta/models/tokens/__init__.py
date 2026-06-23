@@ -54,30 +54,6 @@ def frames_for_vakya(tokens: List[DisplayToken]) -> List[List[DisplayToken]]:
     return frames
 
 
-def process_token(
-    english: str,
-    token: TokenType,
-    visited: Set[tuple[int, int]],
-):
-    refs: List[tuple[str, List[tuple[int, int]]]] = []
-
-    match token:
-        case PunctuationToken():
-            refs.append((token, []))
-        case SimpleToken():
-            refs.append((token.slp1, token.gloss_refs(english, visited)))
-        case SoundChangeToken():
-            refs += process_token(english, token.part, visited)
-            if len(token.glosses) > 0:
-                tmp = SimpleToken(token.slp1, token.glosses)
-                refs.append((tmp.slp1, tmp.gloss_refs(english, visited)))
-        case CompoundToken():
-            for part in token.parts:
-                refs += process_token(english, part, visited)
-
-    return refs
-
-
 def collect_leaf_slp1s(token: TokenType):
     """Walk the token tree yielding leaf slp1 strings in order."""
     match token:
