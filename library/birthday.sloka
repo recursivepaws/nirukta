@@ -1,7 +1,7 @@
 === sloka ===
 
 --- line ---
-amBoja[the day lotus]->amBojam iva[like] puzpa[among flowers]->puzpARAm
+amBoja[day lotus]->amBojam[the] iva[like] puzpa[flowers]->puzpARAm[among]
 "like the day lotus among flowers,"
 
 amfta[nectar]->amftam=>amftaM
@@ -9,8 +9,8 @@ amfta[nectar]->amftam=>amftaM
 "like nectar among foods,"
 
 --- line ---
-sUrya[the sun]->sUryaH=>sUryo
-(jyotis[heavenly bodies]->jyotiH=>jyotir)+(gaRa[among all]->gaRasya)+iva[like]=jyotirgaRasyeva
+sUrya[sun]->sUryaH[the]=>sUryo
+(jyotis[heavenly bodies]->jyotiH=>jyotir)+(gaRa[all]->gaRasya[among])+iva[like]=jyotirgaRasyeva
 "like the sun among all the heavenly bodies,"
 
 taTA[likewise]+eva[indeed]=taTEva tA[your]->te saKitvana[friendship]->saKitvanam ..

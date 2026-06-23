@@ -15,6 +15,8 @@ class DisplayToken:
     english_spans: List[tuple[int, int]]  # the spans this token is responsible for
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     is_root: bool = field(default=False)
+    # english spans rendered as a colored outline (e.g. an inflection's own gloss)
+    outline_spans: List[tuple[int, int]] = field(default_factory=list)
 
     @property
     def is_leaf(self) -> bool:
@@ -27,9 +29,16 @@ class DisplayToken:
 
     def all_spans(self):
         def __all_spans(dt: "DisplayToken", spans: List[tuple[int, int]]):
-            new_spans = spans + dt.english_spans
+            new_spans = spans + dt.english_spans + dt.outline_spans
             for child in dt.children:
                 new_spans.extend(__all_spans(child, []))
             return new_spans
 
         return sorted(__all_spans(self, []), key=lambda x: x[0])
+
+    def all_outline_spans(self) -> List[tuple[int, int]]:
+        """Every span anywhere in the tree that is rendered as an outline gloss."""
+        spans = list(self.outline_spans)
+        for child in self.children:
+            spans.extend(child.all_outline_spans())
+        return spans

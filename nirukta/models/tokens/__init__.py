@@ -6,6 +6,7 @@ from nirukta.models.tokens.punctuation import PunctuationToken
 
 from janim.imports import WHITE, log
 from nirukta.strings import unswara
+from nirukta.models.enums import SoundChange
 from nirukta.models.gloss import EnglishGloss
 
 from typing import List, Set, Dict, Sequence
@@ -103,6 +104,29 @@ def build_colorings(tokens: Sequence[TokenType], colors: List[str]) -> Dict[str,
     return colorings
 
 
+def _root_color(token: TokenType, colorings: Dict[str, str]) -> str:
+    """The coloring assigned to *token*'s first leaf (its underlying root)."""
+    for slp1 in collect_leaf_slp1s(token):
+        return colorings.get(unswara(slp1), WHITE)
+    return WHITE
+
+
+def _stem_gloss_refs(
+    token: TokenType, english: str, visited: Set[tuple[int, int]]
+) -> List[tuple[int, int]]:
+    """English gloss spans of *token*'s underlying stem leaves, in order."""
+    refs: List[tuple[int, int]] = []
+    match token:
+        case SimpleToken():
+            refs += token.gloss_refs(english, visited)
+        case SoundChangeToken():
+            refs += _stem_gloss_refs(token.part, english, visited)
+        case CompoundToken():
+            for part in token.parts:
+                refs += _stem_gloss_refs(part, english, visited)
+    return refs
+
+
 def build_display_token(
     english: str,
     token: TokenType,
@@ -137,7 +161,29 @@ def build_display_token(
                 children=[dt],
                 english_spans=[],
             )
+        case SoundChangeToken() if token.kind == SoundChange.INFLECTION:
+            # An inflection stays at its inflected surface form (e.g. Bojanezu) — it
+            # never resolves down to the bare stem. The sanskrit colours in like a
+            # normal word (white -> root colour, always filled, never outlined). On
+            # the coloured form the stem's meaning ("foods") rides as a fill span and
+            # the inflection's own meaning ("among") rides as an *english* outline span.
+            leaf = DisplayToken(
+                slp1=token.slp1,
+                color=_root_color(token.part, colorings),
+                children=[],
+                english_spans=_stem_gloss_refs(token.part, english, visited),
+                outline_spans=SimpleToken(token.slp1, token.glosses).gloss_refs(
+                    english, visited
+                ),
+            )
+            return DisplayToken(
+                slp1=token.slp1,
+                color=WHITE,
+                children=[leaf],
+                english_spans=[],
+            )
         case SoundChangeToken():
+            # External sandhi: resolve the merged surface form into its part.
             return build_display_token(english, token.as_compound(), visited, colorings)
         case CompoundToken():
             unswarad = token.slp1.replace("\\'", "").replace("\\_", "")

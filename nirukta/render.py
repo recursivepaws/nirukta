@@ -8,6 +8,7 @@ from janim.imports import (
     SupportsAnim,
     AnimGroup,
     Succession,
+    GREY,
     DOWN,
     UP,
     FadeOut,
@@ -145,9 +146,9 @@ class Diff:
             case Animation.SWARAS:
                 return 0.44
             case Animation.SPELLS:
-                return 0.33
+                return 0.66
             case Animation.EXPAND:
-                return 0.55
+                return 0.66
 
     def delay(self):
         return self.duration() * 0.15
@@ -208,11 +209,13 @@ def text_box(text: str, color: str, stroke_mode: bool = False):
     if color == "#FFFFFF" and not stroke_mode:
         return f"#box[#text[{text}]]"
     else:
-        color = color.lstrip("#")
+        color = f'"{color.lstrip("#")}"'
         if stroke_mode:
-            return f'#box[#text(fill: rgb(0, 0, 0, 0), stroke: 0.5pt + rgb("{color}"))[{text}]]'
+            fillcolor = '"FFFFFF"'
         else:
-            return f'#box[#text(fill: rgb("{color}"))[{text}]]'
+            fillcolor = color
+
+        return f"#box[#text(fill: rgb({fillcolor}))[{text}]]"
 
 
 def typst_code_safe(text: str, language: Language, color: str = WHITE) -> str:
@@ -270,7 +273,16 @@ def typst_code(
     text: str, language: Language, color: str = WHITE, stroke_mode: bool = False
 ):
     transformed = transform_text(text, language)
-    return text_box(transformed, color, stroke_mode)
+    if stroke_mode:
+        # NOTE: `stroke_mode` here actually means "declension gloss" — render the
+        # text in its own colour with a thin dotted underline (marks an
+        # inflectional gloss without competing with the hue-based word linking).
+        rgb = f'rgb("{color.lstrip("#")}")'
+        transformed = (
+            f'#underline(stroke: (paint: {rgb}, thickness: 1pt, dash: "dotted"), '
+            f"offset: 0.12em, evade: false)[{transformed}]"
+        )
+    return text_box(transformed, color, stroke_mode=stroke_mode)
 
 
 # def scale_with_stroke(group: Group, factor: float) -> Group:

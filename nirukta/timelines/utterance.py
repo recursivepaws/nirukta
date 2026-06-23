@@ -113,10 +113,13 @@ class UtteranceTimeline(Timeline):
 
         frames = frames_for_vakya(display_tokens)
 
-        all_english_spans: List[tuple[int, int]] = DisplayToken(
-            "", WHITE, children=display_tokens, english_spans=[]
-        ).all_spans()
+        root = DisplayToken("", WHITE, children=display_tokens, english_spans=[])
+        all_english_spans: List[tuple[int, int]] = root.all_spans()
         all_english_spans.append((len(self.english), len(self.english)))
+
+        # Declension (underline) glosses stay white before their underline appears,
+        # rather than going grey like an ordinary inactive gloss.
+        outline_span_set = set(root.all_outline_spans())
 
         log.debug(f"all english spans: {all_english_spans}")
 
@@ -172,9 +175,13 @@ class UtteranceTimeline(Timeline):
                 translit += f"{Junicode_translit(iast, token.color)}<{token.id}> "
 
             frame_spans = [
-                ((start, end), token.color)
+                ((start, end), token.color, False)
                 for token in frame
                 for start, end in token.english_spans
+            ] + [
+                ((start, end), token.color, True)
+                for token in frame
+                for start, end in token.outline_spans
             ]
 
             cursor = 0
@@ -198,13 +205,19 @@ class UtteranceTimeline(Timeline):
 
                     assert cursor == a[0], "Cursor moved to span start"
 
-                # If it is represented in the current frame
-                color = next((color for b, color in frame_spans if a == b), INACTIVE)
+                # If it is represented in the current frame; otherwise inactive —
+                # white for an underline gloss, grey for an ordinary one.
+                inactive = WHITE if a in outline_span_set else INACTIVE
+                color, stroke = next(
+                    ((color, stroke) for b, color, stroke in frame_spans if a == b),
+                    (inactive, False),
+                )
 
                 english += typst_code(
                     self.english[a[0] : a[1]],
                     Language.ENGLISH,
                     color,
+                    stroke_mode=stroke,
                 )
 
                 cursor += a[1] - a[0]
