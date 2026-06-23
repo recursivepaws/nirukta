@@ -1,17 +1,17 @@
 === sloka ===
 
 --- line ---
-amBojam[the day lotus] iva[like] puzpARAm[among flowers]
+amBoja[the day lotus]->amBojam iva[like] puzpa[among flowers]->puzpARAm
 "like the day lotus among flowers,"
 
-amftam[nectar]=>amftaM
-Bojanezu[among foods]+iva[like]=Bojanezviva .
+amfta[nectar]->amftam=>amftaM
+(Bojana[foods]->Bojanezu[among])+iva[like]=Bojanezviva .
 "like nectar among foods,"
 
 --- line ---
-sUryaH[the sun]=>sUryo
-jyotir[heavenly bodies]+gaRasya[among all]+iva[like]=jyotirgaRasyeva
+sUrya[the sun]->sUryaH=>sUryo
+(jyotis[heavenly bodies]->jyotiH=>jyotir)+(gaRa[among all]->gaRasya)+iva[like]=jyotirgaRasyeva
 "like the sun among all the heavenly bodies,"
 
-taTA[likewise]+eva[indeed]=taTEva te[your] saKitvanam[friendship] ..
+taTA[likewise]+eva[indeed]=taTEva tA[your]->te saKitvana[friendship]->saKitvanam ..
 "likewise indeed is your friendship."

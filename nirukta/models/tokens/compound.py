@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Sequence
+from dataclasses import dataclass, field
+from typing import TYPE_CHECKING, List, Sequence
 
 from nirukta.models.enums import SoundChange
+from nirukta.models.gloss import Gloss
 
 if TYPE_CHECKING:
     from nirukta.models.tokens.token import TokenType
@@ -26,6 +27,7 @@ class SoundChangeToken:
     part: TokenType
     slp1: str
     kind: SoundChange
+    glosses: List[Gloss] = field(default_factory=list)
 
     def as_compound(self) -> CompoundToken:
         return CompoundToken([self.part], self.slp1)

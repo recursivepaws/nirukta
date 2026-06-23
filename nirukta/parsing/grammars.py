@@ -18,7 +18,7 @@ SLOKA_GRAMMAR_STR = r"""
     equation_part   = comp_part plus_part+ "=" slp1
 
     # Inflection transforms
-    inflect_part    = "->" slp1
+    inflect_part    = "->" simple_token
 
     # External sandhi transforms
     external_part   = "=>" slp1

@@ -67,6 +67,9 @@ def process_token(
             refs.append((token.slp1, token.gloss_refs(english, visited)))
         case SoundChangeToken():
             refs += process_token(english, token.part, visited)
+            if len(token.glosses) > 0:
+                tmp = SimpleToken(token.slp1, token.glosses)
+                refs.append((tmp.slp1, tmp.gloss_refs(english, visited)))
         case CompoundToken():
             for part in token.parts:
                 refs += process_token(english, part, visited)

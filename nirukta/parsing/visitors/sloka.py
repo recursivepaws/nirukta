@@ -1,7 +1,7 @@
 import logging
 import os
 import traceback
-from typing import Sequence
+from typing import List, Sequence
 from nirukta.models.enums import SoundChange
 from nirukta.models.tokens import PunctuationToken, SoundChangeToken
 from nirukta.render import transliterate
@@ -355,12 +355,17 @@ class SlokaVisitor(NodeVisitor):
             result = initial
 
         # normalize inflect_parts
-        i_parts = inflect_parts if isinstance(inflect_parts, list) else []
-        i_parts = [p for p in i_parts if isinstance(p, str)]
+        i_parts: List[SimpleToken] = (
+            inflect_parts if isinstance(inflect_parts, list) else []
+        )
+        # i_parts = [p for p in i_parts if isinstance(p, str)]
 
-        for slp1 in i_parts:
+        for part in i_parts:
             result = SoundChangeToken(
-                part=result, slp1=slp1, kind=SoundChange.INFLECTION
+                part=result,
+                slp1=part.slp1,
+                kind=SoundChange.INFLECTION,
+                glosses=part.glosses,
             )
 
         e_parts = external_parts if isinstance(external_parts, list) else []
@@ -378,8 +383,8 @@ class SlokaVisitor(NodeVisitor):
         return CompoundToken(parts, slp1)
 
     def visit_inflect_part(self, _, visited_children):
-        _, slp1 = visited_children
-        return slp1
+        _, simple_token = visited_children
+        return simple_token
 
     def visit_external_part(self, _, visited_children):
         _, slp1 = visited_children
@@ -400,6 +405,10 @@ class SlokaVisitor(NodeVisitor):
 
     def visit_simple_token(self, _, visited_children):
         slp1, glosses = visited_children
+        # `gloss*` matching zero glosses falls through generic_visit, which
+        # returns the raw parse Node instead of a list. Normalize to a list.
+        if not isinstance(glosses, list):
+            glosses = []
         return SimpleToken(slp1=slp1, glosses=glosses)
 
     def visit_gloss(self, _, visited_children):
