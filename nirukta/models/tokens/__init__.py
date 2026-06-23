@@ -6,7 +6,7 @@ from nirukta.models.tokens.punctuation import PunctuationToken
 
 from janim.imports import WHITE, log
 from nirukta.strings import unswara
-from nirukta.models.enums import SoundChange
+from nirukta.models.enums import SoundChange, Animation
 from nirukta.models.gloss import EnglishGloss
 
 from typing import List, Set, Dict, Sequence
@@ -35,16 +35,53 @@ def skip_spaces_token(last_line: TokenType, next_line: TokenType) -> bool:
         return skip_spaces_str(last_line.slp1[-1], next_line.slp1[0])
 
 
+# Pada-sandhi (traditional "external" sandhi) expansions are hoisted to the front:
+# compound un-joins (=, EXPAND) and contextual sandhi (=>, SPELLS).
+_PADA_SANDHI = frozenset({Animation.EXPAND, Animation.SPELLS})
+
+
+def animation_for(parent: DisplayToken) -> Animation | None:
+    """Which Animation expanding *parent* (a non-leaf) into its children produces.
+
+    Mirrors the diff classification in `UtteranceTimeline.construct()`.
+    """
+    child = parent.children[0]
+    if len(parent.children) != 1 and parent.slp1 != child.slp1:
+        return Animation.EXPAND  # compound un-join  (= , pada-sandhi)
+    if unswara(parent.slp1) != parent.slp1 and unswara(parent.slp1) == child.slp1:
+        return Animation.SWARAS  # swara strip       (word-internal)
+    if parent.slp1 != child.slp1:
+        return Animation.SPELLS  # external sandhi   (=>, pada-sandhi)
+    if parent.color != child.color:
+        return Animation.COLORS  # inflection colour (word-internal)
+    return None
+
+
 def frames_for_vakya(tokens: List[DisplayToken]) -> List[List[DisplayToken]]:
     """
-    Generate animation frames by expanding one compound at a time, left to right.
-    Each frame is a flat list of DisplayTokens — the current visible surface.
+    Generate animation frames by expanding one node at a time.
+
+    All pada-sandhi (compound splits + external sandhi) across the whole vakya is
+    deconstructed first, before any per-word colouring — a breadth-first pass — then
+    everything else proceeds left to right. Each frame is a flat list of
+    DisplayTokens (the current visible surface).
     """
     current: List[DisplayToken] = list(tokens)
     frames = [list(current)]
 
     while True:
-        idx = next((i for i, t in enumerate(current) if not t.is_leaf), None)
+        # First pass: deconstruct all pada-sandhi across the line.
+        idx = next(
+            (
+                i
+                for i, t in enumerate(current)
+                if not t.is_leaf and animation_for(t) in _PADA_SANDHI
+            ),
+            None,
+        )
+        # Second pass: everything else (colours, swaras), left to right.
+        if idx is None:
+            idx = next((i for i, t in enumerate(current) if not t.is_leaf), None)
         if idx is None:
             break
         token = current[idx]
