@@ -1,15 +1,15 @@
 === suBAzita ===
 
 --- line ---
-para[others]+upakArAya[to benefit]=paropakArAya Palanti[bear fruit] vfkzAH[Trees]
+para[others]+(upakAra[benefit]->upakArAya[to])=paropakArAya Palanti[bear fruit] vfkza[Trees]->vfkzAH
 "Trees bear fruit to benefit others."
 
-para[others]+upakArAya[to benefit]=paropakArAya vahanti[flow] nadyaH[Rivers] .
+para[others]+(upakAra[benefit]->upakArAya[to])=paropakArAya vahanti[flow]->vahanti nadI[Rivers]->nadyaH .
 "Rivers flow to benefit others."
 
 --- line ---
-para[others]+upakArAya[to benefit]=paropakArAya duhanti[give milk] gAvaH[Cows]
+para[others]+(upakAra[benefit]->upakArAya[to])=paropakArAya duhanti[give milk] go[Cows]->gAvaH
 "Cows give milk to benefit others."
 
-(para[others]+upakAraH[benefit]+ArTam[purpose]=paropakArArTam)+idam[this]=paropakArArTamidam=>paropakArArTamidaM SarIram[body] ..
+(para[others]+(upakAra[benefit]->upakAraH)+(ArTa[purpose]->ArTam)=paropakArArTam)+idam[this]=paropakArArTamidam=>paropakArArTamidaM SarIra[body]->SarIram ..
 "The purpose of this body is to benefit others"

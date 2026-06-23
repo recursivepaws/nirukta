@@ -7,18 +7,21 @@ sa\_ha[together] nO[we both]+avatu[May][be protected]=nA\'vavatu .
 sa\_ha[together] nO\'[we both] Bunaktu[May][be nourished] .
 "May we both be nourished together."
 
-sa\_ha[together] vIryam[vigorously]=>vI\_rya\'M
+sa\_ha[together] vIrya[vigorously]->vIryam=>vI\_rya\'M
 karavAvahE[May we both work] .
 "May we both work vigorously together."
 
 --- line ---
-te\_ja\_svi[brilliant]
-(nO[our]+aDItam[study]=nAvaDItam)+astu[May][be]=nA\_vaDI\'tamastu\_
+tejasvin[brilliant]->te\_ja\_svi
+(nO[our]+(aDIta[study]->aDItam)=nAvaDItam)+astu[May][be]=nA\_vaDI\'tamastu\_
 "May our study be brilliant."
 
 mA[not] vi\'dvizA\_vahE\'\'[May we][hate one another] ..
 "May we not hate one another."
 
 --- line ---
-oM[OM] SAntiH\_[peace] SAntiH\_[peace] SAntiH\'[peace] ..
+oM[OM]
+SAnti[peace]->SAntiH\_
+SAnti[peace]->SAntiH\_
+SAnti[peace]->SAntiH\' ..
 "OM, peace, peace, peace."
