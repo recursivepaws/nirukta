@@ -86,6 +86,102 @@ def _mark_dormant(dt: DisplayToken) -> None:
         dt.is_root = True
 
 
+def render_frame_typst(
+    frame: Sequence[DisplayToken],
+    english_text: str,
+    all_english_spans: List[tuple[int, int]],
+    outline_span_set: set,
+    span_to_leaf: dict[tuple[int, int], str] | None = None,
+) -> tuple[str, str, str]:
+    """Build the (sanskrit, translit, english) typst content strings for one frame."""
+    span_to_leaf = span_to_leaf or {}
+    sanskrit = ""
+    translit = ""
+    english = ""
+
+    for token in frame:
+        sanskrit += f"{typst_code(token.slp1, Language.SANSKRIT, token.color)}<{token.id}> "
+        iast = transform_text(token.slp1, Language.TRANSLIT)
+        translit += f"{Junicode_translit(iast, token.color)}<{token.id}> "
+
+    frame_spans = [
+        ((start, end), token.color, False)
+        for token in frame
+        for start, end in token.english_spans
+    ] + [
+        ((start, end), token.color, True)
+        for token in frame
+        for start, end in token.outline_spans
+    ]
+
+    cursor = 0
+    for a in all_english_spans:
+        if a[0] > cursor:
+            missing_text = english_text[cursor : a[0]]
+            for chunk in MISSING_CHUNK_RE.finditer(missing_text):
+                chunk = chunk.group()
+                # Whitespace is already in the right format
+                if WHITESPACE_RE.fullmatch(chunk):
+                    english += chunk
+                # Typst Commands are already in the right format
+                elif TYPST_CMD_RE.fullmatch(chunk):
+                    english += chunk
+                # Everything else should be wrapped
+                else:
+                    english += typst_code(chunk, Language.ENGLISH, WHITE)
+
+                # Move cursor
+                cursor += len(chunk)
+
+            assert cursor == a[0], "Cursor moved to span start"
+
+        # If it is represented in the current frame; otherwise inactive —
+        # white for an underline gloss, grey for an ordinary one.
+        inactive = WHITE if a in outline_span_set else INACTIVE
+        color, stroke = next(
+            ((color, stroke) for b, color, stroke in frame_spans if a == b),
+            (inactive, False),
+        )
+
+        english += typst_code(
+            english_text[a[0] : a[1]],
+            Language.ENGLISH,
+            color,
+            stroke_mode=stroke,
+        )
+        # Label fill glosses by owning-leaf id so they can Awaken with the pada
+        if a in span_to_leaf:
+            english += f"<{span_to_leaf[a]}>"
+
+        cursor += a[1] - a[0]
+
+    return sanskrit, translit, english
+
+
+def utterance_final_typst(utterance: Utterance) -> tuple[str, str, str]:
+    """The (sanskrit, translit, english) typst content for an utterance's final,
+    fully-deconstructed state — the resting end of its timeline, with no animation."""
+    colorings = build_colorings(utterance.tokens, COLORS)
+    visited: set = set()
+    dts = [
+        build_display_token(utterance.english, t, visited, colorings)
+        for t in utterance.tokens
+    ]
+    dts = fix_display_token_akshara_splitting(dts)
+    frames = frames_for_vakya(dts)
+
+    root = DisplayToken("", WHITE, children=dts, english_spans=[])
+    all_english_spans = root.all_spans()
+    all_english_spans.append((len(utterance.english), len(utterance.english)))
+
+    return render_frame_typst(
+        frames[-1],
+        utterance.english,
+        all_english_spans,
+        set(root.all_outline_spans()),
+    )
+
+
 @dataclass
 class UtteranceTimeline(Timeline):
     tokens: Sequence[TokenType]
@@ -193,66 +289,13 @@ class UtteranceTimeline(Timeline):
             assert len(diffs) != diff_count, "Unknown diff type"
 
         for i, frame in enumerate(frames):
-            sanskrit = ""
-            translit = ""
-            english = ""
-
-            for token in frame:
-                sanskrit += f"{typst_code(token.slp1, Language.SANSKRIT, token.color)}<{token.id}> "
-                iast = transform_text(token.slp1, Language.TRANSLIT)
-                translit += f"{Junicode_translit(iast, token.color)}<{token.id}> "
-
-            frame_spans = [
-                ((start, end), token.color, False)
-                for token in frame
-                for start, end in token.english_spans
-            ] + [
-                ((start, end), token.color, True)
-                for token in frame
-                for start, end in token.outline_spans
-            ]
-
-            cursor = 0
-            for a in all_english_spans:
-                if a[0] > cursor:
-                    missing_text = self.english[cursor : a[0]]
-                    for chunk in MISSING_CHUNK_RE.finditer(missing_text):
-                        chunk = chunk.group()
-                        # Whitespace is already in the right format
-                        if WHITESPACE_RE.fullmatch(chunk):
-                            english += chunk
-                        # Typst Commands are already in the right format
-                        elif TYPST_CMD_RE.fullmatch(chunk):
-                            english += chunk
-                        # Everything else should be wrapped
-                        else:
-                            english += typst_code(chunk, Language.ENGLISH, WHITE)
-
-                        # Move cursor
-                        cursor += len(chunk)
-
-                    assert cursor == a[0], "Cursor moved to span start"
-
-                # If it is represented in the current frame; otherwise inactive —
-                # white for an underline gloss, grey for an ordinary one.
-                inactive = WHITE if a in outline_span_set else INACTIVE
-                color, stroke = next(
-                    ((color, stroke) for b, color, stroke in frame_spans if a == b),
-                    (inactive, False),
-                )
-
-                english += typst_code(
-                    self.english[a[0] : a[1]],
-                    Language.ENGLISH,
-                    color,
-                    stroke_mode=stroke,
-                )
-                # Label fill glosses by owning-leaf id so they can Awaken with the pada
-                if a in span_to_leaf:
-                    english += f"<{span_to_leaf[a]}>"
-
-                cursor += a[1] - a[0]
-
+            sanskrit, translit, english = render_frame_typst(
+                frame,
+                self.english,
+                all_english_spans,
+                outline_span_set,
+                span_to_leaf,
+            )
             states[0].append(TypstText(set_font(sanskrit, SANSKRIT_FONT)))
             states[1].append(TypstText(set_font(translit, LATIN_FONT)))
             states[2].append(TypstText(set_font(english, LATIN_FONT, wrap=True)))
