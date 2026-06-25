@@ -3,6 +3,8 @@ import re
 import typst
 import janim.utils.typst_compile as tc
 from janim.gui.anim_viewer import AnimViewer
+from janim.anims.timeline import Timeline
+from janim.exception import ExitException
 from janim.gui.timeline_view import TimelineView, LABEL_OBJ_NAME
 from janim.gui.label import LazyLabelGroup, Label, LabelGroup
 from janim.anims.animation import FOREVER, TimeRange
@@ -196,3 +198,63 @@ if not getattr(AnimViewer, "_set_built_name_patched", False):
 
     AnimViewer.set_built = _patched_anim_viewer_set_built
     AnimViewer._set_built_name_patched = True  # type: ignore[attr-defined]
+
+
+# Janim's on_rebuild_triggered swallows build exceptions, so a wrapper around it
+# never sees the message. Record it here on Timeline.build and re-raise unchanged.
+if not getattr(Timeline, "_nirukta_build_error_patched", False):
+    _orig_build = Timeline.build
+
+    def _patched_build(self, *args, **kwargs):
+        try:
+            return _orig_build(self, *args, **kwargs)
+        except ExitException:
+            raise
+        except Exception as e:
+            Timeline._nirukta_last_error = f"{type(e).__name__}: {e}"  # type: ignore[attr-defined]
+            raise
+
+    Timeline.build = _patched_build
+    Timeline._nirukta_last_error = None  # type: ignore[attr-defined]
+    Timeline._nirukta_build_error_patched = True  # type: ignore[attr-defined]
+
+
+# Surface a failed rebuild in the status bar instead of failing silently.
+# A successful build reassigns self.built to a fresh object inside set_built;
+# a failure returns before that, so unchanged identity means the rebuild failed.
+if not getattr(AnimViewer, "_nirukta_rebuild_error_patched", False):
+    _orig_on_rebuild = AnimViewer.on_rebuild_triggered
+
+    def _nirukta_show_error(self, msg: str) -> None:
+        label = getattr(self, "_nirukta_error_label", None)
+        if label is None:
+            from PySide6.QtWidgets import QLabel
+            label = QLabel()
+            label.setStyleSheet("color: #ff5555; font-weight: bold;")
+            self.statusBar().addWidget(label)
+            self._nirukta_error_label = label  # type: ignore[attr-defined]
+        short = msg if len(msg) <= 120 else msg[:117] + "..."
+        label.setText("⚠ Rebuild failed: " + short)
+        # Full message on hover, since the status bar only fits one line.
+        label.setToolTip(msg)
+        label.show()
+
+    def _nirukta_clear_error(self) -> None:
+        label = getattr(self, "_nirukta_error_label", None)
+        if label is not None:
+            label.clear()
+            label.hide()
+
+    def _patched_on_rebuild(self):
+        Timeline._nirukta_last_error = None  # type: ignore[attr-defined]
+        prev_built = self.built
+        _orig_on_rebuild(self)
+        if self.built is prev_built:
+            self._nirukta_show_error(Timeline._nirukta_last_error or "Rebuild failed")
+        else:
+            self._nirukta_clear_error()
+
+    AnimViewer._nirukta_show_error = _nirukta_show_error  # type: ignore[attr-defined]
+    AnimViewer._nirukta_clear_error = _nirukta_clear_error  # type: ignore[attr-defined]
+    AnimViewer.on_rebuild_triggered = _patched_on_rebuild
+    AnimViewer._nirukta_rebuild_error_patched = True  # type: ignore[attr-defined]
