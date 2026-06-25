@@ -31,7 +31,7 @@ Sveta[white]+padma[lotus]+AsanA[seated]=SvetapadmAsanA .
 
 --- line ---
 yA[She who]
-(brahma[Brahma]+acyuta[Viṣṇu]+SaNkara[Śiva]+(praBftiBi[and other]->praBftiBiH)+(deva[devas]->devEH)=brahmAcyutaSaNkarapraBftiBirdevEH)+sadA[always]=brahmAcyutaSaNkarapraBftiBirdevEssadA
+(brahma[Brahma]+acyuta[Viṣṇu]+SaNkara[Śiva]+(praBfti[other]->praBftiBiH)+(deva[devas]->devEH)=brahmAcyutaSaNkarapraBftiBirdevEH)+sadA[always]=brahmAcyutaSaNkarapraBftiBirdevEssadA
 pUjitA[worshipped]
 "She who is always worshipped by Brahma, Viṣṇu, Śiva, and other devas."
 
@@ -39,7 +39,7 @@ pUjitA[worshipped]
 sA[that] mA[me]->mAm=>mAM pAtu[May][protect]
 sarasvatI[Sarasvatī]
 BagavatI[divine]
-niSSeza[completely]+jAqya[ignorance]+apahA[removes]=niSSezajAqyApahA .. 1 ..
+niSSeza[completely]+jAqya[ignorance]+apaha[removes]=niSSezajAqyApahA .. 1 ..
 "May that divine Sarasvatī who removes ignorance completely, protect me."
 
 === sloka ===
@@ -181,24 +181,24 @@ namas[reverence]->namaH=>namo namas[reverence]->namaH .
 
 --- line ---
 Sabda[Sabda]+brahmi[Brahman]=Sabdabrahmi
-catur[four]+hasta[handed]=caturhasta->caturhaste
+catur[four]+(hasta[handed]->haste)=caturhaste
 "O you who are Sabda Brahman, O four-handed one -"
 
-sarva[all]+sidDi[accomplishment]=sarvasidDi->sarvasidDyE
+sarva[all]+(sidDi[accomplishment]->sidDyE)=sarvasidDyE
 namas[reverence]->namaH=>namo namas[reverence]->namaH .. 8 ..
 "reverence, reverence to her who is all accomplishment."
 
 === sloka ===
 
 --- line ---
-mukta[pearls]+AlaNkfta[adorned]+sarva[every]+aNgi[limb]=muktAlaNkftasarvANgi->muktAlaNkftasarvANgyE
-mUlADAra[root chakra]->mUlADAre
+mukta[pearls]+AlaNkfta[adorned]+sarva[every]+(aNgi[limb]->aNgyE[to])=muktAlaNkftasarvANgyE
+mUlADAra[root chakra]->mUlADAre[O]
 namas[reverence]->namaH=>namo namas[reverence]->namaH .
 "O you who are the root chakra - reverence, reverence to her whose every limb is adorned by pearls."
 
 --- line ---
-mUla[basis]+mantra[mantra]+svarUpA[self-form]=mUlamantrasvarUpA->mUlamantrasvarUpAyE
-mUla[origin]+Sakti[ability]=mUlaSakti->mUlaSaktyE
+mUla[basis]+mantra[mantra]+(svarUpA[self-form]->svarUpAyE[to])=mUlamantrasvarUpAyE
+mUla[origin]+(Sakti[ability]->SaktyE[to])=mUlaSaktyE
 namas[Reverence]->namaH=>namo namas[reverence]->namaH .. 9 ..
 "Reverence, reverence to her whose self-form is the basis of mantra itself, to her who is the origin of ability."
 
