@@ -1,4 +1,5 @@
 import os
+import sys
 import re
 import typst
 import janim.utils.typst_compile as tc
@@ -15,6 +16,27 @@ from PySide6.QtGui import QColor, QPen
 from janim.utils.font.database import FontInfo, get_database
 from fontTools.ttLib import TTCollection, TTFont, TTLibError
 from janim.utils.font_manager import list_fonts, get_fontext_synonyms
+
+# Qt's FreeType engine logs a benign "load glyph failed" warning that we drop while forwarding all other Qt messages.
+# The guard lives on the persistent QtCore module so the handler installs once instead of re-stacking on each reload.
+from PySide6 import QtCore
+
+if not getattr(QtCore, "_nirukta_msg_handler_installed", False):
+    from PySide6.QtCore import qInstallMessageHandler, QtMsgType
+
+    def _nirukta_message_handler(mode, context, message):
+        if message.startswith("load glyph failed"):
+            return
+        if _nirukta_default_handler is not None:
+            _nirukta_default_handler(mode, context, message)
+        else:
+            print(message, file=sys.stderr)
+            if mode == QtMsgType.QtFatalMsg:
+                os.abort()
+
+    _nirukta_default_handler = qInstallMessageHandler(_nirukta_message_handler)
+    QtCore._nirukta_msg_handler_installed = True  # type: ignore[attr-defined]
+
 
 # MethodTransform.__getattr__ accesses self.delayed_actions to record proxy calls.
 # During deserialization, delayed_actions hasn't been set yet, so accessing it
@@ -200,8 +222,8 @@ if not getattr(AnimViewer, "_set_built_name_patched", False):
     AnimViewer._set_built_name_patched = True  # type: ignore[attr-defined]
 
 
-# Janim's on_rebuild_triggered swallows build exceptions, so a wrapper around it
-# never sees the message. Record it here on Timeline.build and re-raise unchanged.
+# Janim's on_rebuild_triggered swallows build exceptions, so a wrapper around it never sees the message.
+# Record the message here on Timeline.build and re-raise so Janim's own handling is unchanged.
 if not getattr(Timeline, "_nirukta_build_error_patched", False):
     _orig_build = Timeline.build
 
@@ -220,8 +242,7 @@ if not getattr(Timeline, "_nirukta_build_error_patched", False):
 
 
 # Surface a failed rebuild in the status bar instead of failing silently.
-# A successful build reassigns self.built to a fresh object inside set_built;
-# a failure returns before that, so unchanged identity means the rebuild failed.
+# A successful build reassigns self.built, so unchanged identity after the rebuild means it failed.
 if not getattr(AnimViewer, "_nirukta_rebuild_error_patched", False):
     _orig_on_rebuild = AnimViewer.on_rebuild_triggered
 
