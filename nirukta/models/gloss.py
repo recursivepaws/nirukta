@@ -27,10 +27,11 @@ class EnglishGloss:
         while True:
             gi = find_nth(english, self.text, n)
 
-            assert gi >= 0, (
-                "Gloss cannot reference text not contained in the english translation!\n"
-                + f'Tried to find "{self.text}" in "{english}" but was unable.'
-            )
+            if gi < 0:
+                raise ValueError(
+                    "Gloss cannot reference text not contained in the english translation!\n"
+                    + f'Tried to find "{self.text}" in "{english}" but was unable.'
+                )
 
             index = (gi, gi + len(self.text))
 
