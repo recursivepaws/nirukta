@@ -128,10 +128,7 @@ def validate_vocabulary(sequence: Sequence[TokenType]):
         resolutions = resolve(form)
 
         if not resolutions:
-            log.warning(
-                f"vocabulary unrecognized [noun]:\t'{print_form}' did not resolve "
-                f"to a known stem or indeclinable."
-            )
+            log.warning(f"vocabulary unrecognized\t[noun]:\t\t'{print_form}'")
             continue
 
         headwords = [r for r in resolutions if r.is_headword]
@@ -139,21 +136,21 @@ def validate_vocabulary(sequence: Sequence[TokenType]):
             kind = (
                 "indeclinable" if any(r.indeclinable for r in headwords) else "headword"
             )
-            log.info(
-                f"vocabulary resolved   [{kind}]:\t'{print_form}' is a known word."
-            )
+            log.info(f"vocabulary resolved\t[{kind}]:\t'{print_form}'")
             mw = _safe_define(form)
             for gloss in token.glosses:
                 if not isinstance(gloss, EnglishGloss):
                     continue
                 if _gloss_in_definitions(gloss.text, mw):
-                    log.info(f"gloss verified   [MW]:\t'{print_form}' [{gloss.text}] ✓")
+                    log.info(
+                        f"gloss verified\t\t[dictionary]:\t'{print_form}' = '{gloss.text}' ✓"
+                    )
                 else:
                     # senses = (
                     #     " | ".join(entry.meaning for entry in mw) or "(no MW entry)"
                     # )
                     log.warning(
-                        f"gloss unverified [MW]:\t'{print_form}' [{gloss.text}] "
+                        f"gloss unverified\t[dictionary]:\t'{print_form}' != '{gloss.text}'"
                         # f"not found in MW. Definitions: {senses}"
                     )
         else:
@@ -164,9 +161,8 @@ def validate_vocabulary(sequence: Sequence[TokenType]):
             )
             rewrites = sorted({f"{r.stem}->{form}" for r in resolutions})
             log.warning(
-                f"vocabulary suggestion [declension]:\t'{print_form}' is an "
-                f"inflected form of these stems: {stems}; consider writing it "
-                f"explicitly as {rewrites} (keep the glosses on the stem)."
+                f"vocabulary suggestion\t[declension]:\t'{print_form}' is an "
+                f"inflected form of: {stems}. rewrite as {rewrites}."
             )
 
 
@@ -230,14 +226,14 @@ def validate_equation(parts: Sequence[TokenType], result: str, kind: SoundChange
         else:
             if kind == SoundChange.EXTERNAL_SANDHI:
                 log.info(
-                    f"sandhi validated [external]:\t\t'{undone_parts[0]}' => '{final_result}' when preceding '{undone_parts[1]}'"
+                    f"sandhi validated\t[external]:\t'{undone_parts[0]}' => '{final_result}' when preceding '{undone_parts[1]}'"
                 )
             else:
                 equation_string = " + ".join(
                     list(map(lambda x: f"'{x}'", undone_parts))
                 )
                 log.info(
-                    f"sandhi validated [internal]:\t\t{equation_string} = '{final_result}'"
+                    f"sandhi validated\t[internal]:\t{equation_string} = '{final_result}'"
                 )
 
     else:
@@ -295,12 +291,34 @@ def validate_sandhi(sequence: Sequence[TokenType]):
                 validate_compound(current)
 
 
+def _validate_sequence(tokens: Sequence[TokenType]):
+    # run both validators on one token sequence, logging instead of raising
+    try:
+        validate_sandhi(tokens)
+    except Exception as e:
+        log.error(f"Failed to validate sandhi: {e}")
+
+    try:
+        validate_vocabulary(tokens)
+    except Exception as e:
+        log.error(f"Failed to validate vocabulary: {e}")
+
+
+def validate_sloka(sloka: Sloka):
+    # validate a single already-parsed sloka, reproducing the per-sequence
+    # validation a full parse would have done for just this sloka
+    for line in sloka.lines:
+        for utterance in line.vAkyAni:
+            _validate_sequence(utterance.tokens)
+
+
 class SlokaVisitor(NodeVisitor):
     file: str
     dir: str
     source: str
+    validate: bool
 
-    def __init__(self, file: str):
+    def __init__(self, file: str, validate: bool = True):
         NodeVisitor.__init__(self)
 
         print(f"Loading {file}...")
@@ -310,6 +328,9 @@ class SlokaVisitor(NodeVisitor):
 
         self.file = file
         self.directory = os.path.dirname(self.file)
+        # when False, parse only builds the tree and skips the expensive
+        # sandhi/vocabulary validators (used to enumerate slokas cheaply)
+        self.validate = validate
 
     def _print_parse_error(self, e: ParseError) -> None:
         lines = self.source.splitlines()
@@ -369,15 +390,8 @@ class SlokaVisitor(NodeVisitor):
         for pair in rest:
             tokens.append(pair[1])
 
-        try:
-            validate_sandhi(tokens)
-        except Exception as e:
-            log.error(f"Failed to validate sandhi: {e}")
-
-        try:
-            validate_vocabulary(tokens)
-        except Exception as e:
-            log.error(f"Failed to validate vocabulary: {e}")
+        if self.validate:
+            _validate_sequence(tokens)
 
         return tokens
 

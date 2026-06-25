@@ -31,6 +31,12 @@ class Sloka:
 
         pass
 
+    def preview(self, length: int = 60) -> str:
+        # first utterance's english, truncated, for menu/list labels
+        if self.lines and self.lines[0].vAkyAni:
+            return self.lines[0].vAkyAni[0].english.strip()[:length]
+        return ""
+
     def meter_slp1(self):
         slp1 = ""
         for line in self.lines:
@@ -87,3 +93,9 @@ class Sloka:
         #
         # return
         # return arrange_vertical(rows, gutter=0.6)
+
+
+def sloka_label(index: int, sloka: Sloka) -> str:
+    # shared label for sloka menus/lists (GUI picker and CLI)
+    num = f"#{sloka.number} — " if sloka.number is not None else f"{index + 1}. "
+    return f"{num}{sloka.preview()}"

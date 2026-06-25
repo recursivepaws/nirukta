@@ -132,20 +132,18 @@ class NiruktaFilePicker(QWidget):
 
     def _populate_sutra(self) -> None:
         from nirukta.parsing.visitors.sutra import SutraVisitor
+        from nirukta.models.presentation.sloka import sloka_label
 
         self._list.clear()
-        sutra_file = SutraVisitor(self._sutra_path).parse()
+        # validation-free parse: we only need the slokas listed, not validated
+        sutra_file = SutraVisitor(self._sutra_path, validate=False).parse()
 
         whole = QListWidgetItem("  Whole Sutra")
         whole.setData(Qt.ItemDataRole.UserRole, ("whole", self._sutra_path))
         self._list.addItem(whole)
 
         for i, sloka in enumerate(sutra_file.slokas):
-            preview = ""
-            if sloka.lines and sloka.lines[0].vAkyAni:
-                preview = sloka.lines[0].vAkyAni[0].english.strip()[:60]
-            num = f"#{sloka.number} — " if sloka.number is not None else f"{i + 1}. "
-            item = QListWidgetItem(f"  {num}{preview}")
+            item = QListWidgetItem(f"  {sloka_label(i, sloka)}")
             item.setData(Qt.ItemDataRole.UserRole, (i, self._sutra_path))
             self._list.addItem(item)
 

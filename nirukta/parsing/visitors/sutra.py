@@ -26,7 +26,9 @@ class SutraVisitor(SlokaVisitor):
                 processed_slokas.append(sloka)
             else:
                 sloka_file = os.path.normpath(os.path.join(self.directory, sloka))
-                processed_slokas.append(SlokaVisitor(sloka_file).parse().sloka)
+                processed_slokas.append(
+                    SlokaVisitor(sloka_file, validate=self.validate).parse().sloka
+                )
 
         return SutraFile(citation, processed_slokas)
 
