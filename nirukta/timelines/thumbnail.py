@@ -75,9 +75,9 @@ class ThumbnailTimeline(Timeline):
 
         self.play(Aligned(FadeIn(group), Sleep(sloka_text)))
 
-        print()
-        print(sloka_text.text)
-        print()
+        # print()
+        # print(sloka_text.text)
+        # print()
 
         for li, line in enumerate(self.sloka.lines):
             if not line.skip():

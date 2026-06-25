@@ -150,7 +150,7 @@ def validate_vocabulary(sequence: Sequence[TokenType]):
                     #     " | ".join(entry.meaning for entry in mw) or "(no MW entry)"
                     # )
                     log.warning(
-                        f"gloss unverified\t[dictionary]:\t'{print_form}' != '{gloss.text}'"
+                        f"gloss unverified\t[dictionary]:\t'{print_form}' != '{gloss.text}' ✘"
                         # f"not found in MW. Definitions: {senses}"
                     )
         else:

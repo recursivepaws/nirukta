@@ -2,7 +2,7 @@ import os
 import glob
 import sys
 
-from nirukta.parsing.visitors.sloka import SlokaVisitor
+from nirukta.parsing.visitors.sloka import SlokaVisitor, validate_sloka
 from nirukta.parsing.visitors.sutra import SutraVisitor
 from nirukta.timelines import ExplainSloka, SlokaFileTimeline, SutraFileTimeline
 
@@ -102,10 +102,14 @@ def _choose_nirukta_file_terminal() -> str:
 def file_to_timeline(chosen: str):
     print(f"Loading {chosen}...")
     if ".sutra" in chosen:
-        sutra_file = SutraVisitor(chosen).parse()
         sloka_index = os.environ.get("NIRUKTA_SLOKA_INDEX")
         if sloka_index is not None:
-            return ExplainSloka(sloka=sutra_file.slokas[int(sloka_index)])
-        return SutraFileTimeline(sutra_file)
+            # rendering one sloka: parse without validating the whole sutra,
+            # then validate only the sloka we are about to render
+            sutra_file = SutraVisitor(chosen, validate=False).parse()
+            sloka = sutra_file.slokas[int(sloka_index)]
+            validate_sloka(sloka)
+            return ExplainSloka(sloka=sloka)
+        return SutraFileTimeline(SutraVisitor(chosen).parse())
     else:
         return SlokaFileTimeline(SlokaVisitor(chosen).parse())

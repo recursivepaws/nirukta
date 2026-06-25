@@ -58,11 +58,7 @@ def validate_sutra(path: str) -> None:
 
 def validate_single_sloka(path: str) -> None:
     while True:
-        sf = SlokaVisitor(path).parse()
-        for line in sf.sloka.lines:
-            for v in line.vAkyAni:
-                for x in v.tokens:
-                    print(x)
+        SlokaVisitor(path).parse()
         if _prompt("validate again? [Y]/n\n", on_eof="n") == "n":
             break
 
