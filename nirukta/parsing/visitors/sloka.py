@@ -23,7 +23,13 @@ from nirukta.models import SlokaFile
 from nirukta.parsing.grammars import SLOKA_GRAMMAR
 from parsimonious.exceptions import ParseError
 from parsimonious.nodes import NodeVisitor
-from nirukta_inflect import analyze_declension, declension_tables, lookup, resolve
+from nirukta_inflect import (
+    analyze_declension,
+    declension_tables,
+    define,
+    lookup,
+    resolve,
+)
 
 S = sandhi_module.Sandhi()
 
@@ -90,6 +96,21 @@ def _leaf_tokens(sequence: Sequence[TokenType]):
                 continue
 
 
+def _safe_define(form: str):
+    """Look up MW definitions, swallowing fetch errors so validation continues."""
+    try:
+        return define(form)
+    except Exception as exc:
+        log.debug(f"MW lookup failed for '{form}': {exc}")
+        return []
+
+
+def _gloss_in_definitions(gloss_text: str, entries) -> bool:
+    """True if the author's gloss appears in any MW definition's meaning."""
+    needle = gloss_text.strip().lower()
+    return bool(needle) and any(needle in entry.meaning.lower() for entry in entries)
+
+
 def validate_vocabulary(sequence: Sequence[TokenType]):
     """Check that every leaf word resolves to a known stem or indeclinable.
 
@@ -121,6 +142,20 @@ def validate_vocabulary(sequence: Sequence[TokenType]):
             log.info(
                 f"vocabulary resolved   [{kind}]:\t'{print_form}' is a known word."
             )
+            mw = _safe_define(form)
+            for gloss in token.glosses:
+                if not isinstance(gloss, EnglishGloss):
+                    continue
+                if _gloss_in_definitions(gloss.text, mw):
+                    log.info(f"gloss verified   [MW]:\t'{print_form}' [{gloss.text}] ✓")
+                else:
+                    # senses = (
+                    #     " | ".join(entry.meaning for entry in mw) or "(no MW entry)"
+                    # )
+                    log.warning(
+                        f"gloss unverified [MW]:\t'{print_form}' [{gloss.text}] "
+                        # f"not found in MW. Definitions: {senses}"
+                    )
         else:
             # A bare inflected form resolves only via declension.
             # Suggest rewriting it as an explicit stem->form.
