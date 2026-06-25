@@ -233,6 +233,13 @@ def validate_sandhi(sequence: Sequence[TokenType]):
                 match current.kind:
                     case SoundChange.INFLECTION:
                         validate_declension(current.part.slp1, current.slp1)
+                        # An inflection applied to a whole compound still needs
+                        # its internal sandhi checked. A chain of inflections
+                        # recurses until it bottoms out at the compound.
+                        if isinstance(current.part, CompoundToken):
+                            validate_compound(current.part)
+                        elif isinstance(current.part, SoundChangeToken):
+                            validate_sandhi([current.part])
                     case SoundChange.EXTERNAL_SANDHI:
                         inner = current.part
                         if (
