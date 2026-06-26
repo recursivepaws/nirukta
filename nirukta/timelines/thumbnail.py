@@ -65,8 +65,8 @@ class ThumbnailTimeline(Timeline):
             sloka_border = SurroundingRect(sloka_text, color=WHITE, buff=MED_SMALL_BUFF)
             group = Group(sloka_text, sloka_border)
 
-        # group.points.to_border(UL if self.devanagari else UR, buff=MED_SMALL_BUFF)
-        group.points.to_border(UP if self.devanagari else DOWN, buff=2)
+        group.points.to_border(UL if self.devanagari else UR, buff=MED_SMALL_BUFF)
+        # group.points.to_border(UP if self.devanagari else DOWN, buff=2)
         # return group
         # initial = sloka_group(self.sloka)
         # self.play(Write(initial), duration=0.33)

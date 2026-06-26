@@ -23,7 +23,11 @@ from janim.imports import (
     Write,
     log,
 )
-from nirukta.models.tokens import fix_display_token_akshara_splitting
+from nirukta.models.tokens import (
+    _PADA_SANDHI,
+    animation_for,
+    fix_display_token_akshara_splitting,
+)
 from nirukta.timelines.transform import LenientTransformMatchingDiff
 from nirukta.constants import (
     COLORS,
@@ -82,7 +86,11 @@ def _mark_dormant(dt: DisplayToken) -> None:
         for child in dt.children:
             if isinstance(child, DisplayToken):
                 _mark_dormant(child)
-    else:  # pada
+    # external sandhi on a pada
+    elif animation_for(dt) in _PADA_SANDHI:
+        # grey this layer, no awaken; descend to the root beneath the sandhi
+        _mark_dormant(dt.children[0])
+    else:  # pada root
         dt.is_root = True
 
 
@@ -100,7 +108,9 @@ def render_frame_typst(
     english = ""
 
     for token in frame:
-        sanskrit += f"{typst_code(token.slp1, Language.SANSKRIT, token.color)}<{token.id}> "
+        sanskrit += (
+            f"{typst_code(token.slp1, Language.SANSKRIT, token.color)}<{token.id}> "
+        )
         iast = transform_text(token.slp1, Language.TRANSLIT)
         translit += f"{Junicode_translit(iast, token.color)}<{token.id}> "
 
@@ -337,10 +347,11 @@ class UtteranceTimeline(Timeline):
                     ]
                     # A pada awakening straight into its colour brings its english
                     # gloss along, in the same aligned animation (no separate recolour).
-                    if diff.anim == Animation.COLORS and diff.gloss_id in gloss_leaf_ids:
-                        awaken_labels.append(
-                            states[2][i - 1].get_label(diff.gloss_id)
-                        )
+                    if (
+                        diff.anim == Animation.COLORS
+                        and diff.gloss_id in gloss_leaf_ids
+                    ):
+                        awaken_labels.append(states[2][i - 1].get_label(diff.gloss_id))
                     self.play(
                         FlatAligned(
                             *(Awaken(dt, color=diff.color) for dt in awaken_labels),
